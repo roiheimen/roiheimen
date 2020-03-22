@@ -1,0 +1,22 @@
+{
+  "name": "roiheimen-web",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "prepare": "snowpack",
+    "start": "es-dev-server --http2 --watch --port 8080 --compatibility none --root-dir src/"
+  },
+  "snowpack": {
+    "installOptions": {
+      "dest": "src/web_modules"
+    },
+    "dedupe": ["heresy"]
+  },
+  "dependencies": {
+    "heresy": "^0.26.1"
+  },
+  "devDependencies": {
+    "es-dev-server": "^1.45.2",
+    "prettier": "^1.19.1",
+    "snowpack": "^1.6.0"
+  }
+}

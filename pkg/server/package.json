@@ -1,0 +1,16 @@
+{
+  "name": "roiheimen-server",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "setup": "cat *.sql | psql"
+  },
+  "dependencies": {
+    "@graphile-contrib/pg-simplify-inflector": "^5.0.0-beta.1",
+    "express": "^4.17.1",
+    "pg-native": "^3.0.0",
+    "postgraphile": "^4.5.5"
+  },
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  }
+}
