@@ -2,23 +2,21 @@ import { define, html } from "/web_modules/heresy.js";
 
 import storage from "../lib/storage.js";
 
-function isActive(path) {
-  const { pathname } = location;
-  return pathname.includes(path) ? "active" : "";
-}
+import "./footer.js";
 
 define("RoiLayout", {
   oninit() {
     this.content = [...this.children];
-    this.creds = storage("creds");
   },
   style(self) {
     return `
     body {
       background-color: #eeefee;
       font-family: "sans-serif";
+      display: grid;
       color: #333;
     }
+    input, textarea { box-sizing: border-box }
     h1, h2, h3 {
       font-weight: normal;
     }
@@ -39,14 +37,6 @@ define("RoiLayout", {
       top: 10px;
       position: relative;
     }
-    ${self} > footer {
-      margin-top: 10px;
-      text-align: center;
-    }
-    ${self} > footer .active {
-      color: black;
-      font-weight: bold;
-    }
     `;
   },
   render() {
@@ -58,24 +48,7 @@ define("RoiLayout", {
         </h1>
       </header>
       ${this.content}
-      <footer>
-        <a href="index.html" class=${isActive("index") && "active"}>index</a>
-        | <a href="queueing.html" class=${isActive("queueing") &&
-          "active"}>talekø</a>
-        | ${
-          this.creds.num
-            ? html`
-                <a href="logout.html" class=${isActive("login") && "active"}
-                  >logg ut</a
-                >
-              `
-            : html`
-                <a href="login.html" class=${isActive("login") && "active"}
-                  >login</a
-                >
-              `
-        }
-      </footer>
+      <footer is="roi-footer" />
     `;
   }
 });

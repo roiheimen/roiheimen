@@ -1,14 +1,9 @@
 import { define } from "/web_modules/heresy.js";
 
 define("WherebyEmbed", {
-  observedAttributes: [
-    "room",
-    "subdomain",
-    "displayName",
-  ],
+  observedAttributes: ["room", "subdomain", "displayName"],
   style(self) {
     return `
-    ${self} { display: block; }
     ${self} iframe {
       border: none;
       height: 100%;
@@ -23,6 +18,7 @@ define("WherebyEmbed", {
     const url = new URL(room, `https://${subdomain}.whereby.com`);
     url.search = new URLSearchParams({
       ...(displayName && { displayName }),
+      background: "off",
       chat: "off",
       emptyRoomInvitation: "off",
       help: "off",
