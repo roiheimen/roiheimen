@@ -18,6 +18,7 @@ app.use(
     pgDefaultRole: "roiheimen_anonymous",
     jwtSecret: "secret_kitten",
     jwtPgTypeIdentifier: "roiheimen.jwt_token",
+    ownerConnectionString: "postgres:///",
 
     disableQueryLog: !DEV, // querylog is slow
     enhanceGraphiql: DEV,

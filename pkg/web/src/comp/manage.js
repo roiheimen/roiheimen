@@ -1,8 +1,27 @@
 import { define, html, ref } from "/web_modules/heresy.js";
 
+import storage from "../lib/storage.js";
 import { gql } from "../lib/graphql.js";
 
+const gqlNewSak = `
+  mutation NewSak($mId: String!, $title: String!) {
+    createSak(input: {sak: {title: $title, meetingId: $mId}}) {
+      sak {
+        id
+        title
+      }
+    }
+  }`;
+const gqlLatestSak = `
+  query LatestSak {
+    latestSak {
+      id
+      title
+    }
+  }`;
+
 const SakTitle = {
+  mappedAttributes: ["sak"],
   style(self) {
     return `
     ${self} {
@@ -15,8 +34,10 @@ const SakTitle = {
     }
     `;
   },
+  onsak() { this.render() },
   render() {
-    this.html`<input value="SakTitle">`;
+    console.log("-- title sak is", this.sak);
+    this.html`<input value=${this.sak?.title} placeholder="Ingenting">`;
   },
 }
 const SakFinishButton = {
@@ -85,7 +106,7 @@ const SakSpeakerList = {
 
 const NewSakDialog = {
   extends: "dialog",
-  onitit() {
+  oninit() {
     this.addEventListener("submit", this);
   },
   style(self) {
@@ -117,20 +138,25 @@ const NewSakDialog = {
   },
   onsubmit(e) {
     console.log("XXX subm", e);
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(e.target);
     const title = form.get("title");
+    console.log("XXX title", title);
+    this.newSak(title, () => { e.target.title.value = "" });
     e.preventDefault();
   },
-  async newSak(title) {
-    const res = await gql(`
-      mutation Login($num: Int!, $org: String!, $password: String!) {
-        authenticate(input: {num: $num, subOrg: $org, password: $password}) {
-          jwtToken
-        }
-      }`,
-      { num, org, password }
-    );
-    console.log("XXX resnewsak", res);
+  async newSak(title, onFinish) {
+    try {
+      console.log(storage("myself"), "msylf")
+      const res = await gql(gqlNewSak, { mId: storage("myself").meetingId, title });
+      const { createSak: { sak } } = res;
+      Object.assign(storage("sak"), sak);
+      console.log("XXX resnewsak", sak);
+      this.dispatchEvent(new CustomEvent("newsak", { detail: sak }));
+      this.close();
+      onFinish();
+    } catch(e) {
+      console.log("XXX e got err", e);
+    }
   },
   render() {
     this.html`
@@ -145,8 +171,12 @@ const NewSakDialog = {
 
 define("RoiManage", {
   includes: { SakTitle, SakFinishButton, SakSpeakerAdderInput, SakSpeakerList, NewSakDialog },
+  mappedAttributes: ["sak"],
   oninit() {
     this.newSakDialog = ref();
+    if (!this.sak) {
+      this.fetchLatestSak();
+    }
   },
   style(self, title, finish, adder, list) {
     return `
@@ -166,17 +196,28 @@ define("RoiManage", {
     ${list} { grid-area: list; }
     `;
   },
-  onclick(e) {
+  onclick() {
     this.newSakDialog.current.showModal();
   },
+  onsak() { this.render() },
+  onnewsak({ detail: sak }) {
+    console.log("ONnewsak", sak);
+    this.sak = sak;
+    this.render();
+  },
+  async fetchLatestSak() {
+    const res = await gql(gqlLatestSak);
+    this.sak = res.latestSak;
+  },
   render() {
+    console.log("sak is", this.sak);
     this.html`
-      <SakTitle />
+      <SakTitle sak=${this.sak} />
       <SakFinishButton onclick=${this} />
       <SakSpeakerAdderInput />
 
       <SakSpeakerList />
-      <NewSakDialog ref=${this.newSakDialog} />
+      <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
     `;
   }
 });

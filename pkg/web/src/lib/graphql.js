@@ -14,7 +14,6 @@ export async function gql(query, variables) {
     mode: "cors"
   });
 
-  console.log("res", res);
   if (!res.ok) {
     const e = new Error(`${res.status}: ${res.statusText}`);
     e.extra = {
@@ -29,6 +28,10 @@ export async function gql(query, variables) {
     console.error(res, e.extra);
     throw e;
   }
-  const { data } = await res.json();
+  const { data, errors } = await res.json();
+  if (errors) {
+    const name = /[^{(]+/.exec(query)?.[0];
+    errors.forEach(e => console.error(name + ":", e.message));
+  }
   return data;
 }
