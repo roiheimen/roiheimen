@@ -36,7 +36,6 @@ const SakTitle = {
   },
   onsak() { this.render() },
   render() {
-    console.log("-- title sak is", this.sak);
     this.html`<input value=${this.sak?.title} placeholder="Ingenting">`;
   },
 }
@@ -106,6 +105,7 @@ const SakSpeakerList = {
 
 const NewSakDialog = {
   extends: "dialog",
+  mappedAttributes: ["err"],
   oninit() {
     this.addEventListener("submit", this);
   },
@@ -136,26 +136,24 @@ const NewSakDialog = {
     }
     `;
   },
+  onerr() { this.render() },
   onsubmit(e) {
-    console.log("XXX subm", e);
     const form = new FormData(e.target);
     const title = form.get("title");
-    console.log("XXX title", title);
     this.newSak(title, () => { e.target.title.value = "" });
     e.preventDefault();
   },
   async newSak(title, onFinish) {
     try {
-      console.log(storage("myself"), "msylf")
       const res = await gql(gqlNewSak, { mId: storage("myself").meetingId, title });
       const { createSak: { sak } } = res;
       Object.assign(storage("sak"), sak);
-      console.log("XXX resnewsak", sak);
       this.dispatchEvent(new CustomEvent("newsak", { detail: sak }));
       this.close();
       onFinish();
     } catch(e) {
-      console.log("XXX e got err", e);
+      console.error("new sak error", e);
+      this.err = ''+e;
     }
   },
   render() {
@@ -165,6 +163,7 @@ const NewSakDialog = {
         <label>Tittel <input name=title placeholder="" required></label>
         <input type=submit value="Legg til og bytt">
       </form>
+      ${this.err && html`<p style=color:red>${this.err}</p>`}
     `;
   }
 };
@@ -201,7 +200,6 @@ define("RoiManage", {
   },
   onsak() { this.render() },
   onnewsak({ detail: sak }) {
-    console.log("ONnewsak", sak);
     this.sak = sak;
     this.render();
   },
@@ -210,7 +208,6 @@ define("RoiManage", {
     this.sak = res.latestSak;
   },
   render() {
-    console.log("sak is", this.sak);
     this.html`
       <SakTitle sak=${this.sak} />
       <SakFinishButton onclick=${this} />

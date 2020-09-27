@@ -3,9 +3,6 @@
 <script type=module src=/comp/layout.js></script>
 <script type=module src=/comp/manage.js></script>
 <script type=module src=/lib/polyfills.js></script>
-<script>
-window.HTMLDialogElement = HTMLDivElement;
-</script>
 <body>
   <roi-layout>
     <roi-manage />
@@ -15,7 +12,4 @@ window.HTMLDialogElement = HTMLDivElement;
 <script type=module>
   import storage from "../lib/storage.js";
   if (!storage("myself").admin) location.assign("/login.html");
-
-  window.addEventListener("apprefresh", () => {
-  }, { once: true });
 </script>
