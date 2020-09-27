@@ -2,6 +2,7 @@ const express = require("express");
 const { postgraphile } = require("postgraphile");
 const pg_simplify_inflector = require("@graphile-contrib/pg-simplify-inflector");
 
+
 const app = express();
 
 const DEV = process.env.NODE_ENV !== "production";
@@ -27,7 +28,11 @@ app.use(
     graphiql: DEV,
     watchPg: DEV,
 
-    appendPlugins: [pg_simplify_inflector],
+    appendPlugins: [
+      pg_simplify_inflector,
+      require("@graphile/subscriptions-lds").default,
+    ],
+    live: true,
     dynamicJson: true,
     enableQueryBatching: true,
     ignoreIndexes: false,

@@ -19,6 +19,37 @@ const gqlLatestSak = `
       title
     }
   }`;
+const gqlCreateSpeech = `
+  mutation CreateSpeech($speakerId: Int!, $type: SpeechType!) {
+    createSpeech(input: {speech: {speakerId: $speakerId, type: $type}}) {
+      speech {
+        id
+        speakerId
+      }
+    }
+  }`;
+const gqlFetchPeople = `
+query FetchPeople {
+  people {
+    nodes {
+      id
+      name
+      num
+      admin
+      nodeId
+    }
+  }
+}`;
+
+async function fetchPeople() {
+  const res = await gql(gqlFetchPeople);
+  const {
+    people: { nodes }
+  } = res;
+  const byId = Object.fromEntries(nodes.map(p => [p.id, p]));
+  storage("people").byId = byId;
+  return byId;
+}
 
 const SakTitle = {
   mappedAttributes: ["sak"],
@@ -34,11 +65,13 @@ const SakTitle = {
     }
     `;
   },
-  onsak() { this.render() },
+  onsak() {
+    this.render();
+  },
   render() {
     this.html`<input value=${this.sak?.title} placeholder="Ingenting">`;
-  },
-}
+  }
+};
 const SakFinishButton = {
   style(self) {
     return `
@@ -50,9 +83,13 @@ const SakFinishButton = {
   },
   render() {
     this.html`<button>Neste sak</button>`;
-  },
-}
+  }
+};
 const SakSpeakerAdderInput = {
+  mappedAttributes: ["people", "err"],
+  oninit() {
+    this.addEventListener("submit", this);
+  },
   style(self) {
     return `
     ${self} form {
@@ -65,17 +102,75 @@ const SakSpeakerAdderInput = {
     ${self} input {
       padding: 3px;
     }
+    ${self} .err {
+      position: absolute;
+      color: white;
+      background-color: red;
+      pointer-events: none;
+      font-size: 20px;
+      margin: 0;
+      right: 20px;
+      padding: 5px 28px;
+    }
     `;
   },
+  onpeople() {
+    this.personIdByNum = new Map(
+      Object.values(this.people).map(p => [p.num, p.id])
+    );
+  },
+  onerr() {
+    this.render();
+  },
+  onsubmit(e) {
+    e.preventDefault();
+    const adder = e.target.adder.value.trim();
+    const [type_, num] = /^(r|i|)(\d+)$/.exec(adder)?.slice(1, 3) || [];
+    const type = { r: "REPLIKK", i: "INNLEGG" }[type_ || "i"];
+    const personId = this.personIdByNum.get(+num);
+    if (!personId) {
+      this.err = `Fann ingen person med nummer ${+num}`;
+      return;
+    }
+    this.newSpeech(type, personId, () => {
+      e.target.adder.value = "";
+    });
+  },
+  async newSpeech(type, speakerId, onFinish) {
+    try {
+      const res = await gql(gqlCreateSpeech, {
+        speakerId,
+        type
+      });
+      const {
+        createSpeech: { speech }
+      } = res;
+      onFinish();
+    } catch (e) {
+      console.error("new sak error", e);
+      this.err = "" + e;
+    }
+  },
   render() {
+    function onErrRef(elm) {
+      elm.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: 2000,
+        fill: "both",
+        delay: 2000
+      });
+    }
     this.html`
+    ${this.err &&
+      html`
+        <p ref=${onErrRef} class="err">${this.err}</p>
+      `}
     <form>
-      <input name=adder placeholder="12 for innlegg, r12 for replikk">
+      <input name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off>
       <input type=submit value="Legg til">
     </form>
     `;
-  },
-}
+  }
+};
 const SakSpeakerList = {
   mappedAttributes: ["speakers"],
   style(self) {
@@ -100,8 +195,8 @@ const SakSpeakerList = {
       )}
       </table>
       `;
-  },
-}
+  }
+};
 
 const NewSakDialog = {
   extends: "dialog",
@@ -136,24 +231,32 @@ const NewSakDialog = {
     }
     `;
   },
-  onerr() { this.render() },
+  onerr() {
+    this.render();
+  },
   onsubmit(e) {
-    const form = new FormData(e.target);
-    const title = form.get("title");
-    this.newSak(title, () => { e.target.title.value = "" });
+    const title = e.target.title.value;
+    this.newSak(title, () => {
+      e.target.title.value = "";
+    });
     e.preventDefault();
   },
   async newSak(title, onFinish) {
     try {
-      const res = await gql(gqlNewSak, { mId: storage("myself").meetingId, title });
-      const { createSak: { sak } } = res;
+      const res = await gql(gqlNewSak, {
+        mId: storage("myself").meetingId,
+        title
+      });
+      const {
+        createSak: { sak }
+      } = res;
       Object.assign(storage("sak"), sak);
       this.dispatchEvent(new CustomEvent("newsak", { detail: sak }));
       this.close();
       onFinish();
-    } catch(e) {
+    } catch (e) {
       console.error("new sak error", e);
-      this.err = ''+e;
+      this.err = "" + e;
     }
   },
   render() {
@@ -163,18 +266,33 @@ const NewSakDialog = {
         <label>Tittel <input name=title placeholder="" required></label>
         <input type=submit value="Legg til og bytt">
       </form>
-      ${this.err && html`<p style=color:red>${this.err}</p>`}
+      ${this.err &&
+        html`
+          <p style="color:red">${this.err}</p>
+        `}
     `;
   }
 };
 
 define("RoiManage", {
-  includes: { SakTitle, SakFinishButton, SakSpeakerAdderInput, SakSpeakerList, NewSakDialog },
-  mappedAttributes: ["sak"],
+  includes: {
+    SakTitle,
+    SakFinishButton,
+    SakSpeakerAdderInput,
+    SakSpeakerList,
+    NewSakDialog
+  },
+  mappedAttributes: ["sak", "people"],
   oninit() {
     this.newSakDialog = ref();
     if (!this.sak) {
       this.fetchLatestSak();
+    }
+    if (!this.people) {
+      this.people = [];
+      fetchPeople().then(people => {
+        this.people = people;
+      });
     }
   },
   style(self, title, finish, adder, list) {
@@ -195,10 +313,15 @@ define("RoiManage", {
     ${list} { grid-area: list; }
     `;
   },
+  onpeople() {
+    this.render();
+  },
+  onsak() {
+    this.render();
+  },
   onclick() {
     this.newSakDialog.current.showModal();
   },
-  onsak() { this.render() },
   onnewsak({ detail: sak }) {
     this.sak = sak;
     this.render();
@@ -211,7 +334,7 @@ define("RoiManage", {
     this.html`
       <SakTitle sak=${this.sak} />
       <SakFinishButton onclick=${this} />
-      <SakSpeakerAdderInput />
+      <SakSpeakerAdderInput people=${this.people} />
 
       <SakSpeakerList />
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />

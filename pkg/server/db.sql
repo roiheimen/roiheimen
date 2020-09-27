@@ -250,6 +250,15 @@ create policy update_speech on roiheimen.speech for update to roiheimen_person
   using (speaker_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer);
 create policy delete_speech on roiheimen.speech for delete to roiheimen_person
   using (speaker_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer);
+create policy all_admin_speech on roiheimen.speech for all to roiheimen_person
+  using (
+    coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
+    and exists (
+      select 1 from roiheimen.person
+      where id = speaker_id
+      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+    )
+  );
 
 -- Triggers
 
