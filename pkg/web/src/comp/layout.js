@@ -10,11 +10,13 @@ define("RoiLayout", {
   },
   style(self) {
     return `
+    ${self} { display: block }
     body {
       background-color: #eeefee;
       font-family: "sans-serif";
       display: grid;
       color: #333;
+      margin: 0;
     }
     input, textarea { box-sizing: border-box }
     h1, h2, h3 {

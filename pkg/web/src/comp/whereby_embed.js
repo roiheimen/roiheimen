@@ -4,7 +4,8 @@ define("WherebyEmbed", {
   observedAttributes: ["room", "subdomain", "displayName"],
   style(self) {
     return `
-    ${self} iframe {
+    ${self}, ${self} iframe {
+      display: block;
       border: none;
       height: 100%;
       width: 100%;

@@ -1,5 +1,6 @@
 import { define, html } from "/web_modules/heresy.js";
 
+import "../db/state.js";
 import storage from "../lib/storage.js";
 
 const YouTubeIframe = {
@@ -23,12 +24,16 @@ const YouTubeIframe = {
 const WherebyEmbed = {
   mappedAttributes: ["creds"],
   style(self) {
-    return ` ${self} {} `;
+    return `
+    ${self} { 
+      display: block;
+      height: 100%;
+    }`;
   },
   render() {
     // You can set this to override the room or even full URL,
     // to use a mock website or local whereby if you have
-    const room = localStorage.debug_room || "/room";
+    const room = localStorage.debug_room || "/test";
     this.html`
       <whereby-embed
         subdomain="bitraf"
@@ -47,21 +52,19 @@ define("RoiVideo", {
     return `
     ${self} { 
       background: #767d6f;
-      grid-row: 1 / 3;
+      display: block;
       grid-column: 2 / 3;
+      grid-row: 1 / 3;
+      height: 100%;
+      min-height: 400px;
     } `;
   },
-  render({ useDb, useEffect }) {
+  render({ useStore, useEffect }) {
     const youtubeId = "NMre6IAAAiU";
-    const [state, dispatch] = useDb();
-    console.log("xxx state is", state);
-    useEffect(() => {
-      const id = setTimeout(() => {
-        console.log("timeout");
-        dispatch({ type: "set", payload: 5 });
-      }, 2000);
-      return () => clearTimeout(id);
-    }, []);
+    const store = useStore();
+    console.log("xxx state is", store.state);
+    const state = store.state;
+
     if (state.innleggScheduled) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else if (state.youtube) {
@@ -69,8 +72,7 @@ define("RoiVideo", {
     } else if (state.innleggFetching) {
       this.html`Waiting...`;
     } else {
-      this.html`<button .onclick=${() =>
-        dispatch({ type: "raise_hand" })}>Raise</button>`;
+      this.html`<button .onclick=${() => store.doReqInnlegg()}>Raise</button>`;
     }
   }
 });

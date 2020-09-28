@@ -1,6 +1,5 @@
 import { define, html, createContext } from "/web_modules/heresy.js";
 
-import "../db/state.js";
 import storage from "../lib/storage.js";
 
 import "./footer.js";
