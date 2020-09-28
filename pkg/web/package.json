@@ -9,10 +9,13 @@
     "installOptions": {
       "dest": "src/web_modules"
     },
-    "dedupe": ["heresy"]
+    "dedupe": [
+      "heresy"
+    ]
   },
   "dependencies": {
-    "heresy": "^0.26.1"
+    "heresy": "^0.26.1",
+    "redux-bundler": "^27.0.2"
   },
   "devDependencies": {
     "es-dev-server": "^1.45.2",

@@ -1,50 +1,112 @@
 import { defineHook } from "/web_modules/heresy.js";
+import { composeBundles } from "/web_modules/redux-bundler.js";
 
-const initialState = {
-  counter: 0
+import { gql } from "../lib/graphql.js";
+
+const myself = {
+  name: "myself",
+  init(store) {
+    setTimeout(() => store.doMyselfFetch(), 0);
+  },
+  reducer: (state = true, { type, payload }) => {
+    if (type == "MYSELF_FETCH_FINISHED") {
+      return payload;
+    }
+    if (type == "MYSELF_FETCH_FAILED") {
+      return false;
+    }
+    return state;
+  },
+
+  doMyselfFetch: () => async ({ dispatch }) => {
+    dispatch({ type: "MYSELF_FETCH_STARTED" });
+    const gqlMyself = `
+      query Myself {
+        currentPerson {
+          name
+          id
+          num
+          meetingId
+          admin
+        }
+      }`;
+    try {
+      const { currentPerson } = await gql(gqlMyself);
+      dispatch({ type: "MYSELF_FETCH_FINISHED", payload: currentPerson });
+    } catch (error) {
+      dispatch({ type: "MYSELF_FETCH_FAILED", error });
+    }
+  },
+
+  selectMyself: state => state.myself,
 };
 
-const reducer = (state, { type, payload }) => {
-  console.log("happening", type, payload);
-  if (type == "up") {
-    return { ...state, counter: state.counter + 1 };
-  }
-  if (type == "set") {
-    return { ...state, counter: payload };
-  }
-  if (type == "INNLEGG_REQ_STARTED") {
-    return { ...state, innleggFetching: true };
-  }
-  if (type == "INNLEGG_REQ_FINISHED") {
-    return { ...state, innleggFetching: false, innleggScheduled: true };
-  }
-  if (type == "WHEREBY_LEFT") {
-    return { ...state, innleggScheduled: true };
-  }
-  return state;
-};
+const innlegg = {
+  name: "innlegg",
+  reducer: (
+    state = { fetching: false, scheduled: false },
+    { type, payload }
+  ) => {
+    if (type == "INNLEGG_REQ_STARTED") {
+      return { ...state, fetching: true };
+    }
+    if (type == "INNLEGG_REQ_FINISHED") {
+      return { ...state, fetching: false, current: payload };
+    }
+    return state;
+  },
 
-const store = {
   doReqInnlegg: () => ({ dispatch }) => {
-    dispatch({ type: "INNLEGG_REQ_STARTED" });
     setTimeout(() => dispatch({ type: "INNLEGG_REQ_FINISHED" }), 2048);
   },
+  doReqInnlegg: (type="INNLEGG", speakerId) => async ({ dispatch, store }) => {
+    dispatch({ type: "INNLEGG_REQ_STARTED" });
+    speakerId = speakerId ?? store.selectMyself().id;
+    const gqlCreateSpeech = `
+      mutation CreateSpeech($speakerId: Int!, $type: SpeechType!) {
+        createSpeech(input: {speech: {speakerId: $speakerId, type: $type}}) {
+          speech {
+            id
+            speakerId
+          }
+        }
+      }`;
+    try {
+      const res = await gql(gqlCreateSpeech, {
+        speakerId,
+        type
+      });
+      const {
+        createSpeech: { speech }
+      } = res;
+      dispatch({ type: "INNLEGG_REQ_FINISHED", payload: speech });
+    } catch (error) {
+      dispatch({ type: "INNLEGG_REQ_FAILED", error });
+    }
+  },
+
+
+  selectInnlegg: state => state.innlegg.current,
+  selectInnleggFetching: state => state.innlegg.fetching,
+  selectInnleggScheduled: state => !!state.innlegg.current,
 };
 
-let state = initialState;
-const dispatch = action => { state = reducer(state, action); };
-dispatch({ type: "START" });
+const store = composeBundles(myself, innlegg)();
+window.store = store;
 
-defineHook("useStore", ({ useState }) => () => {
-  const [_, refresh] = useState(0);
-  const boundStore = Object.keys(store).reduce((o, v) => {
-    o[v] = (...args) => {
-      const res = store[v](args);
-      if (typeof res === "function") return res({ state, dispatch, store: boundStore });
-      return res;
-    }
-    return o;
-  }, {});
-  boundStore.state = state;
-  return boundStore;
+function addSelect(sel) {
+  return sel.map(s => "select" + s[0].toUpperCase() + s.slice(1));
+}
+
+defineHook("useSel", ({ useMemo, useState, useEffect }) => (...sel) => {
+  const fullSel = addSelect(sel);
+  const [state, setState] = useState(() => store.select(fullSel));
+  useEffect(() => {
+    return store.subscribeToSelectors(fullSel, changes =>
+      setState(currentState => ({ ...state, ...changes }))
+    );
+  });
+  return state;
 });
+
+defineHook("useStore", () => () => store);

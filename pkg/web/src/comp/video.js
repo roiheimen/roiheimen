@@ -59,20 +59,19 @@ define("RoiVideo", {
       min-height: 400px;
     } `;
   },
-  render({ useStore, useEffect }) {
+  render({ useSel, useStore, useEffect }) {
     const youtubeId = "NMre6IAAAiU";
-    const store = useStore();
-    console.log("xxx state is", store.state);
-    const state = store.state;
+    const { innleggFetching, innleggScheduled } = useSel(
+      "innleggFetching",
+      "innleggScheduled"
+    );
 
-    if (state.innleggScheduled) {
-      this.html`<WherebyEmbed .creds=${this.creds} />`;
-    } else if (state.youtube) {
-      this.html`<YouTubeIframe .id=${youtubeId} />`;
-    } else if (state.innleggFetching) {
+    if (innleggFetching) {
       this.html`Waiting...`;
+    } else if (innleggScheduled) {
+      this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
-      this.html`<button .onclick=${() => store.doReqInnlegg()}>Raise</button>`;
+      this.html`<YouTubeIframe .id=${youtubeId} />`;
     }
   }
 });

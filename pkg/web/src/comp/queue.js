@@ -14,17 +14,22 @@ define("RoiQueue", {
     ${self} { 
       display: block;
       min-height: 400px;
+      height: 100%;
       background: #767d6f;
       grid-row: 1 / 3;
       grid-column: 2 / 3;
     } `;
   },
-  render({ useStore, useEffect }) {
+  render({ useStore, useSel, useEffect }) {
     const store = useStore();
+    const { innleggFetching, innleggScheduled } = useSel(
+      "innleggFetching",
+      "innleggScheduled"
+    );
     this.html`
       <roi-video />
-      <button .onclick=${() => store.doReqInnlegg()}>Raise</button>
-      hei
+      <button disabled=${innleggFetching || innleggScheduled} .onclick=${() =>
+      store.doReqInnlegg()}>Innlegg</button>
     `;
-  },
+  }
 });
