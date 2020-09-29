@@ -63,7 +63,7 @@ define("RoiLogin", {
   onerr() { this.render() },
   async login(num, mId, password) {
     try {
-      const res = await gql(gqlLogin, { num, mId, password });
+      const res = await gql(gqlLogin, { num, mId, password }, { nocreds: true });
       const { jwtToken } = res.authenticate;
       if (!jwtToken) {
         this.err = ["Feil nummer/passord"];

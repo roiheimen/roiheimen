@@ -38,7 +38,50 @@ const myself = {
     }
   },
 
-  selectMyself: state => state.myself,
+  selectMyself: state => state.myself
+};
+
+const sak = {
+  name: "sak",
+  reducer: (state = true, { type, payload }) => {
+    if (type == "SAK_FETCH_FINISHED") {
+      return payload;
+    }
+    if (type == "SAK_FETCH_FAILED") {
+      return false;
+    }
+    return state;
+  },
+
+  doSakFetch: () => async ({ dispatch }) => {
+    dispatch({ type: "SAK_FETCH_STARTED" });
+    const query = `
+      query SakAndSpeeches {
+        latestSak {
+          id
+          title
+          speeches {
+            nodes {
+              speaker {
+                name
+                num
+              }
+              type
+            }
+          }
+        }
+      }`;
+    try {
+      const { latestSak } = await gql(query);
+      console.log("XX", latestSak);
+      const sak = { ...latestSak, speeches: latestSak.speeches.nodes };
+      dispatch({ type: "SAK_FETCH_FINISHED", payload: sak });
+    } catch (error) {
+      dispatch({ type: "SAK_FETCH_FAILED", error });
+    }
+  },
+
+  selectSak: state => state.sak
 };
 
 const innlegg = {
@@ -56,23 +99,27 @@ const innlegg = {
     return state;
   },
 
-  doReqInnlegg: () => ({ dispatch }) => {
-    setTimeout(() => dispatch({ type: "INNLEGG_REQ_FINISHED" }), 2048);
-  },
-  doReqInnlegg: (type="INNLEGG", speakerId) => async ({ dispatch, store }) => {
+  doReqInnlegg: (type = "INNLEGG", speakerId, sakId) => async ({
+    dispatch,
+    store
+  }) => {
     dispatch({ type: "INNLEGG_REQ_STARTED" });
     speakerId = speakerId ?? store.selectMyself().id;
+    sakId = sakId ?? store.selectSak().id;
     const gqlCreateSpeech = `
-      mutation CreateSpeech($speakerId: Int!, $type: SpeechType!) {
-        createSpeech(input: {speech: {speakerId: $speakerId, type: $type}}) {
+      mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!) {
+        createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId}}) {
           speech {
             id
             speakerId
+            sakId
+            type
           }
         }
       }`;
     try {
       const res = await gql(gqlCreateSpeech, {
+        sakId,
         speakerId,
         type
       });
@@ -85,13 +132,26 @@ const innlegg = {
     }
   },
 
-
   selectInnlegg: state => state.innlegg.current,
   selectInnleggFetching: state => state.innlegg.fetching,
-  selectInnleggScheduled: state => !!state.innlegg.current,
+  selectInnleggScheduled: state => !!state.innlegg.current
 };
 
-const store = composeBundles(myself, innlegg)();
+const errors = {
+  name: "errors",
+  getMiddleware: () => store => next => action => {
+    const result = next(action);
+    if (
+      action.type.endsWith("_FAILED") &&
+      action.error?.extra?.body?.errors?.[0]?.message == "jwt expired"
+    ) {
+      location.assign("/login.html");
+    }
+    return result;
+  }
+};
+
+const store = composeBundles(myself, innlegg, sak, errors)();
 window.store = store;
 
 function addSelect(sel) {

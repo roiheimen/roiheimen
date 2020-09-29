@@ -78,12 +78,14 @@ create type roiheimen.speech_type as enum (
 create table roiheimen.speech (
   id               serial primary key,
   speaker_id       integer not null references roiheimen.person(id) on delete cascade,
+  sak_id           integer not null references roiheimen.sak(id) on delete cascade,
   type             roiheimen.speech_type not null,
   created_at       timestamp default now(),
   updated_at       timestamp default now()
 );
-comment on table roiheimen.speech is 'A forum speech written by a user.';
+comment on table roiheimen.speech is 'A speech done by a person on a sak.';
 create index on roiheimen.speech(speaker_id);
+create index on roiheimen.speech(sak_id);
 
 -- Functions
 
@@ -177,6 +179,15 @@ create function roiheimen.register_people(
 $$ language plpgsql volatile strict set search_path from current;
 
 create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $$
+  select *
+    from roiheimen.sak
+    where finished_at is null
+    and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+    order by created_at desc
+    limit 1
+$$ language sql stable;
+
+create function roiheimen.current_speeches(meeting_id text, sak_id int) returns roiheimen.speech as $$
   select *
     from roiheimen.sak
     where finished_at is null

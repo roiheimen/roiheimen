@@ -6,7 +6,11 @@ import storage from "../lib/storage.js";
 const YouTubeIframe = {
   mappedAttributes: ["id"],
   style(self) {
-    return ` ${self} {} `;
+    return `
+    ${self} iframe {
+      width: 100%;
+      height: 100%;
+    }`;
   },
   render() {
     this.html`
@@ -53,10 +57,7 @@ define("RoiVideo", {
     ${self} { 
       background: #767d6f;
       display: block;
-      grid-column: 2 / 3;
-      grid-row: 1 / 3;
-      height: 100%;
-      min-height: 400px;
+      height: 60vh;
     } `;
   },
   render({ useSel, useStore, useEffect }) {

@@ -5,7 +5,64 @@ import storage from "../lib/storage.js";
 
 import "./video.js";
 
+const RoiQueueDrawer = {
+  mappedAttributes: ["id"],
+  extends: "aside",
+  style(self) {
+    return `
+    ${self} {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      min-height: 40vh;
+    }
+    ${self} button {
+      font-size: 20px;
+      margin: 5px 5px;
+      padding: 10px;
+    }
+    ${self} .buttons {
+      background: #333;
+      display: flex;
+      flex-direction: column;
+    }
+    ${self} .queue {
+      padding: 5px;
+    }
+    `;
+  },
+  render({ useStore, useSel, useEffect }) {
+    const store = useStore();
+    useEffect(() => {
+      console.log("fetch sak");
+      store.doSakFetch();
+    }, []);
+    const { innleggFetching, innleggScheduled, sak } = useSel(
+      "innleggFetching",
+      "innleggScheduled",
+      "sak",
+    );
+    if (!sak?.speeches) {
+      return this.html`Lastar...`;
+    }
+    this.html`
+      <div class=buttons>
+        <button
+          disabled=${innleggFetching || innleggScheduled}
+          .onclick=${() => store.doReqInnlegg()}
+          >Innlegg</button>
+        </div>
+      <div class=queue>
+        <h1>${sak.title}</h1>
+        <table>
+          ${sak.speeches.map(sp => html`<tr><td>${sp.speaker.num} <td>${sp.speaker.name}`)}
+        </table>
+      </div>
+    `;
+  }
+};
+
 define("RoiQueue", {
+  includes: { RoiQueueDrawer },
   oninit() {
     this.creds = storage("creds");
   },
@@ -20,16 +77,10 @@ define("RoiQueue", {
       grid-column: 2 / 3;
     } `;
   },
-  render({ useStore, useSel, useEffect }) {
-    const store = useStore();
-    const { innleggFetching, innleggScheduled } = useSel(
-      "innleggFetching",
-      "innleggScheduled"
-    );
+  render() {
     this.html`
       <roi-video />
-      <button disabled=${innleggFetching || innleggScheduled} .onclick=${() =>
-      store.doReqInnlegg()}>Innlegg</button>
+      <RoiQueueDrawer />
     `;
   }
 });
