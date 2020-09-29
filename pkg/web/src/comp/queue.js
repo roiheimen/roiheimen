@@ -33,7 +33,6 @@ const RoiQueueDrawer = {
   render({ useStore, useSel, useEffect }) {
     const store = useStore();
     useEffect(() => {
-      console.log("fetch sak");
       store.doSakFetch();
     }, []);
     const { innleggFetching, innleggScheduled, sak } = useSel(
@@ -71,7 +70,6 @@ define("RoiQueue", {
     ${self} { 
       display: block;
       min-height: 400px;
-      height: 100%;
       background: #767d6f;
       grid-row: 1 / 3;
       grid-column: 2 / 3;

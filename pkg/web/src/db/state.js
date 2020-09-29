@@ -1,7 +1,7 @@
 import { defineHook } from "/web_modules/heresy.js";
 import { composeBundles } from "/web_modules/redux-bundler.js";
 
-import { gql } from "../lib/graphql.js";
+import { gql, live } from "../lib/graphql.js";
 
 const myself = {
   name: "myself",
@@ -56,7 +56,7 @@ const sak = {
   doSakFetch: () => async ({ dispatch }) => {
     dispatch({ type: "SAK_FETCH_STARTED" });
     const query = `
-      query SakAndSpeeches {
+      subscription SakAndSpeeches {
         latestSak {
           id
           title
@@ -72,10 +72,11 @@ const sak = {
         }
       }`;
     try {
-      const { latestSak } = await gql(query);
-      console.log("XX", latestSak);
-      const sak = { ...latestSak, speeches: latestSak.speeches.nodes };
-      dispatch({ type: "SAK_FETCH_FINISHED", payload: sak });
+      await live(query, ({ data }) => {
+        const { latestSak } = data;
+        const sak = { ...latestSak, speeches: latestSak.speeches.nodes };
+        dispatch({ type: "SAK_FETCH_FINISHED", payload: sak });
+      });
     } catch (error) {
       dispatch({ type: "SAK_FETCH_FAILED", error });
     }

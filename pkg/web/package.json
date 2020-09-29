@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "es-dev-server": "^1.45.2",
+    "koa-http2-proxy": "^0.0.3-2",
     "prettier": "^1.19.1",
     "snowpack": "^1.6.0"
   }

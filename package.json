@@ -1,0 +1,7 @@
+{
+  "name": "roiheimen",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "start": "(cd pkg/web; yarn start --ssl-cert=cert.crt --ssl-key=cert.key) & (cd pkg/server; yarn start)"
+  }
+}
