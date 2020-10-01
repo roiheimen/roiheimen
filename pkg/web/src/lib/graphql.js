@@ -58,6 +58,7 @@ export async function live(query, cb) {
         id: 1,
       });
     } else if (d.type == "data") {
+      printErrors("live", d.payload?.errors)
       cb(d.payload);
     } else if (d.type == "ka") {
       // pass

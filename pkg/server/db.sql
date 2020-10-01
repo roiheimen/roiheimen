@@ -52,6 +52,7 @@ create table roiheimen.person (
   name             text not null check (char_length(name) < 128),
   admin            boolean default false,
   meeting_id       text not null references roiheimen.meeting(id) on delete cascade,
+  room             text not null default '',
   created_at       timestamp default now(),
   updated_at       timestamp default now(),
   unique(num, meeting_id)
@@ -306,6 +307,7 @@ select roiheimen.register_people(
   ]::people_input[]
 );
 update roiheimen.person set admin = true where num = 1000 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/dev' where num = 1000 and meeting_id = 'nmlm12';
 
 
 COPY roiheimen.sak (id, title, meeting_id, created_at, updated_at, finished_at) FROM stdin;

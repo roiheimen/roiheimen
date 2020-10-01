@@ -28,6 +28,7 @@ const myself = {
           num
           meetingId
           admin
+          room
         }
       }`;
     try {
@@ -68,6 +69,7 @@ const sak = {
           speeches {
             nodes {
               speaker {
+                id
                 name
                 num
               }
@@ -142,7 +144,7 @@ const innlegg = {
     }
   },
   doSpeechPrev: () => async ({ dispatch, store }) => {
-    const { current, prev } = store.selectSpeechCurrentState();
+    const { current, prev } = store.selectSpeechState();
     const currentId = current?.id;
     const prevId = prev?.id;
     if (!current && !prev) {
@@ -179,8 +181,9 @@ const innlegg = {
     }
   },
   doSpeechNext: () => async ({ dispatch, store }) => {
-    const currentId = store.selectSpeechCurrent()?.id;
-    const nextId = store.selectSpeechNext()?.id;
+    const { current, next } = store.selectSpeechState();
+    const currentId = current?.id;
+    const nextId = next?.id;
     if (!currentId && !nextId) {
       console.warn("No speech to start or end");
       return;
@@ -231,8 +234,10 @@ const innlegg = {
   selectInnlegg: state => state.innlegg.current,
   selectInnleggFetching: state => state.innlegg.fetching,
   selectInnleggScheduled: state => !!state.innlegg.current,
-  selectSpeechCurrentState: createSelector("selectSak", sak => {
-    const speeches = sak?.speeches || [];
+  selectSpeeches: createSelector("selectSak", sak => {
+    return sak?.speeches || [];
+  }),
+  selectSpeechState: createSelector("selectSpeeches", speeches => {
     const state = {
       prev: null,
       current: null,
@@ -253,12 +258,9 @@ const innlegg = {
     }
     return state;
   }),
-  selectSpeechCurrent: createSelector("selectSak", sak => {
-    return sak?.speeches.find(s => s.startedAt && !s.endedAt);
+  selectSpeechesUpcomingByMe: createSelector("selectMyself", "selectSpeeches", (myself, speeches) => {
+    return speeches.filter(speech => !speech.startedAt && speech.speaker.id == myself.id);
   }),
-  selectSpeechNext: createSelector("selectSak", sak => {
-    return sak?.speeches.find(s => !s.startedAt);
-  })
 };
 
 const errors = {
