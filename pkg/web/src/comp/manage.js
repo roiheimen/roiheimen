@@ -3,6 +3,8 @@ import { define, html, ref } from "/web_modules/heresy.js";
 import storage from "../lib/storage.js";
 import { gql } from "../lib/graphql.js";
 
+import "./speechesList.js";
+
 const gqlNewSak = `
   mutation NewSak($mId: String!, $title: String!) {
     createSak(input: {sak: {title: $title, meetingId: $mId}}) {
@@ -89,6 +91,7 @@ const SakSpeakerAdderInput = {
   mappedAttributes: ["people", "err"],
   oninit() {
     this.addEventListener("submit", this);
+    this.adder = ref();
   },
   style(self) {
     return `
@@ -125,6 +128,11 @@ const SakSpeakerAdderInput = {
   onsubmit(e) {
     e.preventDefault();
     const adder = e.target.adder.value.trim();
+    if (!adder) {
+      // do the enter thing
+      this.store.doSpeechNext();
+      return;
+    }
     const [type_, num] = /^(r|i|)(\d+)$/.exec(adder)?.slice(1, 3) || [];
     const type = { r: "REPLIKK", i: "INNLEGG" }[type_ || "i"];
     const personId = this.personIdByNum.get(+num);
@@ -132,9 +140,16 @@ const SakSpeakerAdderInput = {
       this.err = `Fann ingen person med nummer ${+num}`;
       return;
     }
-    this.newSpeech(type, personId, () => {
-      e.target.adder.value = "";
-    });
+    this.store.doReqInnlegg(type, personId);
+  },
+  onkeydown(e) {
+    const { key } = e;
+    if (key == "Backspace") {
+      if (!this.adder.current.value) {
+        store.doSpeechPrev();
+        return;
+      }
+    }
   },
   async newSpeech(type, speakerId, onFinish) {
     try {
@@ -147,11 +162,11 @@ const SakSpeakerAdderInput = {
       } = res;
       onFinish();
     } catch (e) {
-      console.error("new sak error", e);
+      console.error("new speech error", e);
       this.err = "" + e;
     }
   },
-  render() {
+  render({ useStore, useSel, useEffect, useRef }) {
     function onErrRef(elm) {
       elm.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 2000,
@@ -159,42 +174,23 @@ const SakSpeakerAdderInput = {
         delay: 2000
       });
     }
+    const { innleggFetching } = useSel("innleggFetching");
+    this.store = useStore();
+    useEffect(() => {
+      if (!innleggFetching && this.adder.current.value) {
+        this.adder.current.value = '';
+      }
+    }, [innleggFetching]);
     this.html`
     ${this.err &&
       html`
         <p ref=${onErrRef} class="err">${this.err}</p>
       `}
     <form>
-      <input name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off>
+      <input onkeydown=${this} name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off ref=${this.adder}>
       <input type=submit value="Legg til">
     </form>
     `;
-  }
-};
-const SakSpeakerList = {
-  mappedAttributes: ["speakers"],
-  style(self) {
-    return `
-    `;
-  },
-  render() {
-    if (!this.speakers?.length) {
-      return this.html`Ingen på lista`;
-    }
-    this.html`
-      <table>
-      <tr><th>Nummer <th>Namn </tr>
-      ${this.speakers.map(
-        user =>
-          html`
-            <tr>
-              <td>${user.num}</td>
-              <td>${user.name}</td>
-            </tr>
-          `
-      )}
-      </table>
-      `;
   }
 };
 
@@ -276,11 +272,10 @@ const NewSakDialog = {
 
 define("RoiManage", {
   includes: {
-    SakTitle,
+    NewSakDialog,
     SakFinishButton,
     SakSpeakerAdderInput,
-    SakSpeakerList,
-    NewSakDialog
+    SakTitle,
   },
   mappedAttributes: ["sak", "people"],
   oninit() {
@@ -295,7 +290,7 @@ define("RoiManage", {
       });
     }
   },
-  style(self, title, finish, adder, list) {
+  style(self, dialog, finish, adder, title) {
     return `
     ${self} {
       display: grid;
@@ -310,7 +305,7 @@ define("RoiManage", {
     ${title} { grid-area: title; }
     ${finish} { grid-area: finish; }
     ${adder} { grid-area: adder; }
-    ${list} { grid-area: list; }
+    roi-speeches-list { grid-area: list; }
     `;
   },
   onpeople() {
@@ -336,7 +331,7 @@ define("RoiManage", {
       <SakFinishButton onclick=${this} />
       <SakSpeakerAdderInput people=${this.people} />
 
-      <SakSpeakerList />
+      <roi-speeches-list />
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
     `;
   }

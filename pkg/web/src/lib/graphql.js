@@ -9,7 +9,7 @@ function printErrors(name, errors) {
 }
 
 export async function gql(query, variables, { nocreds } = {}) {
-  const res = await fetch(location.hostname.endsWith("localhost2") ? "/graphql" : "http://localhost:3000/graphql?person", {
+  const res = await fetch("/graphql", {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",

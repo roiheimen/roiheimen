@@ -80,12 +80,17 @@ create table roiheimen.speech (
   speaker_id       integer not null references roiheimen.person(id) on delete cascade,
   sak_id           integer not null references roiheimen.sak(id) on delete cascade,
   type             roiheimen.speech_type not null,
+  started_at       timestamp,
+  ended_at         timestamp,
   created_at       timestamp default now(),
   updated_at       timestamp default now()
 );
 comment on table roiheimen.speech is 'A speech done by a person on a sak.';
 create index on roiheimen.speech(speaker_id);
 create index on roiheimen.speech(sak_id);
+create index on roiheimen.speech(created_at);
+create index on roiheimen.speech(started_at);
+create index on roiheimen.speech(ended_at);
 
 -- Functions
 
@@ -187,14 +192,14 @@ create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $
     limit 1
 $$ language sql stable;
 
-create function roiheimen.current_speeches(meeting_id text, sak_id int) returns roiheimen.speech as $$
-  select *
-    from roiheimen.sak
-    where finished_at is null
-    and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
-    order by created_at desc
-    limit 1
-$$ language sql stable;
+-- create function roiheimen.current_speeches(meeting_id text, sak_id int) returns roiheimen.speech as $$
+--   select *
+--     from roiheimen.sak
+--     where finished_at is null
+--     and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+--     order by created_at desc
+--     limit 1
+-- $$ language sql stable;
 
 create function roiheimen.current_person() returns roiheimen.person as $$
   select *
@@ -301,3 +306,21 @@ select roiheimen.register_people(
   ]::people_input[]
 );
 update roiheimen.person set admin = true where num = 1000 and meeting_id = 'nmlm12';
+
+
+COPY roiheimen.sak (id, title, meeting_id, created_at, updated_at, finished_at) FROM stdin;
+1	Ting og tang	nmlm12	2020-09-29 20:54:07.189976+02	2020-09-29 20:54:07.189976+02	\N
+\.
+
+
+COPY roiheimen.speech (id, speaker_id, sak_id, type, created_at, updated_at) FROM stdin;
+4	3	1	innleiing	2020-09-29 20:54:18.20359	2020-09-29 20:54:18.20359
+5	3	1	innlegg	2020-09-29 21:28:21.216097	2020-09-29 21:28:21.216097
+6	3	1	innlegg	2020-09-30 00:21:31.327424	2020-09-30 00:21:31.327424
+7	3	1	innlegg	2020-09-30 00:33:39.560804	2020-09-30 00:33:39.560804
+8	3	1	innlegg	2020-09-30 00:38:43.920796	2020-09-30 00:38:43.920796
+\.
+
+SELECT pg_catalog.setval('roiheimen.person_id_seq', 3, true);
+SELECT pg_catalog.setval('roiheimen.sak_id_seq', 1, true);
+SELECT pg_catalog.setval('roiheimen.speech_id_seq', 8, true);

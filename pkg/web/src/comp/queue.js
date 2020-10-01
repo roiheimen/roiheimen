@@ -30,11 +30,8 @@ const RoiQueueDrawer = {
     }
     `;
   },
-  render({ useStore, useSel, useEffect }) {
+  render({ useStore, useSel }) {
     const store = useStore();
-    useEffect(() => {
-      store.doSakFetch();
-    }, []);
     const { innleggFetching, innleggScheduled, sak } = useSel(
       "innleggFetching",
       "innleggScheduled",

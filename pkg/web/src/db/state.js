@@ -1,5 +1,5 @@
 import { defineHook } from "/web_modules/heresy.js";
-import { composeBundles } from "/web_modules/redux-bundler.js";
+import { composeBundles, createSelector } from "/web_modules/redux-bundler.js";
 
 import { gql, live } from "../lib/graphql.js";
 
@@ -43,6 +43,11 @@ const myself = {
 
 const sak = {
   name: "sak",
+  init(store) {
+    setTimeout(() => {
+      store.doSakFetch();
+    }, 0);
+  },
   reducer: (state = true, { type, payload }) => {
     if (type == "SAK_FETCH_FINISHED") {
       return payload;
@@ -66,7 +71,11 @@ const sak = {
                 name
                 num
               }
+              id
               type
+              createdAt
+              startedAt
+              endedAt
             }
           }
         }
@@ -132,10 +141,124 @@ const innlegg = {
       dispatch({ type: "INNLEGG_REQ_FAILED", error });
     }
   },
+  doSpeechPrev: () => async ({ dispatch, store }) => {
+    const { current, prev } = store.selectSpeechCurrentState();
+    const currentId = current?.id;
+    const prevId = prev?.id;
+    if (!current && !prev) {
+      console.warn("No speech to start or end");
+      return;
+    }
+    dispatch({ type: "SPEECH_NEXT_STARTED", payload: { prevId, currentId } });
+    const query = `
+    mutation SpeechNext(${[
+      current && `$currentId: Int!`,
+      prev && `$prevId: Int!`
+    ]
+      .filter(Boolean)
+      .join(",")}) {
+      ${
+        currentId
+          ? `current: updateSpeech(input: {id: $currentId, patch: { startedAt: null }}) { clientMutationId }`
+          : ""
+      }
+      ${
+        prevId
+          ? `prev: updateSpeech(input: {id: $prevId, patch: { endedAt: null }}) { clientMutationId }`
+          : ""
+      }
+    }`;
+    try {
+      const res = await gql(query, { currentId, prevId });
+      dispatch({
+        type: "SPEECH_NEXT_FINISHED",
+        payload: { currentId, prevId }
+      });
+    } catch (error) {
+      dispatch({ type: "SPEECH_NEXT_FAILED", error });
+    }
+  },
+  doSpeechNext: () => async ({ dispatch, store }) => {
+    const currentId = store.selectSpeechCurrent()?.id;
+    const nextId = store.selectSpeechNext()?.id;
+    if (!currentId && !nextId) {
+      console.warn("No speech to start or end");
+      return;
+    }
+    dispatch({ type: "SPEECH_NEXT_STARTED", payload: { nextId, currentId } });
+    const query = `
+    mutation SpeechNext(${[
+      currentId && `$currentId: Int!`,
+      nextId && `$nextId: Int!`
+    ]
+      .filter(Boolean)
+      .join(",")}) {
+      ${
+        currentId
+          ? `current: updateSpeech(input: {id: $currentId, patch: { endedAt: "now()" }}) { clientMutationId }`
+          : ""
+      }
+      ${
+        nextId
+          ? `next: updateSpeech(input: {id: $nextId, patch: { startedAt: "now()" }}) { clientMutationId }`
+          : ""
+      }
+    }`;
+    try {
+      const res = await gql(query, { currentId, nextId });
+      dispatch({
+        type: "SPEECH_NEXT_FINISHED",
+        payload: { currentId, nextId }
+      });
+    } catch (error) {
+      dispatch({ type: "SPEECH_NEXT_FAILED", error });
+    }
+  },
+  doSpeechUpdate: (id, updates) => async ({ dispatch, store }) => {
+    dispatch({ type: "SPEECH_UPDATE_STARTED", payload: id });
+    try {
+      const query = `
+      mutation UpdateSpeech($updates: SpeechPatch!) {
+        updateSpeech(input: {id: $id, patch: $updates})
+      }`;
+      const res = await gql(query, { id, updates });
+      dispatch({ type: "SPEECH_UPDATE_FINISHED", payload: { id, updates } });
+    } catch (error) {
+      dispatch({ type: "SPEECH_UPDATE_FAILED", error });
+    }
+  },
 
   selectInnlegg: state => state.innlegg.current,
   selectInnleggFetching: state => state.innlegg.fetching,
-  selectInnleggScheduled: state => !!state.innlegg.current
+  selectInnleggScheduled: state => !!state.innlegg.current,
+  selectSpeechCurrentState: createSelector("selectSak", sak => {
+    const speeches = sak?.speeches || [];
+    const state = {
+      prev: null,
+      current: null,
+      next: null,
+    };
+    for (let i = 0; i < speeches.length; i++) {
+      const speech = speeches[i];
+      if (speech.endedAt) {
+        state.prev = speech;
+      }
+      if (!state.current && speech.startedAt && !speech.endedAt) {
+        state.current = speech;
+      }
+      if (!state.next && !speech.startedAt) {
+        state.next = speech;
+        break;
+      }
+    }
+    return state;
+  }),
+  selectSpeechCurrent: createSelector("selectSak", sak => {
+    return sak?.speeches.find(s => s.startedAt && !s.endedAt);
+  }),
+  selectSpeechNext: createSelector("selectSak", sak => {
+    return sak?.speeches.find(s => !s.startedAt);
+  })
 };
 
 const errors = {

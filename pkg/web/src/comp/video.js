@@ -72,7 +72,7 @@ define("RoiVideo", {
     } else if (innleggScheduled) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
-      this.html`<YouTubeIframe .id=${youtubeId} />`;
+      this.html`XYouTubeIframe .id=${youtubeId} />`;
     }
   }
 });
