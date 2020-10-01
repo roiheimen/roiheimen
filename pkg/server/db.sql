@@ -301,28 +301,39 @@ insert into roiheimen.meeting (id) values ('nmlm12');
 select roiheimen.register_people(
   'nmlm12',
   array[
-    (13, 'Odin', 'test', null),
-    (14, 'Test', 'yes', 'test@example.com'),
-    (1000, 'Admin (Odin)', 'test', null)
+    (10, 'Gro Morken Endresen', 'test', null),
+    (11, 'Astrid Marie Grov', 'test', null),
+    (12, 'Per Henning Arntsen', 'test', null),
+    (13, 'Ingar Arnøy', 'test', null),
+    (14, 'Erik Grov', 'test', null),
+    (15, 'Hege Lothe', 'test', null),
+    (16, 'Marit Aakre Tennø', 'test', null),
+    (1000, 'Odin Hørthe Omdal', 'test', null)
   ]::people_input[]
 );
 update roiheimen.person set admin = true where num = 1000 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/dev' where num = 1000 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r10' where num = 10 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r11' where num = 11 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r12' where num = 12 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r13' where num = 13 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r14' where num = 14 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r15' where num = 15 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r16' where num = 16 and meeting_id = 'nmlm12';
 
 
 COPY roiheimen.sak (id, title, meeting_id, created_at, updated_at, finished_at) FROM stdin;
-1	Ting og tang	nmlm12	2020-09-29 20:54:07.189976+02	2020-09-29 20:54:07.189976+02	\N
+1	Opning	nmlm12	2020-09-29 20:54:07.189976+02	2020-09-29 20:54:07.189976+02	\N
 \.
 
 
 COPY roiheimen.speech (id, speaker_id, sak_id, type, created_at, updated_at) FROM stdin;
-4	3	1	innleiing	2020-09-29 20:54:18.20359	2020-09-29 20:54:18.20359
+4	1	1	innleiing	2020-09-29 20:54:18.20359	2020-09-29 20:54:18.20359
 5	3	1	innlegg	2020-09-29 21:28:21.216097	2020-09-29 21:28:21.216097
-6	3	1	innlegg	2020-09-30 00:21:31.327424	2020-09-30 00:21:31.327424
-7	3	1	innlegg	2020-09-30 00:33:39.560804	2020-09-30 00:33:39.560804
-8	3	1	innlegg	2020-09-30 00:38:43.920796	2020-09-30 00:38:43.920796
+6	2	1	innlegg	2020-09-30 00:21:31.327424	2020-09-30 00:21:31.327424
+7	1	1	innlegg	2020-09-30 00:33:39.560804	2020-09-30 00:33:39.560804
+8	6	1	innlegg	2020-09-30 00:38:43.920796	2020-09-30 00:38:43.920796
 \.
 
-SELECT pg_catalog.setval('roiheimen.person_id_seq', 3, true);
+SELECT pg_catalog.setval('roiheimen.person_id_seq', 7, true);
 SELECT pg_catalog.setval('roiheimen.sak_id_seq', 1, true);
 SELECT pg_catalog.setval('roiheimen.speech_id_seq', 8, true);

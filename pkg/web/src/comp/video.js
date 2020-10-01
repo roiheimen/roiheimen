@@ -65,7 +65,10 @@ define("RoiVideo", {
   style(self) {
     return `
     ${self} { 
-      background: #767d6f;
+      background-image: url('https://www.nm.no/app/uploads/2020/03/framside_2.jpg'); /* #767d6f; */
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
       display: block;
       height: 60vh;
     } `;
@@ -80,7 +83,7 @@ define("RoiVideo", {
 
     if (innleggFetching) {
       this.html`Waiting...`;
-    } else if (speechesUpcomingByMe) {
+    } else if (speechesUpcomingByMe.length) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
       this.html`XYouTubeIframe .id=${youtubeId} />`;

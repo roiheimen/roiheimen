@@ -83,8 +83,14 @@ define("RoiLogin", {
       this.err = [''+e];
     }
   },
-  render() {
+  render({ useEffect, useStore }) {
+    useEffect(() => {
+      if (new URLSearchParams(location.search).has("logout")) {
+        useStore().doMyselfLogout();
+      }
+    }, []);
     this.html`
+    ${this.children}
     <form onsubmit=${this}>
       <label>Nummer</label>
       <input name=num inputmode=numeric pattern="[1-9][0-9]*" value=${this.creds.num} />

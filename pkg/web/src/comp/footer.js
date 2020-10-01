@@ -8,7 +8,7 @@ function isActive(path) {
 }
 
 define("RoiFooter<footer>", {
-  observedAttributes: ["dark"],
+  observedAttributes: ["nologout"],
   oninit() {
     this.creds = storage("creds");
     this.myself = storage("myself");
@@ -16,6 +16,7 @@ define("RoiFooter<footer>", {
   style(self) {
     return `
     ${self} {
+      margin-top: 28px;
       padding: 5px;
       text-align: center;
     }
@@ -34,34 +35,22 @@ define("RoiFooter<footer>", {
   },
 
   render() {
+    if (!this.myself?.admin) {
+      if (this.nologout) return this.html``;
+      return this.html`
+        <a href="/?logout"}>
+          logg ut
+        </a>
+      `;
+    }
     this.html`
-        <a href="index.html" class=${isActive("index") && "active"}>index</a>
-        | <a href="queueing.html" class=${isActive("queueing") &&
+        <a href="queue.html" class=${isActive("queue") &&
           "active"}>talekø</a>
-        ${this.myself?.admin &&
-          html`
-            |
-            <a href="manage.html" class=${isActive("manage") && "active"}
-              >manage</a
-            >
-            |
-            <a href="admin.html" class=${isActive("admin") && "active"}
-              >admin</a
-            >
-          `}
-        | ${
-          this.creds.num
-            ? html`
-                <a href="logout.html" class=${isActive("login") && "active"}
-                  >logg ut</a
-                >
-              `
-            : html`
-                <a href="login.html" class=${isActive("login") && "active"}
-                  >login</a
-                >
-              `
-        }
+        | <a href="manage.html" class=${isActive("manage") &&
+          "active"}>ordstyring</a>
+        | <a href="admin.html" class=${isActive("admin") &&
+          "active"}>administrasjon</a>
+        ${this.nologout ? "" : html`| <a href="/?logout">logg ut</a>`}
       `;
   }
 });

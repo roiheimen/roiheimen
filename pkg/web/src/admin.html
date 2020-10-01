@@ -1,14 +1,24 @@
 <!DOCTYPE html>
-<title>I taleliste-kø</title>
-<script type=module src=/comp/layout.js></script>
+<meta charset=utf8>
+<title>Roiheimen - admin</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
 <script type=module src=/comp/add-users.js></script>
+<script type=module src=/comp/footer.js></script>
+<style>
+body {
+  margin: 20px 0 0;
+}
+</style>
+
 <body>
-  <roi-layout>
-    <roi-add-users />
-  </roi-layout>
+  <section class="card lg">
+    <roi-add-users></roi-add-users>
+  </section>
+  <footer is=roi-footer></footer>
 </body>
 
 <script type=module>
   import storage from "../lib/storage.js";
-  if (!storage("myself").admin) location.assign("/login.html");
+  if (!storage("myself").admin) location.assign("/");
 </script>

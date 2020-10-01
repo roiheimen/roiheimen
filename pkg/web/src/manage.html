@@ -1,16 +1,28 @@
 <!DOCTYPE html>
-<title>I taleliste-kø</title>
+<meta charset=utf-8>
+<title>Ordstyring</title>
+<link rel=stylesheet href=style.css>
 <script type=module src=/db/state.js></script>
+<script type=module src=/comp/footer.js></script>
 <script type=module src=/comp/layout.js></script>
 <script type=module src=/comp/manage.js></script>
 <script type=module src=/lib/polyfills.js></script>
+<style>
+  body {
+    margin: 20px 0 0;
+  }
+  section {
+    min-height: 300px;
+  }
+</style>
 <body>
-  <roi-layout>
-    <roi-manage />
-  </roi-layout>
+  <section class="card lg">
+    <roi-manage></roi-manage>
+  </section>
+  <footer is="roi-footer"></footer>
 </body>
 
 <script type=module>
   import storage from "../lib/storage.js";
-  if (!storage("myself").admin) location.assign("/login.html");
+  if (!storage("myself").admin) location.assign("/");
 </script>

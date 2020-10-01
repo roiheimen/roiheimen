@@ -1,20 +1,20 @@
 import { defineHook } from "/web_modules/heresy.js";
 import { composeBundles, createSelector } from "/web_modules/redux-bundler.js";
 
+import storage from "../lib/storage.js";
 import { gql, live } from "../lib/graphql.js";
+
+const creds = storage("creds");
 
 const myself = {
   name: "myself",
   init(store) {
-    setTimeout(() => store.doMyselfFetch(), 0);
+    if (creds.jwt) setTimeout(() => store.doMyselfFetch(), 0);
   },
-  reducer: (state = true, { type, payload }) => {
-    if (type == "MYSELF_FETCH_FINISHED") {
-      return payload;
-    }
-    if (type == "MYSELF_FETCH_FAILED") {
-      return false;
-    }
+  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
+    if (type == "MYSELF_FETCH_STARTED") return { ...state, started: true };
+    if (type == "MYSELF_FETCH_FINISHED") return { ...state, data: payload };
+    if (type == "MYSELF_FETCH_FAILED") return { ...state, failed: error || true };
     return state;
   },
 
@@ -38,24 +38,22 @@ const myself = {
       dispatch({ type: "MYSELF_FETCH_FAILED", error });
     }
   },
+  doMyselfLogout: () => () => {
+    if (Object.keys(creds).length) {
+      Object.keys(creds).forEach(k => delete creds[k]);
+      location.assign("/");
+    }
+  },
 
-  selectMyself: state => state.myself
+  selectMyself: state => state.myself.data,
 };
 
 const sak = {
   name: "sak",
-  init(store) {
-    setTimeout(() => {
-      store.doSakFetch();
-    }, 0);
-  },
-  reducer: (state = true, { type, payload }) => {
-    if (type == "SAK_FETCH_FINISHED") {
-      return payload;
-    }
-    if (type == "SAK_FETCH_FAILED") {
-      return false;
-    }
+  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
+    if (type == "SAK_FETCH_STARTED") return { ...state, started: true };
+    if (type == "SAK_FETCH_FINISHED") return { ...state, data: payload };
+    if (type == "SAK_FETCH_FAILED") return { ...state, failed: error || true };
     return state;
   },
 
@@ -93,7 +91,14 @@ const sak = {
     }
   },
 
-  selectSak: state => state.sak
+  selectSakRaw: state => state.sak,
+  selectSak: state => state.sak.data,
+
+  reactFetchSakOnMyselfExisting: createSelector("selectSakRaw", "selectMyself", (raw, myself) => {
+    if (!raw.started && !raw.data && !raw.failed && myself?.id) {
+      return { actionCreator: "doSakFetch" };
+    }
+  }),
 };
 
 const innlegg = {
@@ -259,7 +264,7 @@ const innlegg = {
     return state;
   }),
   selectSpeechesUpcomingByMe: createSelector("selectMyself", "selectSpeeches", (myself, speeches) => {
-    return speeches.filter(speech => !speech.startedAt && speech.speaker.id == myself.id);
+    return speeches.filter(speech => !speech.endedAt && speech.speaker.id == myself.id);
   }),
 };
 

@@ -3,6 +3,7 @@ import { define, html } from "/web_modules/heresy.js";
 import "../db/state.js";
 import storage from "../lib/storage.js";
 
+import "./speechesList.js";
 import "./video.js";
 
 const RoiQueueDrawer = {
@@ -12,21 +13,38 @@ const RoiQueueDrawer = {
     return `
     ${self} {
       display: grid;
-      grid-template-columns: 1fr 3fr;
+      grid-template-columns: 200px 3fr;
       min-height: 40vh;
     }
-    ${self} button {
-      font-size: 20px;
-      margin: 5px 5px;
-      padding: 10px;
-    }
     ${self} .buttons {
-      background: #333;
+      align-self: start;
+      background: rgb(199, 15, 15);
       display: flex;
       flex-direction: column;
+      margin: 10px;
+      min-height: calc(40vh - 40px);
+      padding: 10px 0;
+    }
+    ${self} button {
+      background: transparent;
+      border-radius: 4px;
+      border: none;
+      color: white;
+      font-size: 20px;
+      padding: 10px;
+    }
+    ${self} button:hover {
+      background: white;
+      border: 1px solid rgb(199, 15, 15);
+      color: inherit;
+    }
+    ${self} .logout {
+      margin-top: auto;
     }
     ${self} .queue {
       padding: 5px;
+    }
+    ${self} roi-speeches-list {
     }
     `;
   },
@@ -43,15 +61,17 @@ const RoiQueueDrawer = {
     this.html`
       <div class=buttons>
         <button
+          tabindex=0
           disabled=${innleggFetching || innleggScheduled}
           .onclick=${() => store.doReqInnlegg()}
           >Innlegg</button>
-        </div>
+        <button
+          class=logout
+          .onclick=${() => store.doMyselfLogout()}
+          >Logg ut</button>
+      </div>
       <div class=queue>
-        <h1>${sak.title}</h1>
-        <table>
-          ${sak.speeches.map(sp => html`<tr><td>${sp.speaker.num} <td>${sp.speaker.name}`)}
-        </table>
+        <roi-speeches-list />
       </div>
     `;
   }
@@ -67,9 +87,6 @@ define("RoiQueue", {
     ${self} { 
       display: block;
       min-height: 400px;
-      background: #767d6f;
-      grid-row: 1 / 3;
-      grid-column: 2 / 3;
     } `;
   },
   render() {

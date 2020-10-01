@@ -3,6 +3,10 @@ import { define, html } from "/web_modules/heresy.js";
 export default define("RoiSpeechesList", {
   style(self) {
     return `
+    ${self} {
+      display: flex;
+      justify-content: center;
+    }
     ${self} .started { font-size: 140%; }
     ${self} .ended { text-decoration: line-through; color: gray; }
     `;

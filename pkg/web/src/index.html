@@ -1,17 +1,25 @@
 <!DOCTYPE html>
-<title>Ro i heimen</title>
-<script type=module src=/comp/card.js></script>
-<script type=module src=/comp/layout.js></script>
+<meta charset=utf8>
+<title>Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/login.js></script>
 <style>
-roi-what {
-  color: blue;
+.card {
+  min-height: 200px;
 }
 </style>
+
 <body>
-  <roi-layout>
-    <section is=roi-card sm>
-      <h3>Do what you must</h3>
-      <div></div>
-    </section>
-  </roi-layout>
+  <header>
+    <h1>
+      <span>roiheimen</span><br>
+      Test-organisasjon
+    </h1>
+  </header>
+  <section class="card sm">
+    <roi-login>
+      <p>Ver venleg og logg inn</p>
+    </roi-login>
+  </section>
 </body>
