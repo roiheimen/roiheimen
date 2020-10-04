@@ -28,7 +28,6 @@ const YouTubeIframe = {
 };
 
 const WherebyEmbed = {
-  mappedAttributes: ["creds"],
   style(self) {
     return `
     ${self} { 
@@ -75,15 +74,15 @@ define("RoiVideo", {
   },
   render({ useSel, useStore, useEffect }) {
     const youtubeId = "NMre6IAAAiU";
-    const { innleggFetching, innleggScheduled, speechesUpcomingByMe } = useSel(
+    const { innleggFetching, innleggScheduled, speechInWhereby } = useSel(
       "innleggFetching",
       "innleggScheduled",
-      "speechesUpcomingByMe",
+      "speechInWhereby",
     );
 
     if (innleggFetching) {
       this.html`Waiting...`;
-    } else if (speechesUpcomingByMe.length) {
+    } else if (speechInWhereby) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
       this.html`XYouTubeIframe .id=${youtubeId} />`;

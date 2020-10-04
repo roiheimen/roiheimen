@@ -44,15 +44,19 @@ const RoiQueueDrawer = {
     ${self} .queue {
       padding: 5px;
     }
+    ${self} .title {
+      text-align:center;
+    }
     ${self} roi-speeches-list {
     }
     `;
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { innleggFetching, innleggScheduled, sak } = useSel(
+    const { innleggFetching, innleggScheduled, myself, sak } = useSel(
       "innleggFetching",
       "innleggScheduled",
+      "myself",
       "sak",
     );
     if (!sak?.speeches) {
@@ -64,13 +68,16 @@ const RoiQueueDrawer = {
           tabindex=0
           disabled=${innleggFetching || innleggScheduled}
           .onclick=${() => store.doReqInnlegg()}
+          title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
           >Innlegg</button>
         <button
           class=logout
           .onclick=${() => store.doMyselfLogout()}
+          title=${`Logg av som ${myself.name} (${myself.num})`}
           >Logg ut</button>
       </div>
       <div class=queue>
+        <h2 class=title>${sak.title}</h2>
         <roi-speeches-list />
       </div>
     `;
@@ -90,6 +97,7 @@ define("RoiQueue", {
     } `;
   },
   render() {
+      // title here
     this.html`
       <roi-video />
       <RoiQueueDrawer />

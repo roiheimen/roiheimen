@@ -11,10 +11,14 @@ const myself = {
   init(store) {
     if (creds.jwt) setTimeout(() => store.doMyselfFetch(), 0);
   },
-  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
+  reducer: (
+    state = { started: false, failed: false, data: null },
+    { type, payload, error }
+  ) => {
     if (type == "MYSELF_FETCH_STARTED") return { ...state, started: true };
     if (type == "MYSELF_FETCH_FINISHED") return { ...state, data: payload };
-    if (type == "MYSELF_FETCH_FAILED") return { ...state, failed: error || true };
+    if (type == "MYSELF_FETCH_FAILED")
+      return { ...state, failed: error || true };
     return state;
   },
 
@@ -40,17 +44,20 @@ const myself = {
   },
   doMyselfLogout: () => () => {
     if (Object.keys(creds).length) {
-      Object.keys(creds).forEach(k => delete creds[k]);
+      Object.keys(creds).forEach(k => delete creds[k]);
       location.assign("/");
     }
   },
 
-  selectMyself: state => state.myself.data,
+  selectMyself: state => state.myself.data
 };
 
 const sak = {
   name: "sak",
-  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
+  reducer: (
+    state = { started: false, failed: false, data: null },
+    { type, payload, error }
+  ) => {
     if (type == "SAK_FETCH_STARTED") return { ...state, started: true };
     if (type == "SAK_FETCH_FINISHED") return { ...state, data: payload };
     if (type == "SAK_FETCH_FAILED") return { ...state, failed: error || true };
@@ -69,6 +76,7 @@ const sak = {
               speaker {
                 id
                 name
+                room
                 num
               }
               id
@@ -94,11 +102,15 @@ const sak = {
   selectSakRaw: state => state.sak,
   selectSak: state => state.sak.data,
 
-  reactFetchSakOnMyselfExisting: createSelector("selectSakRaw", "selectMyself", (raw, myself) => {
-    if (!raw.started && !raw.data && !raw.failed && myself?.id) {
-      return { actionCreator: "doSakFetch" };
+  reactFetchSakOnMyselfExisting: createSelector(
+    "selectSakRaw",
+    "selectMyself",
+    (raw, myself) => {
+      if (!raw.started && !raw.data && !raw.failed && myself?.id) {
+        return { actionCreator: "doSakFetch" };
+      }
     }
-  }),
+  )
 };
 
 const innlegg = {
@@ -239,14 +251,17 @@ const innlegg = {
   selectInnlegg: state => state.innlegg.current,
   selectInnleggFetching: state => state.innlegg.fetching,
   selectInnleggScheduled: state => !!state.innlegg.current,
-  selectSpeeches: createSelector("selectSak", sak => {
-    return sak?.speeches || [];
-  }),
+  selectSpeeches: createSelector("selectSak", sak =>
+    (sak?.speeches || []).map((speech, i) => ({
+      ...speech,
+      out: i % 2 == 0 ? "a" : "b"
+    }))
+  ),
   selectSpeechState: createSelector("selectSpeeches", speeches => {
     const state = {
       prev: null,
       current: null,
-      next: null,
+      next: null
     };
     for (let i = 0; i < speeches.length; i++) {
       const speech = speeches[i];
@@ -263,8 +278,49 @@ const innlegg = {
     }
     return state;
   }),
-  selectSpeechesUpcomingByMe: createSelector("selectMyself", "selectSpeeches", (myself, speeches) => {
-    return speeches.filter(speech => !speech.endedAt && speech.speaker.id == myself.id);
+  selectSpeechesUpcomingByMe: createSelector(
+    "selectMyself",
+    "selectSpeeches",
+    (myself, speeches) => {
+      return speeches.filter(
+        speech => !speech.endedAt && speech.speaker.id == myself.id
+      );
+    }
+  ),
+  selectSpeechInWhereby: createSelector(
+    "selectMyself",
+    "selectSpeechesUpcomingByMe",
+    "selectSpeechState",
+    (myself, speechesUpcomingByMe, speechState) => {
+      return (
+        speechesUpcomingByMe.length ||
+        speechState.current?.speaker.id == myself?.id
+      );
+    }
+  )
+};
+
+const out = {
+  name: "out",
+  reducer: (state = { currentType: "" }, { type, payload }) => {
+    if (type == "OUT_SWITCH") return { ...state, currentType: payload };
+    return state;
+  },
+  getMiddleware: () => store => next => action => {
+    const { current: oldCurrent } = store.selectSpeechState();
+    const result = next(action);
+    const { current } = store.selectSpeechState();
+    if (oldCurrent && current?.id !== oldCurrent?.id) {
+      store.doOutSwitch(store.selectOutTypeForCurrent());
+    }
+    return result;
+  },
+
+  doOutSwitch: currSpeechId => ({ type: "OUT_SWITCH" }),
+
+  selectOutRaw: state => state.out,
+  selectOutTypeForCurrent: createSelector("selectSpeeches", speeches => {
+    return speeches.length % 2 == 0 ? "a" : "b";
   }),
 };
 
@@ -274,15 +330,16 @@ const errors = {
     const result = next(action);
     if (
       action.type.endsWith("_FAILED") &&
-      action.error?.extra?.body?.errors?.[0]?.message == "jwt expired"
+      action.error?.extra?.body?.errors?.[0]?.message == "jwt expired" &&
+      location.pathname != "/"
     ) {
-      location.assign("/login.html");
+      location.assign("/");
     }
     return result;
   }
 };
 
-const store = composeBundles(myself, innlegg, sak, errors)();
+const store = composeBundles(myself, innlegg, sak, out, errors)();
 window.store = store;
 
 function addSelect(sel) {
@@ -301,3 +358,9 @@ defineHook("useSel", ({ useMemo, useState, useEffect }) => (...sel) => {
 });
 
 defineHook("useStore", () => () => store);
+
+defineHook("usePrevious", ({ useRef, useEffect }) => (value) => {
+  const ref = useRef();
+  useEffect(() => { ref.current = value }, [value]);
+  return ref.current;
+});

@@ -8,10 +8,10 @@ function isActive(path) {
 }
 
 define("RoiFooter<footer>", {
-  observedAttributes: ["nologout"],
   oninit() {
     this.creds = storage("creds");
     this.myself = storage("myself");
+    this.nologout = this.getAttribute("nologout") != null;
   },
   style(self) {
     return `

@@ -73,8 +73,8 @@ define("RoiLogin", {
       const res2 = await gql(gqlMyself);
       const { currentPerson } = res2;
       Object.assign(storage("myself"), currentPerson);
-      if (currentPerson.admin) location.assign("/admin.html");
-      else location.assign("/queueing.html");
+      if (currentPerson.admin) location.assign("/manage.html");
+      else location.assign("/queue.html");
     } catch(e) {
       if (e.extra?.body?.errors) {
         this.err = e.extra.body.errors.map(e => e.message);
