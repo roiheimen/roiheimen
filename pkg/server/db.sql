@@ -174,7 +174,7 @@ create function roiheimen.register_people(
     pa people_input;
     p roiheimen.person[];
   begin
-    -- delete from roiheimen.person rp where rp.sub_org = register_people.sub_org and id != nullif(current_setting('jwt.claims.person_id', true), '')::integer;
+    delete from roiheimen.person rp where rp.meeting_id = register_people.meeting_id and id != nullif(current_setting('jwt.claims.person_id', true), '')::integer;
 
     foreach pa in array people loop
       p := p || (select roiheimen.register_person(pa.num, pa.name, meeting_id, pa.password, pa.email));

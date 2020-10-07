@@ -90,24 +90,24 @@ const UsersPreview = {
 };
 
 define("RoiAddUsers", {
-  mappedAttributes: ["users", "subOrg"],
+  mappedAttributes: ["users", "meetingId"],
   includes: { UserTextArea, UsersPreview },
   oninit() {
     this.addEventListener("submit", this);
-    this.subOrg = storage("myself").subOrg;
+    this.meetingId = storage("myself").meetingId;
   },
   onusers() { this.render() },
   onchange({ target: { value } }) {
-    this.subOrg = value;
+    this.meetingId = value;
     this.render();
   },
   onclick(e) {
     e.preventDefault();
     console.log("XXX submit", this.users);
     gql(
-      `mutation RegisterPeople($subOrg: String!, $people: [PeopleInputRecordInput!]!) {
+      `mutation RegisterPeople($meetingId: String!, $people: [PeopleInputRecordInput!]!) {
         registerPeople(
-          input: { subOrg: $subOrg, people: $people }
+          input: { meetingId: $meetingId, people: $people }
         ) {
           people {
             id
@@ -117,17 +117,19 @@ define("RoiAddUsers", {
         }
       }`,
       {
-        subOrg: this.subOrg,
+        meetingId: this.meetingId,
         people: this.users,
       }
     );
   },
-  render() {
-    const canSave = this.subOrg && this.users;
+  render({ useSel }) {
+    const { myself } = useSel("myself");
+    this.meetingId = myself?.meetingId;
+    const canSave = this.meetingId && this.users;
     this.html`
       <label>
         Organisasjon
-        <input placeholder="skriv_inn" value=${this.subOrg} onchange=${this} />
+        <input placeholder="skriv_inn" value=${this.meetingId} onchange=${this} />
       </label>
       <UserTextArea onusers=${({ detail }) => {
         this.users = detail;
