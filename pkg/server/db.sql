@@ -52,6 +52,7 @@ create table roiheimen.person (
   name             text not null check (char_length(name) < 128),
   admin            boolean default false,
   meeting_id       text not null references roiheimen.meeting(id) on delete cascade,
+  org              text not null default '',
   room             text not null default '',
   created_at       timestamp default now(),
   updated_at       timestamp default now(),
@@ -140,13 +141,14 @@ create function roiheimen.register_person(
   name text,
   meeting_id text,
   password text,
+  org text,
   email text default null
 ) returns roiheimen.person as $$
 declare
   person roiheimen.person;
 begin
-  insert into roiheimen.person (num, name, meeting_id) values
-    (num, name, meeting_id)
+  insert into roiheimen.person (num, name, org, meeting_id) values
+    (num, name, org, meeting_id)
     returning * into person;
 
   insert into roiheimen_private.person_account (person_id, email, password_hash) values
@@ -155,7 +157,7 @@ begin
   return person;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.register_person(integer, text, text, text, text) is 'Registers a single user and creates an account.';
+comment on function roiheimen.register_person(integer, text, text, text, text, text) is 'Registers a single user and creates an account.';
 
 -- input type
 drop type people_input;
@@ -163,6 +165,7 @@ create type people_input as (
   num integer,
   name text,
   password text,
+  org text,
   email text
 );
 
@@ -177,7 +180,7 @@ create function roiheimen.register_people(
     delete from roiheimen.person rp where rp.meeting_id = register_people.meeting_id and id != nullif(current_setting('jwt.claims.person_id', true), '')::integer;
 
     foreach pa in array people loop
-      p := p || (select roiheimen.register_person(pa.num, pa.name, meeting_id, pa.password, pa.email));
+      p := p || (select roiheimen.register_person(pa.num, pa.name, meeting_id, pa.password, pa.org, pa.email));
     end loop;
 
     return p;
@@ -232,7 +235,7 @@ grant insert, update, delete on table roiheimen.speech to roiheimen_person;
 grant usage on sequence roiheimen.speech_id_seq to roiheimen_person;
 
 grant execute on function roiheimen.authenticate(integer, text, text) to roiheimen_anonymous, roiheimen_person;
-grant execute on function roiheimen.register_person(integer, text, text, text, text) to roiheimen_person;
+grant execute on function roiheimen.register_person(integer, text, text, text, text, text) to roiheimen_person;
 grant execute on function roiheimen.register_people(text, people_input[]) to roiheimen_person;
 grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
@@ -301,14 +304,14 @@ insert into roiheimen.meeting (id) values ('nmlm12');
 select roiheimen.register_people(
   'nmlm12',
   array[
-    (10, 'Gro Morken Endresen', 'test', null),
-    (11, 'Astrid Marie Grov', 'test', null),
-    (12, 'Per Henning Arntsen', 'test', null),
-    (13, 'Ingar Arnøy', 'test', null),
-    (14, 'Erik Grov', 'test', null),
-    (15, 'Hege Lothe', 'test', null),
-    (16, 'Marit Aakre Tennø', 'test', null),
-    (1000, 'Odin Hørthe Omdal', 'test', null)
+    (10, 'Gro Morken Endresen', 'test', 'Oslo Mållag', null),
+    (11, 'Astrid Marie Grov', 'test', 'Oslo Mållag', null),
+    (12, 'Per Henning Arntsen', 'test', 'Oslo Mållag', null),
+    (13, 'Ingar Arnøy', 'test', 'Stavanger Mållag', null),
+    (14, 'Erik Grov', 'test', 'Stavanger Mållag', null),
+    (15, 'Hege Lothe', 'test', 'Stavanger Mållag', null),
+    (16, 'Marit Aakre Tennø', 'test', 'Stavanger Mållag', null),
+    (1000, 'Odin Hørthe Omdal', 'test', '', null)
   ]::people_input[]
 );
 update roiheimen.person set admin = true where num = 1000 and meeting_id = 'nmlm12';

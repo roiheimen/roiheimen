@@ -36,7 +36,8 @@ const UserTextArea = {
         num: Number(l[0]),
         name: l[1],
         password: l[2] || genPass(),
-        email: l[3],
+        org: l[3] || '',
+        email: l[4],
       }));
     this.dispatchEvent(new CustomEvent("users", { detail: userList }));
   },
@@ -53,7 +54,7 @@ const UserTextArea = {
     this.html`
       <textarea
        onchange=${this}
-       placeholder="Nummer, Namn, Passord (valfritt), Epost (valfritt)\nNummer2, Namn2"
+       placeholder="Nummer, Namn, Passord (valfritt), Lag (valfritt), Epost (valfritt)\nNummer2, Namn2"
       />`;
   }
 };
@@ -73,7 +74,7 @@ const UsersPreview = {
     if (!this.users) return this.html`Legg til deltakarar i tekstboksen`;
     this.html`
     <table>
-      <tr><th>Nummer <th>Namn <th>Passord <th>Epost </tr>
+      <tr><th>Nummer <th>Namn <th>Passord <th>Lag <th>Epost </tr>
       ${this.users.map(
         user =>
           html`
@@ -81,6 +82,7 @@ const UsersPreview = {
               <td>${user.num}</td>
               <td>${user.name}</td>
               <td><code>${user.password}</code></td>
+              <td>${user.org}</td>
               <td>${user.email}</td>
             </tr>
           `
