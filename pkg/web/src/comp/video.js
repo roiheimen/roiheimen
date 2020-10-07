@@ -85,7 +85,7 @@ define("RoiVideo", {
     } else if (speechInWhereby) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
-      this.html`XYouTubeIframe .id=${youtubeId} />`;
+      this.html`<YouTubeIframe .id=${youtubeId} />`;
     }
   }
 });

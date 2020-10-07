@@ -160,6 +160,22 @@ const innlegg = {
       dispatch({ type: "INNLEGG_REQ_FAILED", error });
     }
   },
+  doSpeechEnd: (speechId) => async ({ dispatch, store }) => {
+    dispatch({ type: "SPEECH_END_STARTED", payload: speechId });
+    const query = `
+    mutation SpeechNext($id: Int!) {
+      updateSpeech(input: {id: $id, patch: { endedAt: "now()" }}) {
+        clientMutationId
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { id: speechId });
+      dispatch({ type: "SPEECH_END_FINISHED", payload: speechId });
+    } catch (error) {
+      dispatch({ type: "SPEECH_END_FAILED", error, payload: speechId });
+    }
+  },
   doSpeechPrev: () => async ({ dispatch, store }) => {
     const { current, prev } = store.selectSpeechState();
     const currentId = current?.id;
@@ -252,10 +268,11 @@ const innlegg = {
   selectInnleggFetching: state => state.innlegg.fetching,
   selectInnleggScheduled: state => !!state.innlegg.current,
   selectSpeeches: createSelector("selectSak", sak =>
-    (sak?.speeches || []).map((speech, i) => ({
-      ...speech,
-      out: i % 2 == 0 ? "a" : "b"
-    }))
+    (sak?.speeches || []).map((speech, i) => {
+      // ignore speeches that ended without ever starting
+      if (!speech.startedAt && speech.endedAt) return;
+      return { ...speech, out: i % 2 == 0 ? "a" : "b" };
+    }).filter(Boolean)
   ),
   selectSpeechState: createSelector("selectSpeeches", speeches => {
     const state = {

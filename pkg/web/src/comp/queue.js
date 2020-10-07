@@ -53,9 +53,9 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { innleggFetching, innleggScheduled, myself, sak } = useSel(
+    const { innleggFetching, speechesUpcomingByMe, myself, sak } = useSel(
       "innleggFetching",
-      "innleggScheduled",
+      "speechesUpcomingByMe",
       "myself",
       "sak",
     );
@@ -66,10 +66,14 @@ const RoiQueueDrawer = {
       <div class=buttons>
         <button
           tabindex=0
-          disabled=${innleggFetching || innleggScheduled}
+          disabled=${innleggFetching}
           .onclick=${() => store.doReqInnlegg()}
           title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
           >Innlegg</button>
+        ${speechesUpcomingByMe[0] ? html`<button
+          .onclick=${() => store.doSpeechEnd(speechesUpcomingByMe[0].id)}
+          title=${`Stryk din pågåande eller komande oppføring på talelista`}
+          >Stryk meg</button>` : ''}
         <button
           class=logout
           .onclick=${() => store.doMyselfLogout()}

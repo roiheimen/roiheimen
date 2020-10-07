@@ -36,7 +36,7 @@ define("RoiFooter<footer>", {
 
   render() {
     if (!this.myself?.admin) {
-      if (this.nologout) return this.html``;
+      if (this.nologout) return this.html` `;
       return this.html`
         <a href="/?logout"}>
           logg ut
