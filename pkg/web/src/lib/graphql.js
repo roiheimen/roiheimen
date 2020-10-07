@@ -42,24 +42,35 @@ export async function gql(query, variables, { nocreds } = {}) {
 }
 
 const liveCurrent = {};
-export async function live(query, cb) {
-  const variables = {};
-  const ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");
-  const send = o => ws.send(JSON.stringify(o));
+let ws;
+let id = 0;
+let wsReadyResolve;
+const send = o => ws.send(JSON.stringify(o));
+const wsReady = new Promise(resolve => { wsReadyResolve = resolve });
+export async function live({ query, variables = {}}, cb) {
+  if (!ws) openWs();
+  await wsReady;
+  liveCurrent[++id] = cb;
+  send({
+    id,
+    type: "start",
+    payload: { query, variables },
+  });
+}
+function openWs(query, cb) {
+  ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");
   ws.onerror = (e) => console.log("err", e);
   ws.onclose = (e) => console.log("close", e);
   ws.onmessage = event => {
     const { data } = event;
     const d = JSON.parse(data);
     if (d.type == "connection_ack") {
-      send({
-        type: "start",
-        payload: { query, variables, operationName: "SakAndSpeeches" },
-        id: 1,
-      });
+      wsReadyResolve(ws);
     } else if (d.type == "data") {
       printErrors("live", d.payload?.errors)
-      cb(d.payload);
+      const cb = liveCurrent[d.id];
+      if (cb) cb(d.payload);
+      else console.error("NO CALLBACK FOR DATA", d);
     } else if (d.type == "ka") {
       // pass
     } else {
@@ -67,14 +78,12 @@ export async function live(query, cb) {
     }
   };
   ws.onopen = (e) => {
-    console.log("open", e);
     setTimeout(() => {
-      console.log("init");
       send({
         type: "connection_init",
         payload: { Authorization: `Bearer ${creds.jwt}` },
       });
-    }, 1000);
+    }, 0);
   };
   window.ws = ws;
 }

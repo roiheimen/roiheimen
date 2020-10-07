@@ -89,7 +89,7 @@ const sak = {
         }
       }`;
     try {
-      await live(query, ({ data }) => {
+      await live({ query }, ({ data }) => {
         const { latestSak } = data;
         const sak = { ...latestSak, speeches: latestSak.speeches.nodes };
         dispatch({ type: "SAK_FETCH_FINISHED", payload: sak });
