@@ -49,7 +49,66 @@ const myself = {
     }
   },
 
-  selectMyself: state => state.myself.data
+  selectMyself: state => state.myself.data,
+  selectMyselfMeetingId: state => state.myself.data?.meetingId
+};
+
+const people = {
+  name: "people",
+  reducer: (
+    state = { started: false, failed: false, data: null },
+    { type, payload, error }
+  ) => {
+    if (type == "PEOPLE_FETCH_STARTED") return { ...state, started: true };
+    if (type == "PEOPLE_FETCH_FAILED")
+      return { ...state, failed: error || true };
+    if (type == "PEOPLE_FETCH_UPDATED") return { ...state, data: payload };
+    return state;
+  },
+
+  doPeopleFetch: () => async ({ dispatch }) => {
+    dispatch({ type: "PEOPLE_FETCH_STARTED" });
+    const query = `
+      subscription People($meetingId: String!) {
+        people(condition: {meetingId: $meetingId}) {
+          nodes {
+            id
+            admin
+            name
+            num
+            org
+            room
+          }
+        }
+      }
+      `;
+    const variables = { meetingId: store.selectMyselfMeetingId() };
+    try {
+      await live({ query, variables }, ({ data }) => {
+        const { people } = data;
+        dispatch({ type: "PEOPLE_FETCH_UPDATED", payload: people.nodes });
+      });
+      dispatch({ type: "PEOPLE_FETCH_FINISHED" });
+    } catch (error) {
+      dispatch({ type: "PEOPLE_FETCH_FAILED", error });
+    }
+  },
+
+  selectPeopleRaw: state => state.people,
+  selectPeople: state => state.people.data || [],
+  selectPeopleById: createSelector("selectPeople", people =>
+    people.reduce((o, v) => ({ ...o, [v.id]: v }), {})
+  ),
+
+  reactFetchPeopleOnMyselfExisting: createSelector(
+    "selectPeopleRaw",
+    "selectMyself",
+    (raw, myself) => {
+      if (!raw.started && !raw.data && !raw.failed && myself?.id) {
+        return { actionCreator: "doPeopleFetch" };
+      }
+    }
+  )
 };
 
 const sak = {
@@ -73,14 +132,9 @@ const sak = {
           title
           speeches {
             nodes {
-              speaker {
-                id
-                name
-                room
-                num
-              }
               id
               type
+              speakerId
               createdAt
               startedAt
               endedAt
@@ -91,8 +145,7 @@ const sak = {
     try {
       await live({ query }, ({ data }) => {
         const { latestSak } = data;
-        const sak = { ...latestSak, speeches: latestSak.speeches.nodes };
-        dispatch({ type: "SAK_FETCH_FINISHED", payload: sak });
+        dispatch({ type: "SAK_FETCH_FINISHED", payload: latestSak });
       });
     } catch (error) {
       dispatch({ type: "SAK_FETCH_FAILED", error });
@@ -100,7 +153,22 @@ const sak = {
   },
 
   selectSakRaw: state => state.sak,
-  selectSak: state => state.sak.data,
+  selectSakData: state => state.sak.data,
+  selectSak: createSelector(
+    "selectSakData",
+    "selectPeopleById",
+    (sakData, peopleById) => {
+      const speeches = sakData?.speeches.nodes || [];
+      const nsak = {
+        ...sakData,
+        speeches: speeches.map(s => ({
+          ...s,
+          speaker: peopleById[s.speakerId] || {}
+        }))
+      };
+      return nsak;
+    }
+  ),
 
   reactFetchSakOnMyselfExisting: createSelector(
     "selectSakRaw",
@@ -160,7 +228,7 @@ const innlegg = {
       dispatch({ type: "INNLEGG_REQ_FAILED", error });
     }
   },
-  doSpeechEnd: (speechId) => async ({ dispatch, store }) => {
+  doSpeechEnd: speechId => async ({ dispatch, store }) => {
     dispatch({ type: "SPEECH_END_STARTED", payload: speechId });
     const query = `
     mutation SpeechNext($id: Int!) {
@@ -268,11 +336,13 @@ const innlegg = {
   selectInnleggFetching: state => state.innlegg.fetching,
   selectInnleggScheduled: state => !!state.innlegg.current,
   selectSpeeches: createSelector("selectSak", sak =>
-    (sak?.speeches || []).map((speech, i) => {
-      // ignore speeches that ended without ever starting
-      if (!speech.startedAt && speech.endedAt) return;
-      return { ...speech, out: i % 2 == 0 ? "a" : "b" };
-    }).filter(Boolean)
+    (sak?.speeches || [])
+      .map((speech, i) => {
+        // ignore speeches that ended without ever starting
+        if (!speech.startedAt && speech.endedAt) return;
+        return { ...speech, out: i % 2 == 0 ? "a" : "b" };
+      })
+      .filter(Boolean)
   ),
   selectSpeechState: createSelector("selectSpeeches", speeches => {
     const state = {
@@ -338,7 +408,7 @@ const out = {
   selectOutRaw: state => state.out,
   selectOutTypeForCurrent: createSelector("selectSpeeches", speeches => {
     return speeches.length % 2 == 0 ? "a" : "b";
-  }),
+  })
 };
 
 const errors = {
@@ -356,7 +426,7 @@ const errors = {
   }
 };
 
-const store = composeBundles(myself, innlegg, sak, out, errors)();
+const store = composeBundles(myself, innlegg, sak, people, out, errors)();
 window.store = store;
 
 function addSelect(sel) {
@@ -364,20 +434,22 @@ function addSelect(sel) {
 }
 
 defineHook("useSel", ({ useMemo, useState, useEffect }) => (...sel) => {
-  const fullSel = addSelect(sel);
-  const [state, setState] = useState(() => store.select(fullSel));
+  const selectors = useMemo(() => addSelect(sel), [sel]);
+  const [state, setState] = useState(() => store.select(selectors));
   useEffect(() => {
-    return store.subscribeToSelectors(fullSel, changes =>
-      setState(currentState => ({ ...state, ...changes }))
+    return store.subscribeToSelectors(selectors, changes =>
+      setState(currentState => ({ ...currentState, ...changes }))
     );
-  });
+  }, [selectors]);
   return state;
 });
 
 defineHook("useStore", () => () => store);
 
-defineHook("usePrevious", ({ useRef, useEffect }) => (value) => {
+defineHook("usePrevious", ({ useRef, useEffect }) => value => {
   const ref = useRef();
-  useEffect(() => { ref.current = value }, [value]);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
   return ref.current;
 });
