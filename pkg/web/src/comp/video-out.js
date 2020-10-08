@@ -33,9 +33,10 @@ define("RoiVideoOut", {
     this.render();
   },
   render({ useSel, usePrevious }) {
-    const { speechState } = useSel("speechState");
+    const { speechState, peopleById } = useSel("speechState", "peopleById");
     const speech = (speechState.current?.out == this.type ? speechState.current : speechState.next);
-    const room = speech?.speaker.room;
+    const speaker = peopleById[speech?.speakerId];
+    const room = speaker?.room;
     const prevRoom = usePrevious(room);
     if (!this.type) {
       return this.html`
@@ -47,6 +48,7 @@ define("RoiVideoOut", {
     if (!room) {
       return this.html`
       Nothing on out ${this.type} at the moment.
+      ${speaker ? "Speaker has no room!" : ""}
       `;
     }
     if (room == prevRoom) return;

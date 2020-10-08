@@ -548,7 +548,7 @@ defineHook(
       return store.subscribeToSelectors(selectors, changes => {
         setState(currentState => ({ ...currentState, ...changes }));
       });
-    }, [selectors]);
+    }, [selectors, prevSelectors]);
 
     return prevSelectors.current === selectors
       ? state
