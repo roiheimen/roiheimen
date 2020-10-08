@@ -34,7 +34,8 @@ define("RoiVideoOut", {
   },
   render({ useSel, usePrevious }) {
     const { speechState, peopleById } = useSel("speechState", "peopleById");
-    const speech = (speechState.current?.out == this.type ? speechState.current : speechState.next);
+    const { current, next } = speechState;
+    const speech = { [current?.out]: current, [next?.out]: next }[this.type];
     const speaker = peopleById[speech?.speakerId];
     const room = speaker?.room;
     const prevRoom = usePrevious(room);
