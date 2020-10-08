@@ -241,11 +241,11 @@ const speech = {
     dispatch,
     store
   }) => {
-    dispatch({ type: "SPEECH_REQ_STARTED" });
     speakerId = speakerId ?? store.selectMyself().id;
     sakId = sakId ?? store.selectSak().id;
     const { current } = store.selectSpeechState();
-    parentId = parentId ?? (type == "REPLIKK" ? current.parentId || current?.id : undefined);
+    parentId = parentId ?? (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
+    dispatch({ type: "SPEECH_REQ_STARTED", payload: { type, speakerId, sakId, parentId } });
     const gqlCreateSpeech = `
       mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!, $parentId: Int) {
         createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId, parentId: $parentId}}) {

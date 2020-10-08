@@ -62,7 +62,7 @@ const RoiQueueDrawer = {
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     this.html`
       <div class=buttons>
-        ${sak.id ? html`
+        ${sak?.id ? html`
         <button
           tabindex=0
           disabled=${speechFetching}
@@ -87,8 +87,10 @@ const RoiQueueDrawer = {
           >Logg ut</button>
       </div>
       <div class=queue>
-        <h2 class=title>${sak.title}</h2>
-        <roi-speeches-list simple />
+        <h2 class=title>${sak?.title || "Ingen sak"}</h2>
+        ${sak?.id ? html`
+          <roi-speeches-list simple />
+        ` : ""}
       </div>
     `;
   }
