@@ -433,16 +433,28 @@ function addSelect(sel) {
   return sel.map(s => "select" + s[0].toUpperCase() + s.slice(1));
 }
 
-defineHook("useSel", ({ useMemo, useState, useEffect }) => (...sel) => {
-  const selectors = useMemo(() => addSelect(sel), [sel]);
-  const [state, setState] = useState(() => store.select(selectors));
-  useEffect(() => {
-    return store.subscribeToSelectors(selectors, changes =>
-      setState(currentState => ({ ...currentState, ...changes }))
-    );
-  }, [selectors]);
-  return state;
-});
+defineHook(
+  "useSel",
+  ({ useMemo, useRef, useState, useEffect }) => (...args) => {
+    const selectors = useMemo(() => addSelect(args), args);
+    const [state, setState] = useState(() => store.select(selectors));
+    const prevSelectors = useRef(selectors);
+
+    useEffect(() => {
+      if (prevSelectors.current !== selectors) {
+        prevSelectors.current = selectors;
+        setState(store.select(selectors));
+      }
+      return store.subscribeToSelectors(selectors, changes => {
+        setState(currentState => ({ ...currentState, ...changes }));
+      });
+    }, [selectors]);
+
+    return prevSelectors.current === selectors
+      ? state
+      : { ...store.select(selectors) };
+  }
+);
 
 defineHook("useStore", () => () => store);
 
