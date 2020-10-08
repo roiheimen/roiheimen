@@ -74,13 +74,13 @@ define("RoiVideo", {
   },
   render({ useSel, useStore, useEffect }) {
     const youtubeId = "NMre6IAAAiU";
-    const { innleggFetching, innleggScheduled, speechInWhereby } = useSel(
-      "innleggFetching",
-      "innleggScheduled",
+    const { speechFetching, speechScheduled, speechInWhereby } = useSel(
+      "speechFetching",
+      "speechScheduled",
       "speechInWhereby",
     );
 
-    if (innleggFetching) {
+    if (speechFetching) {
       this.html`Waiting...`;
     } else if (speechInWhereby) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;

@@ -53,8 +53,8 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { innleggFetching, speechesUpcomingByMe, myself, sak } = useSel(
-      "innleggFetching",
+    const { speechFetching, speechesUpcomingByMe, myself, sak } = useSel(
+      "speechFetching",
       "speechesUpcomingByMe",
       "myself",
       "sak",
@@ -66,10 +66,16 @@ const RoiQueueDrawer = {
       <div class=buttons>
         <button
           tabindex=0
-          disabled=${innleggFetching}
-          .onclick=${() => store.doReqInnlegg()}
+          disabled=${speechFetching}
+          .onclick=${() => store.doSpeechReq()}
           title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
           >Innlegg</button>
+        <button
+          tabindex=0
+          disabled=${speechFetching}
+          .onclick=${() => store.doSpeechReq("REPLIKK")}
+          title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
+          >Replikk</button>
         ${speechesUpcomingByMe[0] ? html`<button
           .onclick=${() => store.doSpeechEnd(speechesUpcomingByMe[0].id)}
           title=${`Stryk din pågåande eller komande oppføring på talelista`}
@@ -82,7 +88,7 @@ const RoiQueueDrawer = {
       </div>
       <div class=queue>
         <h2 class=title>${sak.title}</h2>
-        <roi-speeches-list />
+        <roi-speeches-list simple />
       </div>
     `;
   }

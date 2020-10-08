@@ -114,56 +114,88 @@ const people = {
 const sak = {
   name: "sak",
   reducer: (
-    state = { started: false, failed: false, data: null },
+    state = { started: false, failed: false, data: {} },
     { type, payload, error }
   ) => {
-    if (type == "SAK_FETCH_STARTED") return { ...state, started: true };
-    if (type == "SAK_FETCH_FINISHED") return { ...state, data: payload };
-    if (type == "SAK_FETCH_FAILED") return { ...state, failed: error || true };
+    if (type == "SAK_SUB_STARTED") return { ...state, started: true };
+    if (type == "SAK_SUB_FAILED") return { ...state, failed: error || true };
+    if (type == "SAK_SUB_UPDATED") return { ...state, data: payload };
     return state;
   },
 
-  doSakFetch: () => async ({ dispatch }) => {
-    dispatch({ type: "SAK_FETCH_STARTED" });
+  doSakFinish: sakId => async ({ dispatch, store }) => {
+    dispatch({ type: "SAK_FINISH_STARTED", payload: sakId });
+    sakId = sakId ?? store.selectSak().id;
     const query = `
-      subscription SakAndSpeeches {
-        latestSak {
-          id
-          title
-          speeches {
-            nodes {
-              id
-              type
-              speakerId
-              createdAt
-              startedAt
-              endedAt
-            }
+    mutation SakEnd($id: Int!) {
+      updateSak(input: {id: $id, patch: { finishedAt: "now()" }}) {
+        clientMutationId
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { id: sakId });
+      dispatch({ type: "SAK_FINISH_FINISHED", payload: sakId });
+    } catch (error) {
+      dispatch({ type: "SAK_FINISH_FAILED", error, payload: sakId });
+    }
+  },
+  doSakReq: (title, { meetingId } = {}) => async ({ dispatch }) => {
+    dispatch({ type: "SAK_REQ_STARTED" });
+    meetingId = meetingId ?? store.selectMyself().meetingId;
+    const gqlNewSak = `
+      mutation NewSak($meetingId: String!, $title: String!) {
+        createSak(input: {sak: {title: $title, meetingId: $meetingId}}) {
+          sak {
+            id
+            title
+          }
+        }
+      }`;
+    try {
+      const res = await gql(gqlNewSak, { title, meetingId });
+      const { createSak: { sak } } = res;
+      dispatch({ type: "SAK_REQ_FINISHED", payload: sak });
+    } catch (error) {
+      dispatch({ type: "SAK_REQ_FAILED", error });
+    }
+  },
+  doSakFetch: () => async ({ dispatch }) => {
+    dispatch({ type: "SAK_SUB_STARTED" });
+    const query = `
+      subscription Sak {
+        saks(condition: {finishedAt: null}, orderBy: CREATED_AT_DESC, first: 1) {
+          nodes {
+            id
+            title
+            createdAt
           }
         }
       }`;
     try {
       await live({ query }, ({ data }) => {
-        const { latestSak } = data;
-        dispatch({ type: "SAK_FETCH_FINISHED", payload: latestSak });
+        const { saks: { nodes } } = data;
+        dispatch({ type: "SAK_SUB_UPDATED", payload: nodes[0] });
       });
+      dispatch({ type: "SAK_SUB_FINISHED" });
     } catch (error) {
-      dispatch({ type: "SAK_FETCH_FAILED", error });
+      dispatch({ type: "SAK_SUB_FAILED", error });
     }
   },
 
   selectSakRaw: state => state.sak,
-  selectSakData: state => state.sak.data,
-  selectSak: createSelector(
-    "selectSakData",
+  selectSak: state => state.sak.data,
+  selectSakId: state => state.sak.data.id,
+  selectSakObj: createSelector(
     "selectPeopleById",
-    (sakData, peopleById) => {
-      const speeches = sakData?.speeches.nodes || [];
+    "selectSak",
+    "selectSpeeches",
+    (peopleById, sak, speeches) => {
       const nsak = {
-        ...sakData,
-        speeches: speeches.map(s => ({
-          ...s,
-          speaker: peopleById[s.speakerId] || {}
+        ...sak,
+        speeches: (speeches || []).map(speech => ({
+          ...speech,
+          speaker: peopleById[speech.speakerId] || {},
         }))
       };
       return nsak;
@@ -174,42 +206,53 @@ const sak = {
     "selectSakRaw",
     "selectMyself",
     (raw, myself) => {
-      if (!raw.started && !raw.data && !raw.failed && myself?.id) {
+      if (!raw.started && !raw.failed && myself?.id) {
         return { actionCreator: "doSakFetch" };
       }
     }
   )
 };
 
-const innlegg = {
-  name: "innlegg",
+const speech = {
+  name: "speech",
   reducer: (
-    state = { fetching: false, scheduled: false },
+    state = { started: false, data: [], fetching: false, scheduled: false },
     { type, payload }
   ) => {
-    if (type == "INNLEGG_REQ_STARTED") {
-      return { ...state, fetching: true };
-    }
-    if (type == "INNLEGG_REQ_FINISHED") {
-      return { ...state, fetching: false, current: payload };
-    }
+    if (type == "SPEECH_REQ_STARTED") return { ...state, fetching: true };
+    if (type == "SPEECH_REQ_FINISHED") return { ...state, fetching: false, current: payload };
+    if (type == "SPEECH_SUB_STARTED") return { ...state, started: true };
+    if (type == "SPEECH_SUB_FINISHED") return { ...state, stopSub: payload };
+    if (type == "SPEECH_SUB_UPDATED") return { ...state, data: payload };
+    //if (type == "SAK_SUB_UPDATED") return { ...state, started: false, data: [] };
     return state;
   },
+  getMiddleware: () => store => next => action => {
+    const oldSakId = store.selectSak()?.id;
+    const result = next(action);
+    const newSakId = store.selectSak()?.id;
+    if (oldSakId != newSakId) {
 
-  doReqInnlegg: (type = "INNLEGG", speakerId, sakId) => async ({
+    }
+    return result;
+  },
+
+  doSpeechReq: (type = "INNLEGG", { speakerId, sakId, parentId } = {}) => async ({
     dispatch,
     store
   }) => {
-    dispatch({ type: "INNLEGG_REQ_STARTED" });
+    dispatch({ type: "SPEECH_REQ_STARTED" });
     speakerId = speakerId ?? store.selectMyself().id;
     sakId = sakId ?? store.selectSak().id;
+    parentId = parentId ?? (type == "REPLIKK" ? store.selectSpeechState().current?.id : undefined);
     const gqlCreateSpeech = `
-      mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!) {
-        createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId}}) {
+      mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!, $parentId: Int) {
+        createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId, parentId: $parentId}}) {
           speech {
             id
             speakerId
             sakId
+            parentId
             type
           }
         }
@@ -218,14 +261,15 @@ const innlegg = {
       const res = await gql(gqlCreateSpeech, {
         sakId,
         speakerId,
-        type
+        type,
+        parentId,
       });
       const {
         createSpeech: { speech }
       } = res;
-      dispatch({ type: "INNLEGG_REQ_FINISHED", payload: speech });
+      dispatch({ type: "SPEECH_REQ_FINISHED", payload: speech });
     } catch (error) {
-      dispatch({ type: "INNLEGG_REQ_FAILED", error });
+      dispatch({ type: "SPEECH_REQ_FAILED", error });
     }
   },
   doSpeechEnd: speechId => async ({ dispatch, store }) => {
@@ -331,12 +375,57 @@ const innlegg = {
       dispatch({ type: "SPEECH_UPDATE_FAILED", error });
     }
   },
+  doSpeechSubscribe: (sakId) => async ({ dispatch }) => {
+    sakId = sakId ?? store.selectSak().id;
+    const { stopSub } = store.selectSpeechRaw();
+    dispatch({ type: "SPEECH_SUB_STARTED", payload: sakId });
+    if (stopSub) stopSub();
+    const query = `
+      subscription Speeches($sakId: Int!) {
+        speeches(condition: {sakId: $sakId}) {
+          nodes {
+            id
+            speakerId
+            sakId
+            parentId
+            type
+            createdAt
+            endedAt
+            startedAt
+          }
+        }
+      }
+      `;
+    const variables = { sakId };
+    try {
+      const stop = await live({ query, variables }, ({ data }) => {
+        const { speeches: { nodes } } = data;
+        dispatch({ type: "SPEECH_SUB_UPDATED", payload: nodes });
+      });
+      dispatch({ type: "SPEECH_SUB_FINISHED", payload: stop });
+    } catch (error) {
+      dispatch({ type: "SPEECH_SUB_FAILED", error });
+    }
+  },
 
-  selectInnlegg: state => state.innlegg.current,
-  selectInnleggFetching: state => state.innlegg.fetching,
-  selectInnleggScheduled: state => !!state.innlegg.current,
-  selectSpeeches: createSelector("selectSak", sak =>
-    (sak?.speeches || [])
+  selectSpeechRaw: state => state.speech,
+  selectSpeech: state => state.speech.current,
+  selectSpeechStarted: state => state.speech.started,
+  selectSpeechFetching: state => state.speech.fetching,
+  selectSpeechScheduled: state => !!state.speech.current,
+  selectSpeeches: createSelector("selectSpeechRaw", raw => {
+    return raw.data.map((speech) => ({ ...speech, 
+          status: speech.startedAt
+            ? speech.endedAt
+              ? "ended"
+              : "started"
+            : speech.endedAt
+            ? "cancelled"
+            : "waiting"
+    })).sort((a, b) => (a.parentId || a.id) - (b.parentId || b.id));
+  }),
+  selectSpeechesValid: createSelector("selectSpeeches", speeches =>
+    speeches
       .map((speech, i) => {
         // ignore speeches that ended without ever starting
         if (!speech.startedAt && speech.endedAt) return;
@@ -344,7 +433,7 @@ const innlegg = {
       })
       .filter(Boolean)
   ),
-  selectSpeechState: createSelector("selectSpeeches", speeches => {
+  selectSpeechState: createSelector("selectSpeechesValid", speeches => {
     const state = {
       prev: null,
       current: null,
@@ -367,10 +456,10 @@ const innlegg = {
   }),
   selectSpeechesUpcomingByMe: createSelector(
     "selectMyself",
-    "selectSpeeches",
+    "selectSpeechesValid",
     (myself, speeches) => {
       return speeches.filter(
-        speech => !speech.endedAt && speech.speaker.id == myself.id
+        speech => !speech.endedAt && speech.speakerId == myself.id
       );
     }
   ),
@@ -380,9 +469,20 @@ const innlegg = {
     "selectSpeechState",
     (myself, speechesUpcomingByMe, speechState) => {
       return (
-        speechesUpcomingByMe.length ||
-        speechState.current?.speaker.id == myself?.id
+        speechState.next?.speakerId == myself?.id ||
+        speechState.current?.speakerId == myself?.id
       );
+    }
+  ),
+
+  reactSpeechesUpdateOnSakChange: createSelector(
+    "selectSakId",
+    "selectSpeechStarted",
+    (sakId, speechStarted) => {
+    console.log("react speech");
+      if (sakId && !speechStarted) {
+        return { actionCreator: "doSpeechSubscribe", args: [sakId] };
+      }
     }
   )
 };
@@ -426,7 +526,7 @@ const errors = {
   }
 };
 
-const store = composeBundles(myself, innlegg, sak, people, out, errors)();
+const store = composeBundles(myself, speech, sak, people, out, errors)();
 window.store = store;
 
 function addSelect(sel) {

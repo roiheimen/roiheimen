@@ -51,11 +51,11 @@ export async function live({ query, variables = {}}, cb) {
   if (!ws) openWs();
   await wsReady;
   liveCurrent[++id] = cb;
-  send({
-    id,
-    type: "start",
-    payload: { query, variables },
-  });
+  send({ id, type: "start", payload: { query, variables } });
+  return () => {
+    delete liveCurrent[id];
+    send({ id, type: "stop" });
+  };
 }
 function openWs(query, cb) {
   ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");

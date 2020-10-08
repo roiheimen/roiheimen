@@ -6,15 +6,6 @@ import { gql } from "../lib/graphql.js";
 import "./speechesList.js";
 import "./personList.js";
 
-const gqlNewSak = `
-  mutation NewSak($mId: String!, $title: String!) {
-    createSak(input: {sak: {title: $title, meetingId: $mId}}) {
-      sak {
-        id
-        title
-      }
-    }
-  }`;
 const gqlLatestSak = `
   query LatestSak {
     latestSak {
@@ -60,36 +51,17 @@ const SakTitle = {
     return `
     ${self} {
     }
-    ${self} input {
-      font-size: 24px;
-      height: 100%;
-      padding: 3px;
-      width: 100%;
-    }
     `;
   },
   onsak() {
     this.render();
   },
   render() {
-    this.html`<input value=${this.sak?.title} placeholder="Ingenting">`;
   }
 };
-const SakFinishButton = {
-  style(self) {
-    return `
-    ${self} button {
-      height: 100%;
-      width: 100%;
-    }
-    `;
-  },
-  render() {
-    this.html`<button>Neste sak</button>`;
-  }
-};
+
 const SakSpeakerAdderInput = {
-  mappedAttributes: ["people", "err"],
+  mappedAttributes: ["err"],
   oninit() {
     this.addEventListener("submit", this);
     this.adder = ref();
@@ -118,11 +90,6 @@ const SakSpeakerAdderInput = {
     }
     `;
   },
-  onpeople() {
-    this.personIdByNum = new Map(
-      Object.values(this.people).map(p => [p.num, p.id])
-    );
-  },
   onerr() {
     this.render();
   },
@@ -136,15 +103,20 @@ const SakSpeakerAdderInput = {
     }
     const [type_, num] = /^(r|i|)(\d+)$/.exec(adder)?.slice(1, 3) || [];
     const type = { r: "REPLIKK", i: "INNLEGG" }[type_ || "i"];
-    const personId = this.personIdByNum.get(+num);
-    if (!personId) {
+    if (!this.people.length) {
+      console.log("XXX people is no WTF");
+      this.people = store.selectPeople();
+    }
+    const person = this.people.find(p => p.num == +num);
+    if (!person) {
+      console.log("XXX people", this.people, type, num);
       this.err = `Fann ingen person med nummer ${+num}`;
       return;
     }
-    this.store.doReqInnlegg(type, personId);
+    this.store.doSpeechReq(type, { speakerId: person.id });
   },
   onkeydown(e) {
-    const { key } = e;
+    const { key } = e;
     if (key == "Backspace") {
       if (!this.adder.current.value) {
         store.doSpeechPrev();
@@ -175,20 +147,23 @@ const SakSpeakerAdderInput = {
         delay: 2000
       });
     }
-    const { innleggFetching } = useSel("innleggFetching");
+    const { speechFetching, people } = useSel("speechFetching", "people");
+    this.people = people;
     this.store = useStore();
     useEffect(() => {
-      if (!innleggFetching && this.adder.current.value) {
-        this.adder.current.value = '';
+      if (!speechFetching && this.adder.current.value) {
+        this.adder.current.value = "";
       }
-    }, [innleggFetching]);
+    }, [speechFetching]);
     this.html`
     ${this.err &&
       html`
         <p ref=${onErrRef} class="err">${this.err}</p>
       `}
     <form>
-      <input onkeydown=${this} name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off ref=${this.adder}>
+      <input onkeydown=${this} name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off ref=${
+      this.adder
+    }>
       <input type=submit value="Legg til">
     </form>
     `;
@@ -233,9 +208,11 @@ const NewSakDialog = {
   },
   onsubmit(e) {
     const title = e.target.title.value;
-    this.newSak(title, () => {
-      e.target.title.value = "";
-    });
+    this.store.doSakReq(title);
+    this.close();
+    //this.newSak(title, () => {
+    //  e.target.title.value = "";
+    //});
     e.preventDefault();
   },
   async newSak(title, onFinish) {
@@ -256,7 +233,8 @@ const NewSakDialog = {
       this.err = "" + e;
     }
   },
-  render() {
+  render({ useStore }) {
+    this.store = useStore();
     this.html`
       <h1>Neste sak</h1>
       <form>
@@ -274,24 +252,12 @@ const NewSakDialog = {
 define("RoiManage", {
   includes: {
     NewSakDialog,
-    SakFinishButton,
     SakSpeakerAdderInput,
-    SakTitle,
   },
-  mappedAttributes: ["sak", "people"],
   oninit() {
     this.newSakDialog = ref();
-    if (!this.sak) {
-      this.fetchLatestSak();
-    }
-    if (!this.people) {
-      this.people = [];
-      fetchPeople().then(people => {
-        this.people = people;
-      });
-    }
   },
-  style(self, dialog, finish, adder, title) {
+  style(self, dialog, adder) {
     return `
     ${self} {
       display: grid;
@@ -303,8 +269,14 @@ define("RoiManage", {
         'list  list  list';
       grid-gap: 10px;
     }
-    ${title} { grid-area: title; }
-    ${finish} { grid-area: finish; }
+    ${self} .title {
+      grid-area: title; 
+      font-size: 24px;
+      height: 100%;
+      padding: 3px;
+      width: 100%;
+    }
+    ${self} .finish { grid-area: finish; }
     ${adder} { grid-area: adder; }
     roi-speeches-list { grid-area: list; }
     ${self} .people {
@@ -315,30 +287,28 @@ define("RoiManage", {
     roi-person-list table { width: 100% }
     `;
   },
-  onpeople() {
-    this.render();
+  onclick(e) {
+    if (e.target.classList.contains("new")) {
+      this.newSakDialog.current.showModal();
+    } else {
+      store.doSakFinish();
+    }
   },
-  onsak() {
-    this.render();
-  },
-  onclick() {
-    this.newSakDialog.current.showModal();
-  },
-  onnewsak({ detail: sak }) {
-    this.sak = sak;
-    this.render();
-  },
-  async fetchLatestSak() {
-    const res = await gql(gqlLatestSak);
-    this.sak = res.latestSak;
-  },
-  render() {
+  render({ useSel, useStore }) {
+    const { sak } = useSel("sak");
+    this.store = useStore();
     this.html`
-      <SakTitle sak=${this.sak} />
-      <SakFinishButton onclick=${this} />
-      <SakSpeakerAdderInput people=${this.people} />
+      ${
+        sak?.id
+          ? html`
+              <input class=title value=${sak?.title} placeholder="Ingenting">
+              <button class=finish onclick=${this}>Ferdig sak</button>
+              <SakSpeakerAdderInput />
+              <roi-speeches-list />
+            `
+            : html`<button class=new onclick=${this}>Ny sak</button>`
+      }
 
-      <roi-speeches-list />
       <div class=people>
         <h2>Folk</h2>
         <roi-person-list />

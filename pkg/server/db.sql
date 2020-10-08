@@ -44,6 +44,8 @@ create table roiheimen.sak (
 );
 comment on table roiheimen.sak is 'A sak is one agende item that can have speeches connected to it.';
 create index on roiheimen.sak(meeting_id);
+create index on roiheimen.sak(created_at);
+create index on roiheimen.sak(finished_at);
 
 -- person
 create table roiheimen.person (
@@ -81,7 +83,8 @@ create table roiheimen.speech (
   id               serial primary key,
   speaker_id       integer not null references roiheimen.person(id) on delete cascade,
   sak_id           integer not null references roiheimen.sak(id) on delete cascade,
-  type             roiheimen.speech_type not null,
+  parent_id        integer null references roiheimen.speech(id) on delete set null,
+  type             roiheimen.speech_type not null default 'innlegg',
   started_at       timestamp,
   ended_at         timestamp,
   created_at       timestamp default now(),
@@ -90,9 +93,19 @@ create table roiheimen.speech (
 comment on table roiheimen.speech is 'A speech done by a person on a sak.';
 create index on roiheimen.speech(speaker_id);
 create index on roiheimen.speech(sak_id);
+create index on roiheimen.speech(parent_id);
 create index on roiheimen.speech(created_at);
 create index on roiheimen.speech(started_at);
 create index on roiheimen.speech(ended_at);
+
+-- Views
+
+drop view ordered_speech;
+create view ordered_speech as
+  select *
+  from roiheimen.speech
+  where sak_id = (select max(id) from roiheimen.sak)
+  order by coalesce(parent_id, id) asc, created_at asc;
 
 -- Functions
 
@@ -196,6 +209,15 @@ create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $
     limit 1
 $$ language sql stable;
 
+create function forum.latest_post(forum_id text) returns forum.post as $$
+  select *
+    from forum.post
+    where finished_at is null
+    and forum_id = coalesce($1, current_setting('jwt.claims.forum_id', true))
+    order by created_at desc
+    limit 1
+$$ language sql stable;
+
 -- create function roiheimen.current_speeches(meeting_id text, sak_id int) returns roiheimen.speech as $$
 --   select *
 --     from roiheimen.sak
@@ -233,6 +255,8 @@ grant update, delete on table roiheimen.person to roiheimen_person;
 grant select on table roiheimen.speech to roiheimen_anonymous, roiheimen_person;
 grant insert, update, delete on table roiheimen.speech to roiheimen_person;
 grant usage on sequence roiheimen.speech_id_seq to roiheimen_person;
+
+grant select on roiheimen.ordered_speech to roiheimen_anonymous, roiheimen_person;
 
 grant execute on function roiheimen.authenticate(integer, text, text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.register_person(integer, text, text, text, text, text) to roiheimen_person;
