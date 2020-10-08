@@ -124,17 +124,17 @@ const sak = {
   },
 
   doSakFinish: sakId => async ({ dispatch, store }) => {
+    sakId = sakId ?? store.selectSakId();
     dispatch({ type: "SAK_FINISH_STARTED", payload: sakId });
-    sakId = sakId ?? store.selectSak().id;
     const query = `
-    mutation SakEnd($id: Int!) {
-      updateSak(input: {id: $id, patch: { finishedAt: "now()" }}) {
+    mutation SakEnd($sakId: Int!) {
+      updateSak(input: {id: $sakId, patch: { finishedAt: "now()" }}) {
         clientMutationId
       }
     }
     `;
     try {
-      const res = await gql(query, { id: sakId });
+      const res = await gql(query, { sakId });
       dispatch({ type: "SAK_FINISH_FINISHED", payload: sakId });
     } catch (error) {
       dispatch({ type: "SAK_FINISH_FAILED", error, payload: sakId });
@@ -185,7 +185,7 @@ const sak = {
 
   selectSakRaw: state => state.sak,
   selectSak: state => state.sak.data,
-  selectSakId: state => state.sak.data.id,
+  selectSakId: state => state.sak.data?.id,
   selectSakObj: createSelector(
     "selectPeopleById",
     "selectSak",
@@ -244,7 +244,8 @@ const speech = {
     dispatch({ type: "SPEECH_REQ_STARTED" });
     speakerId = speakerId ?? store.selectMyself().id;
     sakId = sakId ?? store.selectSak().id;
-    parentId = parentId ?? (type == "REPLIKK" ? store.selectSpeechState().current?.id : undefined);
+    const { current } = store.selectSpeechState();
+    parentId = parentId ?? (type == "REPLIKK" ? current.parentId || current?.id : undefined);
     const gqlCreateSpeech = `
       mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!, $parentId: Int) {
         createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId, parentId: $parentId}}) {
