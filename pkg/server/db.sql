@@ -272,7 +272,9 @@ alter table roiheimen.speech enable row level security;
 
 create policy select_meeting on roiheimen.meeting for select using (true);
 
-create policy select_sak on roiheimen.sak for select using (true);
+create policy select_sak on roiheimen.sak for select using (
+    meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+  );
 create policy update_sak on roiheimen.sak for all using (
     coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
     and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
