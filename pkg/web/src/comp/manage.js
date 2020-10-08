@@ -4,6 +4,7 @@ import storage from "../lib/storage.js";
 import { gql } from "../lib/graphql.js";
 
 import "./speechesList.js";
+import "./personList.js";
 
 const gqlNewSak = `
   mutation NewSak($mId: String!, $title: String!) {
@@ -306,6 +307,12 @@ define("RoiManage", {
     ${finish} { grid-area: finish; }
     ${adder} { grid-area: adder; }
     roi-speeches-list { grid-area: list; }
+    ${self} .people {
+      color: #666;
+      grid-column: 1/4;
+    }
+    ${self} h2 { text-align: center }
+    roi-person-list table { width: 100% }
     `;
   },
   onpeople() {
@@ -332,6 +339,10 @@ define("RoiManage", {
       <SakSpeakerAdderInput people=${this.people} />
 
       <roi-speeches-list />
+      <div class=people>
+        <h2>Folk</h2>
+        <roi-person-list />
+      </div>
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
     `;
   }
