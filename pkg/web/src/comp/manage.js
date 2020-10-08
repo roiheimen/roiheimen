@@ -105,12 +105,16 @@ const SakSpeakerAdderInput = {
     const type = { r: "REPLIKK", i: "INNLEGG" }[type_ || "i"];
     if (!this.people.length) {
       console.log("XXX people is no WTF");
-      this.people = store.selectPeople();
+      this.people = this.store.selectPeople();
     }
     const person = this.people.find(p => p.num == +num);
     if (!person) {
       console.log("XXX people", this.people, type, num);
       this.err = `Fann ingen person med nummer ${+num}`;
+      return;
+    }
+    if (type == "REPLIKK" && !this.store.selectSpeechState().current) {
+      this.err = `Ingen replikk utan aktiv tale`;
       return;
     }
     this.store.doSpeechReq(type, { speakerId: person.id });
@@ -119,7 +123,7 @@ const SakSpeakerAdderInput = {
     const { key } = e;
     if (key == "Backspace") {
       if (!this.adder.current.value) {
-        store.doSpeechPrev();
+        this.store.doSpeechPrev();
         return;
       }
     }
@@ -140,12 +144,14 @@ const SakSpeakerAdderInput = {
     }
   },
   render({ useStore, useSel, useEffect, useRef }) {
-    function onErrRef(elm) {
-      elm.animate([{ opacity: 1 }, { opacity: 0 }], {
+    const onErrRef = async (elm) => {
+      const anim = elm.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 2000,
         fill: "both",
         delay: 2000
       });
+      await anim.finished;
+      this.err = "";
     }
     const { speechFetching, people } = useSel("speechFetching", "people");
     this.people = people;
@@ -153,6 +159,7 @@ const SakSpeakerAdderInput = {
     useEffect(() => {
       if (!speechFetching && this.adder.current.value) {
         this.adder.current.value = "";
+        this.err = "";
       }
     }, [speechFetching]);
     this.html`
@@ -291,7 +298,7 @@ define("RoiManage", {
     if (e.target.classList.contains("new")) {
       this.newSakDialog.current.showModal();
     } else {
-      store.doSakFinish();
+      this.store.doSakFinish();
     }
   },
   render({ useSel, useStore }) {
