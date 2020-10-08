@@ -59,11 +59,10 @@ const RoiQueueDrawer = {
       "myself",
       "sak",
     );
-    if (!sak?.speeches) {
-      return this.html`Lastar...`;
-    }
+    const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     this.html`
       <div class=buttons>
+        ${sak.id ? html`
         <button
           tabindex=0
           disabled=${speechFetching}
@@ -76,8 +75,9 @@ const RoiQueueDrawer = {
           .onclick=${() => store.doSpeechReq("REPLIKK")}
           title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
           >Replikk</button>
-        ${speechesUpcomingByMe[0] ? html`<button
-          .onclick=${() => store.doSpeechEnd(speechesUpcomingByMe[0].id)}
+          ` : ''}
+        ${myNewestSpeechRequest ? html`<button
+          .onclick=${() => store.doSpeechEnd(myNewestSpeechRequest.id)}
           title=${`Stryk din pågåande eller komande oppføring på talelista`}
           >Stryk meg</button>` : ''}
         <button
