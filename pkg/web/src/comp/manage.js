@@ -35,6 +35,20 @@ query FetchPeople {
   }
 }`;
 
+export function parseAdderLine(line) {
+  if (["r", "i"].includes(line[0]) || /\d/.test(line[0])) {
+    let num;
+    if (/\d/.test(line[0])) num = +line;
+    else num = +line.slice(1);
+    const speech = { r: "REPLIKK", i: "INNLEGG" }[line[0]] || "INNLEGG";
+    return { speech, num };
+  }
+  if (["v", "l"].includes(line[0])) {
+    const [title, ...choices] = line.slice(1).split(":").map(p => p.trim())
+    return { vote: { v: "OPEN", l: "CLOSED" }[line[0]], title, choices };
+  }
+}
+
 async function fetchPeople() {
   const res = await gql(gqlFetchPeople);
   const {
@@ -101,23 +115,30 @@ const SakSpeakerAdderInput = {
       this.store.doSpeechNext();
       return;
     }
-    const [type_, num] = /^(r|i|)(\d+)$/.exec(adder)?.slice(1, 3) || [];
-    const type = { r: "REPLIKK", i: "INNLEGG" }[type_ || "i"];
-    if (!this.people.length) {
-      console.log("XXX people is no WTF");
-      this.people = this.store.selectPeople();
-    }
-    const person = this.people.find(p => p.num == +num);
-    if (!person) {
-      console.log("XXX people", this.people, type, num);
-      this.err = `Fann ingen person med nummer ${+num}`;
+    const action = parseAdderLine(adder);
+    if (action.speech) {
+      const { speech: type, num } = action;
+      if (!this.people.length) {
+        console.log("XXX people is no WTF");
+        this.people = this.store.selectPeople();
+      }
+      const person = this.people.find(p => p.num == +num);
+      if (!person) {
+        console.log("XXX people", this.people, type, num);
+        this.err = `Fann ingen person med nummer ${+num}`;
+        return;
+      }
+      if (type == "REPLIKK" && !this.store.selectSpeechState().current) {
+        this.err = `Ingen replikk utan aktiv tale`;
+        return;
+      }
+      this.store.doSpeechReq(type, { speakerId: person.id });
       return;
     }
-    if (type == "REPLIKK" && !this.store.selectSpeechState().current) {
-      this.err = `Ingen replikk utan aktiv tale`;
+    if (action.vote) {
+      this.store.doReferendumReq({ type: action.vote, ...action });
       return;
     }
-    this.store.doSpeechReq(type, { speakerId: person.id });
   },
   onkeydown(e) {
     const { key } = e;

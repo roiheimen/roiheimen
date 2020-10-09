@@ -3,10 +3,12 @@ body {
   color: #333;
   display: grid;
   font-family: "sans-serif";
-  font-size: 24px;
-  font-size: 2.5vw;
+  font-size: 20px;
   line-height: 145%;
   margin: 0;
+}
+body.bigtext {
+  font-size: 2.5vw;
 }
 input, textarea { box-sizing: border-box }
 h1, h2, h3 {

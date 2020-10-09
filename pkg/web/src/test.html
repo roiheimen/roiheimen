@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta charset=utf8>
+<title>Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<body>
+<script type=module>
+import { parseAdderLine } from "./comp/manage.js"
+
+const allOut = [];
+function w(out) {
+  if (typeof out == "object") out = JSON.stringify(out);
+  allOut.push(out);
+  document.querySelector("pre").innerText = allOut.join("\n");
+}
+
+function testParse(input, expect) {
+  const out = parseAdderLine(input)
+  const jout = JSON.stringify(out);
+  const jexpect = JSON.stringify(expect);
+  if (jout != jexpect) {
+    w(`fail! got >>${jout}<<, expected >>${jexpect}<<`);
+  } else w("ok");
+}
+
+testParse("", undefined);
+testParse("1", { speech: "INNLEGG", num: 1 });
+testParse("r12", { speech: "REPLIKK", num: 12 });
+testParse("i8812", { speech: "INNLEGG", num: 8812 });
+testParse("i 1337 ", { speech: "INNLEGG", num: 1337 });
+testParse(
+  "vAlt okay? :Ja : Nei, det er greit :Nei ",
+  {
+    vote: "open",
+    title: "Alt okay?",
+    choices: ["Ja", "Nei, det er greit", "Nei"]
+  });
+testParse(
+  "lBeste is?:Kræsj pink:Kærsj pink",
+  {
+    vote: "closed",
+    title: "Beste is?",
+    choices: ["Kræsj pink", "Kærsj pink"]
+  });
+
+
+w("finish");
+</script>
+<pre style="white-space: pre-wrap">
+</pre>
+</body>

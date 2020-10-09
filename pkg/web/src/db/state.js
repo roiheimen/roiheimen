@@ -488,6 +488,67 @@ const speech = {
   )
 };
 
+const referendum = {
+  name: "referendum",
+  reducer: (
+    state = { started: false, data: {}, fetching: false },
+    { type, payload }
+  ) => {
+    if (type == "REFERENDUM_REQ_STARTED") return { ...state, fetching: true };
+    if (type == "REFERENDUM_REQ_FINISHED") return { ...state, fetching: false, current: payload };
+    return state;
+  },
+  getMiddleware: () => store => next => action => {
+    const oldSakId = store.selectSak()?.id;
+    const result = next(action);
+    const newSakId = store.selectSak()?.id;
+    if (oldSakId != newSakId) {
+    }
+    return result;
+  },
+
+  doReferendumReq: ({ type, title, choices, sakId }) => async ({
+    dispatch,
+    store
+  }) => {
+    sakId = sakId ?? store.selectSak().id;
+    dispatch({ type: "REFERENDUM_REQ_STARTED", payload: { type, title, choices, sakId } });
+    const query = `
+      mutation CreateReferendum($title: String!, $sakId: Int!, $choices: JSON!, $type: ReferendumType!) {
+        createReferendum(input: {referendum: {title: $title, sakId: $sakId, choices: $choices, type: $type}}) {
+          clientMutationId
+        }
+      }`;
+    try {
+      const res = await gql(query, {
+        sakId,
+        type,
+        title,
+        choices,
+      });
+      dispatch({ type: "REFERENDUM_REQ_FINISHED", payload: res });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_REQ_FAILED", error });
+    }
+  },
+  doReferendumEnd: referendumId => async ({ dispatch, store }) => {
+    dispatch({ type: "REFERENDUM_END_STARTED", payload: referendumId });
+    const query = `
+    mutation ReferendumEnd($id: Int!) {
+      updateReferendum(input: {id: $id, patch: { finishedAt: "now()" }}) {
+        clientMutationId
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { id: referendumId });
+      dispatch({ type: "REFERENDUM_END_FINISHED", payload: referendumId });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
+    }
+  },
+};
+
 const out = {
   name: "out",
   reducer: (state = { currentType: "" }, { type, payload }) => {
@@ -527,7 +588,7 @@ const errors = {
   }
 };
 
-const store = composeBundles(myself, speech, sak, people, out, errors)();
+const store = composeBundles(myself, speech, sak, people, referendum, out, errors)();
 window.store = store;
 
 function addSelect(sel) {
