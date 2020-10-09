@@ -16,7 +16,14 @@ export default define("RoiReferendumList", {
     }
     `;
   },
-  render({ useSel }) {
+  onclick({ target }) {
+    if (target.name = "end") {
+      const id = +target.closest("tr").dataset.id;
+      this.store.doReferendumEnd(id);
+    }
+  },
+  render({ useSel, useStore }) {
+    this.store = useStore();
     const { referendums } = useSel("referendums");
     if (!referendums.length) {
       return this.html` `;
@@ -27,11 +34,11 @@ export default define("RoiReferendumList", {
       ${referendums.map(
         r =>
           html`
-            <tr id=${"referendum-" + r.id}>
+            <tr data-id=${r.id}>
               <td>${r.title}</td>
               <td>${r.type}</td>
               <td>${r.choices.map(c => html`<span class=choice>${c}</span>`)}</td>
-              <td>${r.finishedAt ? "Ferdig" : ""}</td>
+              <td>${r.finishedAt ? "Ferdig" : html`<button name=end onclick=${this}>Avslutt</button>`}</td>
             </tr>
           `
       )}
