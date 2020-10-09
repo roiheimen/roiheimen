@@ -98,9 +98,42 @@ create index on roiheimen.speech(created_at);
 create index on roiheimen.speech(started_at);
 create index on roiheimen.speech(ended_at);
 
+-- vote
+create type roiheimen.referendum_type as enum (
+  'open',
+  'closed'
+);
+create table roiheimen.referendum (
+  id               serial primary key,
+  title            text not null,
+  type             roiheimen.referendum_type not null default 'open',
+  choices          jsonb default '[]',
+  sak_id           integer not null references roiheimen.sak(id) on delete cascade,
+  created_at       timestamptz default now(),
+  updated_at       timestamptz default now(),
+  finished_at      timestamptz default null
+);
+comment on table roiheimen.referendum is 'A referendum opened on a sak.';
+create index on roiheimen.referendum(sak_id);
+create index on roiheimen.referendum(created_at);
+create index on roiheimen.referendum(finished_at);
+
+create table roiheimen.vote (
+  id               serial primary key,
+  vote             text not null,
+  referendum_id    integer not null references roiheimen.referendum(id) on delete cascade,
+  person_id        integer not null references roiheimen.person(id) on delete cascade,
+  created_at       timestamptz default now(),
+  unique(referendum_id, person_id)
+);
+comment on table roiheimen.vote is 'A vote by a person.';
+create index on roiheimen.vote(referendum_id);
+create index on roiheimen.vote(person_id);
+create index on roiheimen.vote(created_at);
+
 -- Views
 
-drop view ordered_speech;
+drop view if exists ordered_speech;
 create view ordered_speech as
   select *
   from roiheimen.speech
@@ -209,15 +242,6 @@ create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $
     limit 1
 $$ language sql stable;
 
-create function forum.latest_post(forum_id text) returns forum.post as $$
-  select *
-    from forum.post
-    where finished_at is null
-    and forum_id = coalesce($1, current_setting('jwt.claims.forum_id', true))
-    order by created_at desc
-    limit 1
-$$ language sql stable;
-
 -- create function roiheimen.current_speeches(meeting_id text, sak_id int) returns roiheimen.speech as $$
 --   select *
 --     from roiheimen.sak
@@ -256,6 +280,12 @@ grant select on table roiheimen.speech to roiheimen_anonymous, roiheimen_person;
 grant insert, update, delete on table roiheimen.speech to roiheimen_person;
 grant usage on sequence roiheimen.speech_id_seq to roiheimen_person;
 
+grant select on table roiheimen.referendum to roiheimen_anonymous, roiheimen_person;
+grant insert, update, delete on table roiheimen.referendum to roiheimen_person;
+grant usage on sequence roiheimen.referendum_id_seq to roiheimen_person;
+grant select, insert, delete on table roiheimen.vote to roiheimen_person;
+grant usage on sequence roiheimen.vote_id_seq to roiheimen_person;
+
 grant select on roiheimen.ordered_speech to roiheimen_anonymous, roiheimen_person;
 
 grant execute on function roiheimen.authenticate(integer, text, text) to roiheimen_anonymous, roiheimen_person;
@@ -269,6 +299,8 @@ alter table roiheimen.meeting enable row level security;
 alter table roiheimen.sak enable row level security;
 alter table roiheimen.person enable row level security;
 alter table roiheimen.speech enable row level security;
+alter table roiheimen.referendum enable row level security;
+alter table roiheimen.vote enable row level security;
 
 create policy select_meeting on roiheimen.meeting for select using (true);
 
@@ -303,6 +335,43 @@ create policy all_admin_speech on roiheimen.speech for all to roiheimen_person
       select 1 from roiheimen.person
       where id = speaker_id
       and meeting_id = current_setting('jwt.claims.meeting_id', true)
+    )
+  );
+
+create policy select_referendum on roiheimen.referendum for select using (true);
+create policy update_referendum on roiheimen.referendum for all using (
+    coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
+    and exists (
+      select 1 from roiheimen.sak
+      where id = sak_id
+      and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    )
+  );
+create policy select_vote on roiheimen.vote for select to roiheimen_person
+  using (
+    exists (
+      select 1 from roiheimen.referendum
+      where id = referendum_id
+      and sak_id = sak_id
+      and type = 'open'
+      -- and sak meeting id?
+    )
+    and exists (
+      select 1 from roiheimen.person
+      where id = person_id
+      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+    )
+  );
+create policy select_vote_yourself on roiheimen.vote for select to roiheimen_person
+  using (
+    person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+  );
+create policy insert_vote on roiheimen.vote for insert to roiheimen_person
+  with check (
+    person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+    and exists (
+      select 1 from roiheimen.referendum
+      where id = referendum_id and finished_at is null
     )
   );
 
@@ -341,6 +410,7 @@ select roiheimen.register_people(
   ]::people_input[]
 );
 update roiheimen.person set admin = true where num = 1000 and meeting_id = 'nmlm12';
+update roiheimen.person set room = 'https://nm.whereby.com/r1000' where num = 1000 and meeting_id = 'nmlm12';
 update roiheimen.person set room = 'https://nm.whereby.com/r10' where num = 10 and meeting_id = 'nmlm12';
 update roiheimen.person set room = 'https://nm.whereby.com/r11' where num = 11 and meeting_id = 'nmlm12';
 update roiheimen.person set room = 'https://nm.whereby.com/r12' where num = 12 and meeting_id = 'nmlm12';
