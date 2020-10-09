@@ -216,12 +216,12 @@ const sak = {
 const speech = {
   name: "speech",
   reducer: (
-    state = { started: false, data: [], fetching: false, scheduled: false },
+    state = { subStarted: false, data: [], fetching: false, scheduled: false },
     { type, payload }
   ) => {
     if (type == "SPEECH_REQ_STARTED") return { ...state, fetching: true };
     if (type == "SPEECH_REQ_FINISHED") return { ...state, fetching: false, current: payload };
-    if (type == "SPEECH_SUB_STARTED") return { ...state, started: true };
+    if (type == "SPEECH_SUB_STARTED") return { ...state, subStarted: true };
     if (type == "SPEECH_SUB_FINISHED") return { ...state, stopSub: payload };
     if (type == "SPEECH_SUB_UPDATED") return { ...state, data: payload };
     //if (type == "SAK_SUB_UPDATED") return { ...state, started: false, data: [] };
@@ -411,7 +411,7 @@ const speech = {
 
   selectSpeechRaw: state => state.speech,
   selectSpeech: state => state.speech.current,
-  selectSpeechStarted: state => state.speech.started,
+  selectSpeechStarted: state => state.speech.subStarted,
   selectSpeechFetching: state => state.speech.fetching,
   selectSpeechScheduled: state => !!state.speech.current,
   selectSpeeches: createSelector("selectSpeechRaw", raw => {
@@ -480,7 +480,6 @@ const speech = {
     "selectSakId",
     "selectSpeechStarted",
     (sakId, speechStarted) => {
-    console.log("react speech");
       if (sakId && !speechStarted) {
         return { actionCreator: "doSpeechSubscribe", args: [sakId] };
       }
@@ -491,11 +490,19 @@ const speech = {
 const referendum = {
   name: "referendum",
   reducer: (
-    state = { started: false, data: {}, fetching: false },
+    state = {
+      subStarted: false,
+      data: [],
+      subStop: null,
+      fetching: false
+    },
     { type, payload }
   ) => {
     if (type == "REFERENDUM_REQ_STARTED") return { ...state, fetching: true };
     if (type == "REFERENDUM_REQ_FINISHED") return { ...state, fetching: false, current: payload };
+    if (type == "REFERENDUM_SUB_STARTED") return { ...state, subStarted: true, subStop: null };
+    if (type == "REFERENDUM_SUB_FINISHED") return { ...state, subStop: payload };
+    if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
     return state;
   },
   getMiddleware: () => store => next => action => {
@@ -547,6 +554,55 @@ const referendum = {
       dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
     }
   },
+  doReferendumSubscribe: (sakId) => async ({ dispatch }) => {
+    sakId = sakId ?? store.selectSak().id;
+    const { subStop } = store.selectReferendumRaw();
+    dispatch({ type: "REFERENDUM_SUB_STARTED", payload: sakId });
+    if (subStop) subStop();
+    const query = `
+      subscription Referendums($sakId: Int!) {
+        referendums(condition: {sakId: $sakId}) {
+          nodes {
+            choices
+            id
+            title
+            type
+            createdAt
+            finishedAt
+            votes {
+              nodes {
+                personId
+              }
+            }
+          }
+        }
+      }
+      `;
+    const variables = { sakId };
+    try {
+      const stop = await live({ query, variables }, ({ data }) => {
+        const { referendums: { nodes } } = data;
+        dispatch({ type: "REFERENDUM_SUB_UPDATED", payload: nodes });
+      });
+      dispatch({ type: "REFERENDUM_SUB_FINISHED", payload: stop });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_SUB_FAILED", error });
+    }
+  },
+
+  selectReferendumRaw: state => state.referendum,
+  selectReferendums: state => state.referendum.data,
+  selectReferendum: createSelector("selectReferendums", referendums => referendums.filter(r => !r.finishedAt)[0]),
+
+  reactSpeechesUpdateOnSakChange: createSelector(
+    "selectReferendumRaw",
+    "selectSakId",
+    (referendumRaw, sakId) => {
+      if (sakId && !referendumRaw.subStarted) {
+        return { actionCreator: "doReferendumSubscribe", args: [sakId] };
+      }
+    }
+  )
 };
 
 const out = {
