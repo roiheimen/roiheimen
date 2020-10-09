@@ -17,7 +17,7 @@ export default define("RoiReferendumList", {
     `;
   },
   onclick({ target }) {
-    if (target.name = "end") {
+    if (target.name == "end") {
       const id = +target.closest("tr").dataset.id;
       this.store.doReferendumEnd(id);
     }
@@ -36,7 +36,7 @@ export default define("RoiReferendumList", {
           html`
             <tr data-id=${r.id}>
               <td>${r.title}</td>
-              <td>${r.type}</td>
+              <td>${{OPEN: "Open", CLOSED: "Lukka"}[r.type] || r.type}</td>
               <td>${r.choices.map(c => html`<span class=choice>${c}</span>`)}</td>
               <td>${r.finishedAt ? "Ferdig" : html`<button name=end onclick=${this}>Avslutt</button>`}</td>
             </tr>

@@ -3,6 +3,7 @@ import { define, html } from "/web_modules/heresy.js";
 import "../db/state.js";
 import storage from "../lib/storage.js";
 
+import "./referendum.js";
 import "./speechesList.js";
 import "./video.js";
 
@@ -25,7 +26,7 @@ const RoiQueueDrawer = {
       min-height: calc(40vh - 40px);
       padding: 10px 0;
     }
-    ${self} button {
+    ${self} .buttons button {
       background: transparent;
       border-radius: 4px;
       border: none;
@@ -33,7 +34,7 @@ const RoiQueueDrawer = {
       font-size: 20px;
       padding: 10px;
     }
-    ${self} button:hover {
+    ${self} .buttons button:hover {
       background: white;
       border: 1px solid rgb(199, 15, 15);
       color: inherit;
@@ -53,13 +54,18 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { speechFetching, speechesUpcomingByMe, myself, sak } = useSel(
+    const { speechFetching, speechesUpcomingByMe, myself, referendum, sak } = useSel(
       "speechFetching",
       "speechesUpcomingByMe",
       "myself",
+      "referendum",
       "sak",
     );
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
+    let workArea = "";
+    if (referendum) workArea = html`<roi-referendum simple />`;
+    else if (sak?.id) workArea = html`<roi-speeches-list simple />`;
+
     this.html`
       <div class=buttons>
         ${sak?.id ? html`
@@ -88,9 +94,7 @@ const RoiQueueDrawer = {
       </div>
       <div class=queue>
         <h2 class=title>${sak?.title || "Ingen sak"}</h2>
-        ${sak?.id ? html`
-          <roi-speeches-list simple />
-        ` : ""}
+        ${workArea}
       </div>
     `;
   }

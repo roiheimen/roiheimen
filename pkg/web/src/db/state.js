@@ -589,6 +589,24 @@ const referendum = {
       dispatch({ type: "REFERENDUM_SUB_FAILED", error });
     }
   },
+  doReferendumVote: ({ referendumId, choice }) => async ({ dispatch, store }) => {
+    const personId = store.selectMyself().id;
+    dispatch({ type: "REFERENDUM_VOTE_STARTED", payload: { personId, choice, referendumId } });
+    const query = `
+    mutation ReferendumVote($referendumId: Int!, $personId: Int!, $choice: String!) {
+      createVote(input: {vote: {vote: $choice, referendumId: $referendumId, personId: $personId}}) {
+        vote { id }
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { referendumId, choice, personId });
+      const id = res.createVote.vote.id;
+      dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: id });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_VOTE_FAILED", error, payload: referendumId });
+    }
+  },
 
   selectReferendumRaw: state => state.referendum,
   selectReferendums: state => state.referendum.data,
