@@ -5,6 +5,7 @@ import { gql } from "../lib/graphql.js";
 
 import "./speechesList.js";
 import "./personList.js";
+import "./referendumList.js";
 
 const gqlLatestSak = `
   query LatestSak {
@@ -306,10 +307,13 @@ define("RoiManage", {
     }
     ${self} .finish { grid-area: finish; }
     ${adder} { grid-area: adder; }
-    roi-speeches-list { grid-area: list; }
+    ${self} .list { grid-area: list; }
     ${self} .people {
       color: #666;
       grid-column: 1/4;
+    }
+    roi-referendum-list, roi-speeches-list {
+      margin-bottom: 20px;
     }
     ${self} h2 { text-align: center }
     roi-person-list table { width: 100% }
@@ -332,7 +336,10 @@ define("RoiManage", {
               <input class=title value=${sak?.title} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
               <SakSpeakerAdderInput />
-              <roi-speeches-list />
+              <div class=list>
+                <roi-referendum-list />
+                <roi-speeches-list />
+              </list>
             `
             : html`<button class=new onclick=${this}>Ny sak</button>`
       }
