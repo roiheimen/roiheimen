@@ -685,6 +685,26 @@ const test = {
       dispatch({ type: "TEST_REQ_FAILED", error, payload: requesterId });
     }
   },
+  doTestUpdateStatus: (id, status) => async ({ dispatch }) => {
+    dispatch({ type: "TEST_UPD_STARTED", payload: id });
+    const query = `
+      mutation {
+        updateTest(input: {id: ${id}, patch: {${
+      { start: `startedAt: "now()"`, stop: `startedAt: "now()"` }[status]
+    }}}) {
+          test { id }
+        }
+      }`;
+    try {
+      const res = await gql(query);
+      const {
+        updateTest: { test },
+      } = res;
+      dispatch({ type: "TEST_REQ_FINISHED", payload: test });
+    } catch (error) {
+      dispatch({ type: "TEST_REQ_FAILED", error, payload: id });
+    }
+  },
   doTestSubscribe: (requesterId) => async ({ dispatch }) => {
     requesterId = requesterId ?? store.selectMyselfId();
     const { subStop } = store.selectTestRaw();
@@ -698,6 +718,7 @@ const test = {
             id
             requesterId
             createdAt
+            startedAt
             finishedAt
           }
         }
