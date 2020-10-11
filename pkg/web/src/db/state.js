@@ -743,6 +743,9 @@ const test = {
   selectTest: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
     tests.filter((t) => t.requesterId == myselfId).find((t) => !t.finishedAt)
   ),
+  selectTestActive: createSelector("selectTests", (tests) =>
+    tests.filter((t) => t.startedAt && !t.finishedAt)[0]
+  ),
   selectTestStatus: createSelector("selectTestRaw", "selectTest", (raw, test) => {
     if (test?.startedAt) return "active";
     if (test) return "waiting";

@@ -1,12 +1,45 @@
+import "https://whereby.dev/embed/whereby-embed.js";
+
 import { define, html } from "/web_modules/heresy.js";
 
 import "../db/state.js";
 
+const WherebyEmbed = {
+  style(self) {
+    return `
+    ${self} {
+      display: block;
+      height: 100%;
+    }
+    ${self} whereby-embed {
+      display: block;
+      height: 100%;
+      min-height: 400px;
+    }
+    `;
+  },
+  render({ useSel, usePrevious }) {
+    const { testActive, peopleById, myself } = useSel("testActive", "peopleById", "myself");
+    const person = peopleById[testActive.requesterId]
+    const room = person.room;
+    const prevRoom = usePrevious(room);
+    if (!room) return this.html`Person ${person.num} ${person.name} has no room!`;
+    if (room == prevRoom) return;
+    this.html`
+      <whereby-embed
+        displayName=${myself?.name}
+        room=${room} />
+    `;
+  },
+};
+
 define("RoiBackroom", {
+  includes: { WherebyEmbed },
   style(self) {
     return `
     ${self} {
       display: flex;
+      flex-direction: column;
     }
     `;
   },
@@ -21,11 +54,12 @@ define("RoiBackroom", {
   },
   render({ useEffect, useSel, useStore }) {
     this.store = useStore();
-    const { tests, testStatus, testListenAll, peopleById } = useSel(
-      "tests",
-      "testStatus",
+    const { peopleById, testActive, testListenAll, testStatus, tests } = useSel(
+      "peopleById",
+      "testActive",
       "testListenAll",
-      "peopleById"
+      "testStatus",
+      "tests",
     );
     useEffect(() => {
       if (testStatus && testStatus !== "starting" && !testListenAll) {
@@ -42,6 +76,7 @@ define("RoiBackroom", {
       return "Ferdig";
     };
     this.html`
+      ${testActive ? html`<WherebyEmbed />` : null}
       <table onclick=${this}>
       <tr><th>Nummer <th>Namn </tr>
       ${tests.map(
