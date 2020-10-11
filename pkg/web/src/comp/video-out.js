@@ -6,7 +6,6 @@ import storage from "../lib/storage.js";
 import "./speechesList.js";
 import "./video.js";
 
-
 define("RoiVideoOut", {
   mappedAttributes: ["type"],
   oninit() {
@@ -29,7 +28,7 @@ define("RoiVideoOut", {
     this.type = event.target.value;
   },
   ontype(t) {
-    history.replaceState({}, '', new URL(`?type=${this.type}`, location.href));
+    history.replaceState({}, "", new URL(`?type=${this.type}`, location.href));
     this.render();
   },
   render({ useSel, usePrevious }) {
@@ -60,5 +59,5 @@ define("RoiVideoOut", {
       audio=off
       room=${room + "?floatSelf"} />
     `;
-  }
+  },
 });

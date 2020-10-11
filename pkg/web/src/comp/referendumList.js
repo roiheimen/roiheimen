@@ -40,33 +40,23 @@ export default define("RoiReferendumList", {
       <table>
       <tr><th>Votering <th>Type <th>Val <th>Anna </tr>
       ${referendums.map(
-        r =>
+        (r) =>
           html`
             <tr data-id=${r.id}>
               <td>${r.title}</td>
               <td>${{ OPEN: "Open", CLOSED: "Lukka" }[r.type] || r.type}</td>
               <td>
-                ${r.counts?.map(c =>
+                ${r.counts?.map((c) =>
                   !c.choice && !c.count
                     ? html`${[]}`
-                    : html`
-                        <span class="choice"
-                          >${c.choice || "<blank>"} (${c.count})</span
-                        >
-                      `
+                    : html` <span class="choice">${c.choice || "<blank>"} (${c.count})</span> `
                 )}
               </td>
-              <td>
-                ${r.finishedAt
-                  ? "Ferdig"
-                  : html`
-                      <button name="end" onclick=${this}>Avslutt</button>
-                    `}
-              </td>
+              <td>${r.finishedAt ? "Ferdig" : html` <button name="end" onclick=${this}>Avslutt</button> `}</td>
             </tr>
           `
       )}
       </table>
       `;
-  }
+  },
 });

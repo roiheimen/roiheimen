@@ -74,5 +74,5 @@ define("RoiMeetingLayout", {
       ${this.content}
       <footer is="roi-footer" data-dark=dark />
     `;
-  }
+  },
 });

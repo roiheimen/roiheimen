@@ -45,7 +45,10 @@ export function parseAdderLine(line) {
     return { speech, num };
   }
   if (["v", "l"].includes(line[0])) {
-    const [title, ...choices] = line.slice(1).split(":").map(p => p.trim())
+    const [title, ...choices] = line
+      .slice(1)
+      .split(":")
+      .map((p) => p.trim());
     return { vote: { v: "OPEN", l: "CLOSED" }[line[0]], title, choices };
   }
 }
@@ -53,9 +56,9 @@ export function parseAdderLine(line) {
 async function fetchPeople() {
   const res = await gql(gqlFetchPeople);
   const {
-    people: { nodes }
+    people: { nodes },
   } = res;
-  const byId = Object.fromEntries(nodes.map(p => [p.id, p]));
+  const byId = Object.fromEntries(nodes.map((p) => [p.id, p]));
   storage("people").byId = byId;
   return byId;
 }
@@ -71,8 +74,7 @@ const SakTitle = {
   onsak() {
     this.render();
   },
-  render() {
-  }
+  render() {},
 };
 
 const SakSpeakerAdderInput = {
@@ -123,7 +125,7 @@ const SakSpeakerAdderInput = {
         console.log("XXX people is no WTF");
         this.people = this.store.selectPeople();
       }
-      const person = this.people.find(p => p.num == +num);
+      const person = this.people.find((p) => p.num == +num);
       if (!person) {
         console.log("XXX people", this.people, type, num);
         this.err = `Fann ingen person med nummer ${+num}`;
@@ -154,10 +156,10 @@ const SakSpeakerAdderInput = {
     try {
       const res = await gql(gqlCreateSpeech, {
         speakerId,
-        type
+        type,
       });
       const {
-        createSpeech: { speech }
+        createSpeech: { speech },
       } = res;
       onFinish();
     } catch (e) {
@@ -170,11 +172,11 @@ const SakSpeakerAdderInput = {
       const anim = elm.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 2000,
         fill: "both",
-        delay: 2000
+        delay: 2000,
       });
       await anim.finished;
       this.err = "";
-    }
+    };
     const { speechFetching, people } = useSel("speechFetching", "people");
     this.people = people;
     this.store = useStore();
@@ -185,10 +187,7 @@ const SakSpeakerAdderInput = {
       }
     }, [speechFetching]);
     this.html`
-    ${this.err &&
-      html`
-        <p ref=${onErrRef} class="err">${this.err}</p>
-      `}
+    ${this.err && html` <p ref=${onErrRef} class="err">${this.err}</p> `}
     <form>
       <input onkeydown=${this} name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off ref=${
       this.adder
@@ -196,7 +195,7 @@ const SakSpeakerAdderInput = {
       <input type=submit value="Legg til">
     </form>
     `;
-  }
+  },
 };
 
 const NewSakDialog = {
@@ -248,10 +247,10 @@ const NewSakDialog = {
     try {
       const res = await gql(gqlNewSak, {
         mId: storage("myself").meetingId,
-        title
+        title,
       });
       const {
-        createSak: { sak }
+        createSak: { sak },
       } = res;
       Object.assign(storage("sak"), sak);
       this.dispatchEvent(new CustomEvent("newsak", { detail: sak }));
@@ -270,12 +269,9 @@ const NewSakDialog = {
         <label>Tittel <input name=title placeholder="" required></label>
         <input type=submit value="Legg til og bytt">
       </form>
-      ${this.err &&
-        html`
-          <p style="color:red">${this.err}</p>
-        `}
+      ${this.err && html` <p style="color:red">${this.err}</p> `}
     `;
-  }
+  },
 };
 
 define("RoiManage", {
@@ -341,7 +337,7 @@ define("RoiManage", {
                 <roi-speeches-list />
               </list>
             `
-            : html`<button class=new onclick=${this}>Ny sak</button>`
+          : html`<button class="new" onclick=${this}>Ny sak</button>`
       }
 
       <div class=people>
@@ -350,5 +346,5 @@ define("RoiManage", {
       </div>
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
     `;
-  }
+  },
 });

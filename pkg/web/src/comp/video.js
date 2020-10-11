@@ -24,7 +24,7 @@ const YouTubeIframe = {
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen></iframe>
     `;
-  }
+  },
 };
 
 const WherebyEmbed = {
@@ -41,7 +41,7 @@ const WherebyEmbed = {
     `;
   },
   render({ useSel }) {
-    const { myself } = useSel("myself");
+    const { myself } = useSel("myself");
     // You can set this to override the room or even full URL,
     // to use a mock website or local whereby if you have
     const room = localStorage.debug_room || myself?.room || "/test";
@@ -53,7 +53,7 @@ const WherebyEmbed = {
         background=off
         room=${room} />
     `;
-  }
+  },
 };
 
 define("RoiVideo", {
@@ -77,7 +77,7 @@ define("RoiVideo", {
     const { speechFetching, speechScheduled, speechInWhereby } = useSel(
       "speechFetching",
       "speechScheduled",
-      "speechInWhereby",
+      "speechInWhereby"
     );
 
     if (speechFetching) {
@@ -87,5 +87,5 @@ define("RoiVideo", {
     } else {
       this.html`<YouTubeIframe .id=${youtubeId} />`;
     }
-  }
+  },
 });

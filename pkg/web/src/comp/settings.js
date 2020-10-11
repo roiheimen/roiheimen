@@ -78,24 +78,15 @@ define("RoiSettings", {
     this.store = useStore();
     const { testStatus } = useSel("testStatus");
     const testHtml = {
-      active: html`
-        <div class="info">Du er i eit test-møte.</div>
-      `,
+      active: html` <div class="info">Du er i eit test-møte.</div> `,
       waiting: html`
-        <div class="info">
-          Du har spurt om test, du blir teken inn når det er din tur. Du kan
-          lukka dette vindauga.
-        </div>
+        <div class="info">Du har spurt om test, du blir teken inn når det er din tur. Du kan lukka dette vindauga.</div>
       `,
-      requesting: html`
-        <div>Spør om test.</div>
-      `,
+      requesting: html` <div>Spør om test.</div> `,
       listening: html`
-        <button tabindex="0" .onclick=${() => this.store.doTestReq()}>
-          Be om prat med bakrommet
-        </button>
+        <button tabindex="0" .onclick=${() => this.store.doTestReq()}>Be om prat med bakrommet</button>
       `,
-      "": ""
+      "": "",
     }[testStatus];
     this.html`
       <div class=settings>
@@ -114,5 +105,5 @@ define("RoiSettings", {
           </div>
       </div>
     `;
-  }
+  },
 });

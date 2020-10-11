@@ -22,13 +22,13 @@ export default define("RoiReferendum", {
   onsubmit(e) {
     e.preventDefault();
     const { target } = e;
-    console.log("sub", target, target.dataset.id)
+    console.log("sub", target, target.dataset.id);
     const referendumId = +target.dataset.id;
     const choice = target.choice.value;
     this.store.doReferendumVote({ referendumId, choice });
   },
   onclick({ target }) {
-    console.log("click", target.name)
+    console.log("click", target.name);
     if (target.name == "end") {
       const id = +target.closest("tr").dataset.id;
       this.store.doReferendumEnd(id);
@@ -42,34 +42,30 @@ export default define("RoiReferendum", {
     }
     const { id, title, type, finishedAt } = referendum;
     const choices = referendum.choices
-      .map(a => ({ sort: Math.random(), value: a }))
+      .map((a) => ({ sort: Math.random(), value: a }))
       .sort((a, b) => a.sort - b.sort)
-      .map(a => a.value);
+      .map((a) => a.value);
     const humanType = { OPEN: "open røysting", CLOSED: "lukka røysting" }[type] || type;
     const chooser = () => html`
       <ul style="list-style: none">
-      ${choices.map(
-        c =>
-          html`
-            <li>
-              <label
-                ><input type="radio" name="choice" value=${c} /> ${c}</label
-              >
-            </li>
-          `
-      )}
+        ${choices.map(
+          (c) =>
+            html`
+              <li>
+                <label><input type="radio" name="choice" value=${c} /> ${c}</label>
+              </li>
+            `
+        )}
       </ul>
-      <p><input type=submit name=vote value=Røyst>
-      <p><button name=blank onclick=${this}>Røyst blank</button>
+      <p><input type="submit" name="vote" value="Røyst" /></p>
+      <p><button name="blank" onclick=${this}>Røyst blank</button></p>
     `;
-    const didVote = () => html`
-      Du har røysta.
-    `;
+    const didVote = () => html` Du har røysta. `;
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>
         ${referendumVote ? didVote() : chooser()}
       </form>
       `;
-  }
+  },
 });

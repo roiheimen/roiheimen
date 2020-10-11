@@ -4,7 +4,7 @@ const creds = storage("creds");
 
 function printErrors(name, errors) {
   if (errors) {
-    errors.forEach(e => console.error(name + ":", e.message));
+    errors.forEach((e) => console.error(name + ":", e.message));
   }
 }
 
@@ -17,7 +17,7 @@ export async function gql(query, variables, { nocreds } = {}) {
     },
     body: JSON.stringify({ query, variables }),
     method: "POST",
-    mode: "cors"
+    mode: "cors",
   });
 
   const name = /[^{(]+/.exec(query)?.[0].trim();
@@ -26,11 +26,7 @@ export async function gql(query, variables, { nocreds } = {}) {
     e.extra = {
       variables,
       url: res.url,
-      body: await (res.headers
-        .get("content-type")
-        .startsWith("application/json")
-        ? res.json()
-        : res.text())
+      body: await (res.headers.get("content-type").startsWith("application/json") ? res.json() : res.text()),
     };
     const errors = e.extra.body?.errors;
     printErrors(name, errors);
@@ -45,9 +41,11 @@ const liveCurrent = {};
 let ws;
 let id = 0;
 let wsReadyResolve;
-const send = o => ws.send(JSON.stringify(o));
-const wsReady = new Promise(resolve => { wsReadyResolve = resolve });
-export async function live({ query, variables = {}}, cb) {
+const send = (o) => ws.send(JSON.stringify(o));
+const wsReady = new Promise((resolve) => {
+  wsReadyResolve = resolve;
+});
+export async function live({ query, variables = {} }, cb) {
   if (!ws) openWs();
   await wsReady;
   liveCurrent[++id] = cb;
@@ -61,13 +59,13 @@ function openWs(query, cb) {
   ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");
   ws.onerror = (e) => console.log("err", e);
   ws.onclose = (e) => console.log("close", e);
-  ws.onmessage = event => {
+  ws.onmessage = (event) => {
     const { data } = event;
     const d = JSON.parse(data);
     if (d.type == "connection_ack") {
       wsReadyResolve(ws);
     } else if (d.type == "data") {
-      printErrors("live", d.payload?.errors)
+      printErrors("live", d.payload?.errors);
       const cb = liveCurrent[d.id];
       if (cb) cb(d.payload);
       else console.error("NO CALLBACK FOR DATA", d);

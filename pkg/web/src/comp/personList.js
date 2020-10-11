@@ -21,7 +21,7 @@ export default define("RoiPersonList", {
       <table>
       <tr><th>Nummer <th>Namn <th>Lag <th>Anna </tr>
       ${people.map(
-        person =>
+        (person) =>
           html`
             <tr id=${"person-" + person.id}>
               <td>${person.num}</td>
@@ -33,5 +33,5 @@ export default define("RoiPersonList", {
       )}
       </table>
       `;
-  }
+  },
 });

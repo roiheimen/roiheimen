@@ -23,15 +23,18 @@ export default define("RoiSpeechesList", {
       return this.html`Ingen på lista`;
     }
     if (this.simple) {
-      speeches = speeches.filter(s => !s.endedAt || s.id == speechState.prev?.id);
+      speeches = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
     }
     this.html`
       <table class=${this.simple ? "simple" : ""}>
       <tr><th>Nummer <th>Namn </tr>
       ${speeches.map(
-        speech =>
+        (speech) =>
           html`
-            <tr class=${`status-${speech.status} type-${speech.type}`} title=${`${speech.type} av ${speech.speaker.name}`}>
+            <tr
+              class=${`status-${speech.status} type-${speech.type}`}
+              title=${`${speech.type} av ${speech.speaker.name}`}
+            >
               <td>${speech.speaker.num}</td>
               <td>${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}</td>
             </tr>
@@ -39,5 +42,5 @@ export default define("RoiSpeechesList", {
       )}
       </table>
       `;
-  }
+  },
 });

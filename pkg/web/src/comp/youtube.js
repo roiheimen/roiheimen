@@ -18,5 +18,5 @@ define("RoiYoutube", {
 
     `;
     //<Video .creds=${this.creds} />
-  }
+  },
 });

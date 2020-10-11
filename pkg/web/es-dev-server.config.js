@@ -1,4 +1,4 @@
-const proxy = require('koa-http2-proxy');
+const proxy = require("koa-http2-proxy");
 
 module.exports = {
   http2: true,
@@ -9,7 +9,7 @@ module.exports = {
   sslCert: "cert.crt",
   sslKey: "cert.key",
   middlewares: [
-    proxy('/graphql', { target: 'http://localhost:3000', ws: true, changeOrigin: true  }),
-    proxy('/graphiql', { target: 'http://localhost:3000', changeOrigin: true }),
+    proxy("/graphql", { target: "http://localhost:3000", ws: true, changeOrigin: true }),
+    proxy("/graphiql", { target: "http://localhost:3000", changeOrigin: true }),
   ],
 };

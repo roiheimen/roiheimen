@@ -55,31 +55,17 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const {
-      speechFetching,
-      speechesUpcomingByMe,
-      myself,
-      referendum,
-      sak
-    } = useSel(
+    const { speechFetching, speechesUpcomingByMe, myself, referendum, sak } = useSel(
       "speechFetching",
       "speechesUpcomingByMe",
       "myself",
       "referendum",
       "sak"
     );
-    const myNewestSpeechRequest = speechesUpcomingByMe.sort(
-      (a, b) => b.id - a.id
-    )[0];
+    const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = "";
-    if (referendum)
-      workArea = html`
-        <roi-referendum simple />
-      `;
-    else if (sak?.id)
-      workArea = html`
-        <roi-speeches-list simple />
-      `;
+    if (referendum) workArea = html` <roi-referendum simple /> `;
+    else if (sak?.id) workArea = html` <roi-speeches-list simple /> `;
 
     this.html`
       <div class=buttons>
@@ -127,7 +113,7 @@ const RoiQueueDrawer = {
         ${workArea}
       </div>
     `;
-  }
+  },
 };
 
 define("RoiQueue", {
@@ -147,13 +133,7 @@ define("RoiQueue", {
     this.html`
       <roi-video />
       <RoiQueueDrawer />
-      ${
-        clientUi == "settings"
-          ? html`
-              <roi-settings />
-            `
-          : null
-      }
+      ${clientUi == "settings" ? html` <roi-settings /> ` : null}
     `;
-  }
+  },
 });

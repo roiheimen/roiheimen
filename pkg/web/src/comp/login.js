@@ -60,11 +60,13 @@ define("RoiLogin", {
     }
     event.preventDefault();
   },
-  onerr() { this.render() },
+  onerr() {
+    this.render();
+  },
   async login(num, mId, password) {
     try {
       const res = await gql(gqlLogin, { num, mId, password }, { nocreds: true });
-      const { jwtToken } = res.authenticate;
+      const { jwtToken } = res.authenticate;
       if (!jwtToken) {
         this.err = ["Feil nummer/passord"];
         return;
@@ -75,15 +77,15 @@ define("RoiLogin", {
       Object.assign(storage("myself"), currentPerson);
       if (currentPerson.admin) location.assign("/manage.html");
       else location.assign("/queue.html");
-    } catch(e) {
+    } catch (e) {
       if (e.extra?.body?.errors) {
-        this.err = e.extra.body.errors.map(e => e.message);
+        this.err = e.extra.body.errors.map((e) => e.message);
         return;
       }
-      this.err = [''+e];
+      this.err = ["" + e];
     }
   },
-  render({ useEffect, useStore }) {
+  render({ useEffect, useStore }) {
     useEffect(() => {
       if (new URLSearchParams(location.search).has("logout")) {
         useStore().doMyselfLogout();
@@ -96,10 +98,10 @@ define("RoiLogin", {
       <input name=num inputmode=numeric pattern="[1-9][0-9]*" value=${this.creds.num} />
       <label>Kode</label>
       <input name=code value=${this.creds.code} />
-      ${this.err && this.err.map(e => html`<p class=err>${e}</p>`)}
+      ${this.err && this.err.map((e) => html`<p class="err">${e}</p>`)}
       <span />
       <input type=submit value="Logg inn" />
     </form>
     `;
-  }
+  },
 });

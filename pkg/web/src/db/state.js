@@ -11,14 +11,10 @@ const myself = {
   init(store) {
     if (creds.jwt) setTimeout(() => store.doMyselfFetch(), 0);
   },
-  reducer: (
-    state = { started: false, failed: false, data: null },
-    { type, payload, error }
-  ) => {
+  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
     if (type == "MYSELF_FETCH_STARTED") return { ...state, started: true };
     if (type == "MYSELF_FETCH_FINISHED") return { ...state, data: payload };
-    if (type == "MYSELF_FETCH_FAILED")
-      return { ...state, failed: error || true };
+    if (type == "MYSELF_FETCH_FAILED") return { ...state, failed: error || true };
     return state;
   },
 
@@ -44,25 +40,21 @@ const myself = {
   },
   doMyselfLogout: () => () => {
     if (Object.keys(creds).length) {
-      Object.keys(creds).forEach(k => delete creds[k]);
+      Object.keys(creds).forEach((k) => delete creds[k]);
       location.assign("/");
     }
   },
 
-  selectMyself: state => state.myself.data,
-  selectMyselfId: state => state.myself.data?.id,
-  selectMyselfMeetingId: state => state.myself.data?.meetingId
+  selectMyself: (state) => state.myself.data,
+  selectMyselfId: (state) => state.myself.data?.id,
+  selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
 };
 
 const people = {
   name: "people",
-  reducer: (
-    state = { started: false, failed: false, data: null },
-    { type, payload, error }
-  ) => {
+  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
     if (type == "PEOPLE_FETCH_STARTED") return { ...state, started: true };
-    if (type == "PEOPLE_FETCH_FAILED")
-      return { ...state, failed: error || true };
+    if (type == "PEOPLE_FETCH_FAILED") return { ...state, failed: error || true };
     if (type == "PEOPLE_FETCH_UPDATED") return { ...state, data: payload };
     return state;
   },
@@ -95,36 +87,27 @@ const people = {
     }
   },
 
-  selectPeopleRaw: state => state.people,
-  selectPeople: state => state.people.data || [],
-  selectPeopleById: createSelector("selectPeople", people =>
-    people.reduce((o, v) => ({ ...o, [v.id]: v }), {})
-  ),
+  selectPeopleRaw: (state) => state.people,
+  selectPeople: (state) => state.people.data || [],
+  selectPeopleById: createSelector("selectPeople", (people) => people.reduce((o, v) => ({ ...o, [v.id]: v }), {})),
 
-  reactFetchPeopleOnMyselfExisting: createSelector(
-    "selectPeopleRaw",
-    "selectMyself",
-    (raw, myself) => {
-      if (!raw.started && !raw.data && !raw.failed && myself?.id) {
-        return { actionCreator: "doPeopleFetch" };
-      }
+  reactFetchPeopleOnMyselfExisting: createSelector("selectPeopleRaw", "selectMyself", (raw, myself) => {
+    if (!raw.started && !raw.data && !raw.failed && myself?.id) {
+      return { actionCreator: "doPeopleFetch" };
     }
-  )
+  }),
 };
 
 const sak = {
   name: "sak",
-  reducer: (
-    state = { started: false, failed: false, data: {} },
-    { type, payload, error }
-  ) => {
+  reducer: (state = { started: false, failed: false, data: {} }, { type, payload, error }) => {
     if (type == "SAK_SUB_STARTED") return { ...state, started: true };
     if (type == "SAK_SUB_FAILED") return { ...state, failed: error || true };
     if (type == "SAK_SUB_UPDATED") return { ...state, data: payload };
     return state;
   },
 
-  doSakFinish: sakId => async ({ dispatch, store }) => {
+  doSakFinish: (sakId) => async ({ dispatch, store }) => {
     sakId = sakId ?? store.selectSakId();
     dispatch({ type: "SAK_FINISH_STARTED", payload: sakId });
     const query = `
@@ -156,7 +139,7 @@ const sak = {
     try {
       const res = await gql(gqlNewSak, { title, meetingId });
       const {
-        createSak: { sak }
+        createSak: { sak },
       } = res;
       dispatch({ type: "SAK_REQ_FINISHED", payload: sak });
     } catch (error) {
@@ -178,7 +161,7 @@ const sak = {
     try {
       await live({ query }, ({ data }) => {
         const {
-          saks: { nodes }
+          saks: { nodes },
         } = data;
         dispatch({ type: "SAK_SUB_UPDATED", payload: nodes[0] });
       });
@@ -188,52 +171,39 @@ const sak = {
     }
   },
 
-  selectSakRaw: state => state.sak,
-  selectSak: state => state.sak.data,
-  selectSakId: state => state.sak.data?.id,
-  selectSakObj: createSelector(
-    "selectPeopleById",
-    "selectSak",
-    "selectSpeeches",
-    (peopleById, sak, speeches) => {
-      const nsak = {
-        ...sak,
-        speeches: (speeches || []).map(speech => ({
-          ...speech,
-          speaker: peopleById[speech.speakerId] || {}
-        }))
-      };
-      return nsak;
-    }
-  ),
+  selectSakRaw: (state) => state.sak,
+  selectSak: (state) => state.sak.data,
+  selectSakId: (state) => state.sak.data?.id,
+  selectSakObj: createSelector("selectPeopleById", "selectSak", "selectSpeeches", (peopleById, sak, speeches) => {
+    const nsak = {
+      ...sak,
+      speeches: (speeches || []).map((speech) => ({
+        ...speech,
+        speaker: peopleById[speech.speakerId] || {},
+      })),
+    };
+    return nsak;
+  }),
 
-  reactSakSubscribeOnMyselfExisting: createSelector(
-    "selectSakRaw",
-    "selectMyselfId",
-    (raw, myselfId) => {
-      if (!raw.started && !raw.failed && myselfId) {
-        return { actionCreator: "doSakSubscribe" };
-      }
+  reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectMyselfId", (raw, myselfId) => {
+    if (!raw.started && !raw.failed && myselfId) {
+      return { actionCreator: "doSakSubscribe" };
     }
-  )
+  }),
 };
 
 const speech = {
   name: "speech",
-  reducer: (
-    state = { subStarted: false, data: [], fetching: false, scheduled: false },
-    { type, payload }
-  ) => {
+  reducer: (state = { subStarted: false, data: [], fetching: false, scheduled: false }, { type, payload }) => {
     if (type == "SPEECH_REQ_STARTED") return { ...state, fetching: true };
-    if (type == "SPEECH_REQ_FINISHED")
-      return { ...state, fetching: false, current: payload };
+    if (type == "SPEECH_REQ_FINISHED") return { ...state, fetching: false, current: payload };
     if (type == "SPEECH_SUB_STARTED") return { ...state, subStarted: true };
     if (type == "SPEECH_SUB_FINISHED") return { ...state, stopSub: payload };
     if (type == "SPEECH_SUB_UPDATED") return { ...state, data: payload };
     //if (type == "SAK_SUB_UPDATED") return { ...state, started: false, data: [] };
     return state;
   },
-  getMiddleware: () => store => next => action => {
+  getMiddleware: () => (store) => (next) => (action) => {
     const oldSakId = store.selectSak()?.id;
     const result = next(action);
     const newSakId = store.selectSak()?.id;
@@ -242,19 +212,14 @@ const speech = {
     return result;
   },
 
-  doSpeechReq: (
-    type = "INNLEGG",
-    { speakerId, sakId, parentId } = {}
-  ) => async ({ dispatch, store }) => {
+  doSpeechReq: (type = "INNLEGG", { speakerId, sakId, parentId } = {}) => async ({ dispatch, store }) => {
     speakerId = speakerId ?? store.selectMyself().id;
     sakId = sakId ?? store.selectSak().id;
     const { current } = store.selectSpeechState();
-    parentId =
-      parentId ??
-      (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
+    parentId = parentId ?? (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
     dispatch({
       type: "SPEECH_REQ_STARTED",
-      payload: { type, speakerId, sakId, parentId }
+      payload: { type, speakerId, sakId, parentId },
     });
     const gqlCreateSpeech = `
       mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!, $parentId: Int) {
@@ -273,17 +238,17 @@ const speech = {
         sakId,
         speakerId,
         type,
-        parentId
+        parentId,
       });
       const {
-        createSpeech: { speech }
+        createSpeech: { speech },
       } = res;
       dispatch({ type: "SPEECH_REQ_FINISHED", payload: speech });
     } catch (error) {
       dispatch({ type: "SPEECH_REQ_FAILED", error });
     }
   },
-  doSpeechEnd: speechId => async ({ dispatch, store }) => {
+  doSpeechEnd: (speechId) => async ({ dispatch, store }) => {
     dispatch({ type: "SPEECH_END_STARTED", payload: speechId });
     const query = `
     mutation SpeechNext($id: Int!) {
@@ -309,28 +274,19 @@ const speech = {
     }
     dispatch({ type: "SPEECH_NEXT_STARTED", payload: { prevId, currentId } });
     const query = `
-    mutation SpeechNext(${[
-      current && `$currentId: Int!`,
-      prev && `$prevId: Int!`
-    ]
-      .filter(Boolean)
-      .join(",")}) {
+    mutation SpeechNext(${[current && `$currentId: Int!`, prev && `$prevId: Int!`].filter(Boolean).join(",")}) {
       ${
         currentId
           ? `current: updateSpeech(input: {id: $currentId, patch: { startedAt: null }}) { clientMutationId }`
           : ""
       }
-      ${
-        prevId
-          ? `prev: updateSpeech(input: {id: $prevId, patch: { endedAt: null }}) { clientMutationId }`
-          : ""
-      }
+      ${prevId ? `prev: updateSpeech(input: {id: $prevId, patch: { endedAt: null }}) { clientMutationId }` : ""}
     }`;
     try {
       const res = await gql(query, { currentId, prevId });
       dispatch({
         type: "SPEECH_NEXT_FINISHED",
-        payload: { currentId, prevId }
+        payload: { currentId, prevId },
       });
     } catch (error) {
       dispatch({ type: "SPEECH_NEXT_FAILED", error });
@@ -346,28 +302,19 @@ const speech = {
     }
     dispatch({ type: "SPEECH_NEXT_STARTED", payload: { nextId, currentId } });
     const query = `
-    mutation SpeechNext(${[
-      currentId && `$currentId: Int!`,
-      nextId && `$nextId: Int!`
-    ]
-      .filter(Boolean)
-      .join(",")}) {
+    mutation SpeechNext(${[currentId && `$currentId: Int!`, nextId && `$nextId: Int!`].filter(Boolean).join(",")}) {
       ${
         currentId
           ? `current: updateSpeech(input: {id: $currentId, patch: { endedAt: "now()" }}) { clientMutationId }`
           : ""
       }
-      ${
-        nextId
-          ? `next: updateSpeech(input: {id: $nextId, patch: { startedAt: "now()" }}) { clientMutationId }`
-          : ""
-      }
+      ${nextId ? `next: updateSpeech(input: {id: $nextId, patch: { startedAt: "now()" }}) { clientMutationId }` : ""}
     }`;
     try {
       const res = await gql(query, { currentId, nextId });
       dispatch({
         type: "SPEECH_NEXT_FINISHED",
-        payload: { currentId, nextId }
+        payload: { currentId, nextId },
       });
     } catch (error) {
       dispatch({ type: "SPEECH_NEXT_FAILED", error });
@@ -386,7 +333,7 @@ const speech = {
       dispatch({ type: "SPEECH_UPDATE_FAILED", error });
     }
   },
-  doSpeechSubscribe: sakId => async ({ dispatch }) => {
+  doSpeechSubscribe: (sakId) => async ({ dispatch }) => {
     sakId = sakId ?? store.selectSak().id;
     const { stopSub } = store.selectSpeechRaw();
     dispatch({ type: "SPEECH_SUB_STARTED", payload: sakId });
@@ -411,7 +358,7 @@ const speech = {
     try {
       const stop = await live({ query, variables }, ({ data }) => {
         const {
-          speeches: { nodes }
+          speeches: { nodes },
         } = data;
         dispatch({ type: "SPEECH_SUB_UPDATED", payload: nodes });
       });
@@ -421,26 +368,20 @@ const speech = {
     }
   },
 
-  selectSpeechRaw: state => state.speech,
-  selectSpeech: state => state.speech.current,
-  selectSpeechStarted: state => state.speech.subStarted,
-  selectSpeechFetching: state => state.speech.fetching,
-  selectSpeechScheduled: state => !!state.speech.current,
-  selectSpeeches: createSelector("selectSpeechRaw", raw => {
+  selectSpeechRaw: (state) => state.speech,
+  selectSpeech: (state) => state.speech.current,
+  selectSpeechStarted: (state) => state.speech.subStarted,
+  selectSpeechFetching: (state) => state.speech.fetching,
+  selectSpeechScheduled: (state) => !!state.speech.current,
+  selectSpeeches: createSelector("selectSpeechRaw", (raw) => {
     return raw.data
-      .map(speech => ({
+      .map((speech) => ({
         ...speech,
-        status: speech.startedAt
-          ? speech.endedAt
-            ? "ended"
-            : "started"
-          : speech.endedAt
-          ? "cancelled"
-          : "waiting"
+        status: speech.startedAt ? (speech.endedAt ? "ended" : "started") : speech.endedAt ? "cancelled" : "waiting",
       }))
       .sort((a, b) => (a.parentId || a.id) - (b.parentId || b.id));
   }),
-  selectSpeechesValid: createSelector("selectSpeeches", speeches =>
+  selectSpeechesValid: createSelector("selectSpeeches", (speeches) =>
     speeches
       .map((speech, i) => {
         // ignore speeches that ended without ever starting
@@ -449,11 +390,11 @@ const speech = {
       })
       .filter(Boolean)
   ),
-  selectSpeechState: createSelector("selectSpeechesValid", speeches => {
+  selectSpeechState: createSelector("selectSpeechesValid", (speeches) => {
     const state = {
       prev: null,
       current: null,
-      next: null
+      next: null,
     };
     for (let i = 0; i < speeches.length; i++) {
       const speech = speeches[i];
@@ -470,36 +411,23 @@ const speech = {
     }
     return state;
   }),
-  selectSpeechesUpcomingByMe: createSelector(
-    "selectMyself",
-    "selectSpeechesValid",
-    (myself, speeches) => {
-      return speeches.filter(
-        speech => !speech.endedAt && speech.speakerId == myself.id
-      );
-    }
-  ),
+  selectSpeechesUpcomingByMe: createSelector("selectMyself", "selectSpeechesValid", (myself, speeches) => {
+    return speeches.filter((speech) => !speech.endedAt && speech.speakerId == myself.id);
+  }),
   selectSpeechInWhereby: createSelector(
     "selectMyself",
     "selectSpeechesUpcomingByMe",
     "selectSpeechState",
     (myself, speechesUpcomingByMe, speechState) => {
-      return (
-        speechState.next?.speakerId == myself?.id ||
-        speechState.current?.speakerId == myself?.id
-      );
+      return speechState.next?.speakerId == myself?.id || speechState.current?.speakerId == myself?.id;
     }
   ),
 
-  reactSpeechesUpdateOnSakChange: createSelector(
-    "selectSakId",
-    "selectSpeechStarted",
-    (sakId, speechStarted) => {
-      if (sakId && !speechStarted) {
-        return { actionCreator: "doSpeechSubscribe", args: [sakId] };
-      }
+  reactSpeechesUpdateOnSakChange: createSelector("selectSakId", "selectSpeechStarted", (sakId, speechStarted) => {
+    if (sakId && !speechStarted) {
+      return { actionCreator: "doSpeechSubscribe", args: [sakId] };
     }
-  )
+  }),
 };
 
 const referendum = {
@@ -510,23 +438,19 @@ const referendum = {
       data: [],
       subStop: null,
       fetching: false,
-      count: []
+      count: [],
     },
     { type, payload }
   ) => {
     if (type == "REFERENDUM_REQ_STARTED") return { ...state, fetching: true };
-    if (type == "REFERENDUM_REQ_FINISHED")
-      return { ...state, fetching: false, current: payload };
-    if (type == "REFERENDUM_SUB_STARTED")
-      return { ...state, subStarted: true, subStop: null };
-    if (type == "REFERENDUM_SUB_FINISHED")
-      return { ...state, subStop: payload };
+    if (type == "REFERENDUM_REQ_FINISHED") return { ...state, fetching: false, current: payload };
+    if (type == "REFERENDUM_SUB_STARTED") return { ...state, subStarted: true, subStop: null };
+    if (type == "REFERENDUM_SUB_FINISHED") return { ...state, subStop: payload };
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
-    if (type == "REFERENDUM_COUNT_FINISHED")
-      return { ...state, count: payload };
+    if (type == "REFERENDUM_COUNT_FINISHED") return { ...state, count: payload };
     return state;
   },
-  getMiddleware: () => store => next => action => {
+  getMiddleware: () => (store) => (next) => (action) => {
     const oldSakId = store.selectSak()?.id;
     const result = next(action);
     const newSakId = store.selectSak()?.id;
@@ -535,14 +459,11 @@ const referendum = {
     return result;
   },
 
-  doReferendumReq: ({ type, title, choices, sakId }) => async ({
-    dispatch,
-    store
-  }) => {
+  doReferendumReq: ({ type, title, choices, sakId }) => async ({ dispatch, store }) => {
     sakId = sakId ?? store.selectSak().id;
     dispatch({
       type: "REFERENDUM_REQ_STARTED",
-      payload: { type, title, choices, sakId }
+      payload: { type, title, choices, sakId },
     });
     const query = `
       mutation CreateReferendum($title: String!, $sakId: Int!, $choices: JSON!, $type: ReferendumType!) {
@@ -555,14 +476,14 @@ const referendum = {
         sakId,
         type,
         title,
-        choices
+        choices,
       });
       dispatch({ type: "REFERENDUM_REQ_FINISHED", payload: res });
     } catch (error) {
       dispatch({ type: "REFERENDUM_REQ_FAILED", error });
     }
   },
-  doReferendumEnd: referendumId => async ({ dispatch, store }) => {
+  doReferendumEnd: (referendumId) => async ({ dispatch, store }) => {
     dispatch({ type: "REFERENDUM_END_STARTED", payload: referendumId });
     const query = `
     mutation ReferendumEnd($id: Int!) {
@@ -578,7 +499,7 @@ const referendum = {
       dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
     }
   },
-  doReferendumSubscribe: sakId => async ({ dispatch }) => {
+  doReferendumSubscribe: (sakId) => async ({ dispatch }) => {
     sakId = sakId ?? store.selectSak().id;
     const { subStop } = store.selectReferendumRaw();
     dispatch({ type: "REFERENDUM_SUB_STARTED", payload: sakId });
@@ -607,7 +528,7 @@ const referendum = {
     try {
       const stop = await live({ query, variables }, ({ data }) => {
         const {
-          referendums: { nodes }
+          referendums: { nodes },
         } = data;
         dispatch({ type: "REFERENDUM_SUB_UPDATED", payload: nodes });
       });
@@ -616,14 +537,11 @@ const referendum = {
       dispatch({ type: "REFERENDUM_SUB_FAILED", error });
     }
   },
-  doReferendumVote: ({ referendumId, choice }) => async ({
-    dispatch,
-    store
-  }) => {
+  doReferendumVote: ({ referendumId, choice }) => async ({ dispatch, store }) => {
     const personId = store.selectMyself().id;
     dispatch({
       type: "REFERENDUM_VOTE_STARTED",
-      payload: { personId, choice, referendumId }
+      payload: { personId, choice, referendumId },
     });
     const query = `
     mutation ReferendumVote($referendumId: Int!, $personId: Int!, $choice: String!) {
@@ -640,7 +558,7 @@ const referendum = {
       dispatch({
         type: "REFERENDUM_VOTE_FAILED",
         error,
-        payload: referendumId
+        payload: referendumId,
       });
     }
   },
@@ -662,25 +580,19 @@ const referendum = {
       const res = await gql(query, { sakId });
       dispatch({
         type: "REFERENDUM_COUNT_FINISHED",
-        payload: res.voteCount.nodes
+        payload: res.voteCount.nodes,
       });
     } catch (error) {
       dispatch({ type: "REFERENDUM_COUNT_FAILED", error, payload: sakId });
     }
   },
 
-  selectReferendumRaw: state => state.referendum,
-  selectReferendumsData: state => state.referendum.data,
-  selectReferendumCountData: state => state.referendum.count,
-  selectReferendum: createSelector(
-    "selectReferendums",
-    referendums => referendums.filter(r => !r.finishedAt)[0]
-  ),
-  selectReferendumVote: createSelector(
-    "selectMyselfId",
-    "selectReferendum",
-    (myselfId, referendum) =>
-      referendum?.votes.nodes.find(v => v.personId == myselfId)
+  selectReferendumRaw: (state) => state.referendum,
+  selectReferendumsData: (state) => state.referendum.data,
+  selectReferendumCountData: (state) => state.referendum.count,
+  selectReferendum: createSelector("selectReferendums", (referendums) => referendums.filter((r) => !r.finishedAt)[0]),
+  selectReferendumVote: createSelector("selectMyselfId", "selectReferendum", (myselfId, referendum) =>
+    referendum?.votes.nodes.find((v) => v.personId == myselfId)
   ),
   selectReferendums: createSelector(
     "selectReferendumsData",
@@ -692,11 +604,11 @@ const referendum = {
         if (!refCnt[id]) refCnt[id] = [];
         refCnt[id].push(c);
       }
-      return referendumsData.map(r => {
+      return referendumsData.map((r) => {
         if (refCnt[r.id]) {
-          const counts = [...r.choices, ""].map(choice => ({
+          const counts = [...r.choices, ""].map((choice) => ({
             choice,
-            count: +refCnt[r.id]?.find(rf => rf.choice == choice)?.cnt || 0
+            count: +refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0,
           }));
           return { ...r, counts };
         }
@@ -705,15 +617,11 @@ const referendum = {
     }
   ),
 
-  reactSpeechesUpdateOnSakChange: createSelector(
-    "selectReferendumRaw",
-    "selectSakId",
-    (referendumRaw, sakId) => {
-      if (sakId && !referendumRaw.subStarted) {
-        return { actionCreator: "doReferendumSubscribe", args: [sakId] };
-      }
+  reactSpeechesUpdateOnSakChange: createSelector("selectReferendumRaw", "selectSakId", (referendumRaw, sakId) => {
+    if (sakId && !referendumRaw.subStarted) {
+      return { actionCreator: "doReferendumSubscribe", args: [sakId] };
     }
-  )
+  }),
 };
 
 const out = {
@@ -722,7 +630,7 @@ const out = {
     if (type == "OUT_SWITCH") return { ...state, currentType: payload };
     return state;
   },
-  getMiddleware: () => store => next => action => {
+  getMiddleware: () => (store) => (next) => (action) => {
     const { current: oldCurrent } = store.selectSpeechState();
     const result = next(action);
     const { current } = store.selectSpeechState();
@@ -732,28 +640,24 @@ const out = {
     return result;
   },
 
-  doOutSwitch: currSpeechId => ({ type: "OUT_SWITCH" }),
+  doOutSwitch: (currSpeechId) => ({ type: "OUT_SWITCH" }),
 
-  selectOutRaw: state => state.out,
-  selectOutTypeForCurrent: createSelector("selectSpeeches", speeches => {
+  selectOutRaw: (state) => state.out,
+  selectOutTypeForCurrent: createSelector("selectSpeeches", (speeches) => {
     return speeches.length % 2 == 0 ? "a" : "b";
-  })
+  }),
 };
 
 const test = {
   name: "test",
-  reducer: (
-    state = { requested: false, subStarted: false, subStop: null, data: [] },
-    { type, payload }
-  ) => {
+  reducer: (state = { requested: false, subStarted: false, subStop: null, data: [] }, { type, payload }) => {
     if (type == "TEST_REQ_STARTED") return { ...state, requested: true };
     if (type == "TEST_REQ_FAILED") return { ...state, requested: false };
     if (type == "TEST_SUB_STARTED") return { ...state, subStarted: true };
     if (type == "TEST_SUB_FINISHED") return { ...state, subStop: payload };
     if (type == "TEST_SUB_UPDATED") return { ...state, data: payload };
     if (type == "CLIENT_UI") {
-      if (!["", "settings"].includes(payload))
-        throw new Error(`Unexpecetd ui ${payload}`);
+      if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
       return { ...state, ui: payload };
     }
     return state;
@@ -771,7 +675,7 @@ const test = {
     try {
       const res = await gql(query, { requesterId });
       const {
-        createTest: { test }
+        createTest: { test },
       } = res;
       dispatch({ type: "TEST_REQ_FINISHED", payload: test });
     } catch (error) {
@@ -779,7 +683,7 @@ const test = {
     }
   },
   // Limit to self in common case, but allow "all" if admin?
-  doTestSubscribe: requesterId => async ({ dispatch }) => {
+  doTestSubscribe: (requesterId) => async ({ dispatch }) => {
     requesterId = requesterId ?? store.selectMyselfId();
     const { subStop } = store.selectTestRaw();
     dispatch({ type: "TEST_SUB_STARTED", payload: requesterId });
@@ -799,7 +703,7 @@ const test = {
     try {
       const stop = await live({ query, variables }, ({ data }) => {
         const {
-          tests: { nodes }
+          tests: { nodes },
         } = data;
         dispatch({ type: "TEST_SUB_UPDATED", payload: nodes });
       });
@@ -809,56 +713,44 @@ const test = {
     }
   },
 
-  selectTestRaw: state => state.test,
-  selectTests: state => state.test.data,
-  selectTest: createSelector(
-    "selectTests",
-    "selectMyselfId",
-    (tests, myselfId) =>
-      tests.filter(t => t.requesterId == myselfId).find(t => !t.finishedAt)
+  selectTestRaw: (state) => state.test,
+  selectTests: (state) => state.test.data,
+  selectTest: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
+    tests.filter((t) => t.requesterId == myselfId).find((t) => !t.finishedAt)
   ),
-  selectTestStatus: createSelector(
-    "selectTestRaw",
-    "selectTest",
-    (raw, test) => {
-      if (test?.startedAt) return "active";
-      if (test) return "waiting";
-      if (raw.requesting) return "requesting";
-      if (raw.subStarted) return "listening";
-      return "";
-    }
-  ),
+  selectTestStatus: createSelector("selectTestRaw", "selectTest", (raw, test) => {
+    if (test?.startedAt) return "active";
+    if (test) return "waiting";
+    if (raw.requesting) return "requesting";
+    if (raw.subStarted) return "listening";
+    return "";
+  }),
 
-  reactTestSubscribeOnMyselfExisting: createSelector(
-    "selectTestRaw",
-    "selectMyselfId",
-    (raw, myselfId) => {
-      if (!raw.subStarted && myselfId) {
-        return { actionCreator: "doTestSubscribe" };
-      }
+  reactTestSubscribeOnMyselfExisting: createSelector("selectTestRaw", "selectMyselfId", (raw, myselfId) => {
+    if (!raw.subStarted && myselfId) {
+      return { actionCreator: "doTestSubscribe" };
     }
-  )
+  }),
 };
 
 const client = {
   name: "client",
   reducer: (state = { ui: "" }, { type, payload }) => {
     if (type == "CLIENT_UI") {
-      if (!["", "settings"].includes(payload))
-        throw new Error(`Unexpecetd ui ${payload}`);
+      if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
       return { ...state, ui: payload };
     }
     return state;
   },
 
-  doClientUi: ui => ({ type: "CLIENT_UI", payload: ui }),
+  doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
 
-  selectClientUi: state => state.client.ui
+  selectClientUi: (state) => state.client.ui,
 };
 
 const errors = {
   name: "errors",
-  getMiddleware: () => store => next => action => {
+  getMiddleware: () => (store) => (next) => (action) => {
     const result = next(action);
     if (
       action.type.endsWith("_FAILED") &&
@@ -868,52 +760,37 @@ const errors = {
       location.assign("/");
     }
     return result;
-  }
+  },
 };
 
-const store = composeBundles(
-  myself,
-  speech,
-  sak,
-  people,
-  referendum,
-  out,
-  test,
-  client,
-  errors
-)();
+const store = composeBundles(myself, speech, sak, people, referendum, out, test, client, errors)();
 window.store = store;
 
 function addSelect(sel) {
-  return sel.map(s => "select" + s[0].toUpperCase() + s.slice(1));
+  return sel.map((s) => "select" + s[0].toUpperCase() + s.slice(1));
 }
 
-defineHook(
-  "useSel",
-  ({ useMemo, useRef, useState, useEffect }) => (...args) => {
-    const selectors = useMemo(() => addSelect(args), args);
-    const [state, setState] = useState(() => store.select(selectors));
-    const prevSelectors = useRef(selectors);
+defineHook("useSel", ({ useMemo, useRef, useState, useEffect }) => (...args) => {
+  const selectors = useMemo(() => addSelect(args), args);
+  const [state, setState] = useState(() => store.select(selectors));
+  const prevSelectors = useRef(selectors);
 
-    useEffect(() => {
-      if (prevSelectors.current !== selectors) {
-        prevSelectors.current = selectors;
-        setState(store.select(selectors));
-      }
-      return store.subscribeToSelectors(selectors, changes => {
-        setState(currentState => ({ ...currentState, ...changes }));
-      });
-    }, [selectors, prevSelectors]);
+  useEffect(() => {
+    if (prevSelectors.current !== selectors) {
+      prevSelectors.current = selectors;
+      setState(store.select(selectors));
+    }
+    return store.subscribeToSelectors(selectors, (changes) => {
+      setState((currentState) => ({ ...currentState, ...changes }));
+    });
+  }, [selectors, prevSelectors]);
 
-    return prevSelectors.current === selectors
-      ? state
-      : { ...store.select(selectors) };
-  }
-);
+  return prevSelectors.current === selectors ? state : { ...store.select(selectors) };
+});
 
 defineHook("useStore", () => () => store);
 
-defineHook("usePrevious", ({ useRef, useEffect }) => value => {
+defineHook("usePrevious", ({ useRef, useEffect }) => (value) => {
   const ref = useRef();
   useEffect(() => {
     ref.current = value;

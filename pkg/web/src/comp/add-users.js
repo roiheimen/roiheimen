@@ -4,9 +4,7 @@ import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
 
 function genPass() {
-  const pass = Math.random()
-    .toString(36)
-    .slice(2, 7);
+  const pass = Math.random().toString(36).slice(2, 7);
   if (pass.length < 5) return genPass();
   return pass;
 }
@@ -20,23 +18,23 @@ const UserTextArea = {
   },
   onchange(e) {
     const {
-      target: { value }
+      target: { value },
     } = e;
     const lines = value.split("\n");
     const userList = lines
-      .filter(l => l)
-      .map(l =>
+      .filter((l) => l)
+      .map((l) =>
         l
           .split(/,\s*/g)
-          .map(f => f.trim())
-          .filter(f => f)
+          .map((f) => f.trim())
+          .filter((f) => f)
       )
-      .filter(l => l.length)
-      .map(l => ({
+      .filter((l) => l.length)
+      .map((l) => ({
         num: Number(l[0]),
         name: l[1],
         password: l[2] || genPass(),
-        org: l[3] || '',
+        org: l[3] || "",
         email: l[4],
       }));
     this.dispatchEvent(new CustomEvent("users", { detail: userList }));
@@ -48,15 +46,15 @@ const UserTextArea = {
     1234, odin hørtthe
     2, Helene Urdland Karlser
     3,jens
-    `
-      }
+    `,
+      },
     });
     this.html`
       <textarea
        onchange=${this}
        placeholder="Nummer, Namn, Passord (valfritt), Lag (valfritt), Epost (valfritt)\nNummer2, Namn2"
       />`;
-  }
+  },
 };
 
 const UsersPreview = {
@@ -76,7 +74,7 @@ const UsersPreview = {
     <table>
       <tr><th>Nummer <th>Namn <th>Passord <th>Lag <th>Epost </tr>
       ${this.users.map(
-        user =>
+        (user) =>
           html`
             <tr>
               <td>${user.num}</td>
@@ -88,7 +86,7 @@ const UsersPreview = {
           `
       )}
       </table>`;
-  }
+  },
 };
 
 define("RoiAddUsers", {
@@ -98,7 +96,9 @@ define("RoiAddUsers", {
     this.addEventListener("submit", this);
     this.meetingId = storage("myself").meetingId;
   },
-  onusers() { this.render() },
+  onusers() {
+    this.render();
+  },
   onchange({ target: { value } }) {
     this.meetingId = value;
     this.render();
@@ -139,5 +139,5 @@ define("RoiAddUsers", {
       <UsersPreview users=${this.users} />
       <input onclick=${this} type=submit value="Lagre" disabled=${!canSave} />
     `;
-  }
+  },
 });
