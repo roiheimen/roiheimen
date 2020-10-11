@@ -209,9 +209,9 @@ const sak = {
 
   reactSakSubscribeOnMyselfExisting: createSelector(
     "selectSakRaw",
-    "selectMyself",
-    (raw, myself) => {
-      if (!raw.started && !raw.failed && myself?.id) {
+    "selectMyselfId",
+    (raw, myselfId) => {
+      if (!raw.started && !raw.failed && myselfId) {
         return { actionCreator: "doSakSubscribe" };
       }
     }
@@ -829,7 +829,7 @@ const test = {
     }
   ),
 
-  reactSakSubscribeOnMyselfExisting: createSelector(
+  reactTestSubscribeOnMyselfExisting: createSelector(
     "selectTestRaw",
     "selectMyselfId",
     (raw, myselfId) => {
