@@ -8,6 +8,10 @@ function printErrors(name, errors) {
   }
 }
 
+function getName(query) {
+  return /[^{(]+/.exec(query)?.[0].trim();
+}
+
 export async function gql(query, variables, { nocreds } = {}) {
   const res = await fetch("/graphql", {
     headers: {
@@ -20,7 +24,7 @@ export async function gql(query, variables, { nocreds } = {}) {
     mode: "cors",
   });
 
-  const name = /[^{(]+/.exec(query)?.[0].trim();
+  const name = getName(query);
   if (!res.ok) {
     const e = new Error(`${res.status}: ${res.statusText}`);
     e.extra = {
@@ -38,50 +42,80 @@ export async function gql(query, variables, { nocreds } = {}) {
 }
 
 const liveCurrent = {};
-let ws;
 let id = 0;
-let wsReadyResolve;
-const send = (o) => ws.send(JSON.stringify(o));
-const wsReady = new Promise((resolve) => {
-  wsReadyResolve = resolve;
-});
+let timeout;
+const send = (ws, o) => ws.send(JSON.stringify(o));
 export async function live({ query, variables = {} }, cb) {
-  if (!ws) openWs();
-  await wsReady;
-  liveCurrent[++id] = cb;
-  send({ id, type: "start", payload: { query, variables } });
+  const ws = await openWs();
+  liveCurrent[++id] = { query, variables, cb };
+  send(ws, { id, type: "start", payload: { query, variables } });
   return () => {
     delete liveCurrent[id];
-    send({ id, type: "stop" });
+    send(ws, { id, type: "stop" });
   };
 }
-function openWs(query, cb) {
-  ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");
-  ws.onerror = (e) => console.log("err", e);
-  ws.onclose = (e) => console.log("close", e);
+let connTries = 0;
+let kaTimeout;
+async function reconn() {
+  const rand = Math.random();
+  const ms = connTries ? connTries * rand * 1000 : 0;
+  console.info(`ws reconn after ${ms} ms, conntries ${connTries}`);
+
+  const orgConnTries = connTries;
+  await new Promise(res => setTimeout(res, ms));
+  if (orgConnTries != connTries) {
+    console.info(`ws reconn: already tried during our break`);
+    return;
+  }
+  openWs(true);
+}
+let wsReady;
+async function openWs(reconnect) {
+  if (wsReady && !reconnect) return wsReady;
+  connTries++;
+  let resolve;
+  let reject;
+  wsReady = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  const ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");
+  ws.onerror = (e) => console.error("ws err", e);
+  ws.onclose = (e) => {
+    console.info("ws close", e);
+    reconn();
+  }
   ws.onmessage = (event) => {
     const { data } = event;
     const d = JSON.parse(data);
     if (d.type == "connection_ack") {
-      wsReadyResolve(ws);
+      connTries = 0;
+      for (const [id, { query, variables }] of Object.entries(liveCurrent)) {
+        const name = getName(query);
+        console.info(`resending id:${id} name:${name}`);
+        send(ws, { id, type: "start", payload: { query, variables } });
+      }
+      resolve(ws);
     } else if (d.type == "data") {
       printErrors("live", d.payload?.errors);
-      const cb = liveCurrent[d.id];
+      const cb = liveCurrent[d.id]?.cb;
       if (cb) cb(d.payload);
       else console.error("NO CALLBACK FOR DATA", d);
-    } else if (d.type == "ka") {
+    } else if (d.type == "ka" || d.type == "complete") {
       // pass
     } else {
       console.log("????", d);
     }
+    clearTimeout(kaTimeout);
+    kaTimeout = setTimeout(reconn, 19 * 1000 + (Math.random() * 1000));
   };
   ws.onopen = (e) => {
     setTimeout(() => {
-      send({
+      send(ws, {
         type: "connection_init",
         payload: { Authorization: `Bearer ${creds.jwt}` },
       });
     }, 0);
   };
-  window.ws = ws;
+  return wsReady;
 }
