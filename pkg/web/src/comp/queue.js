@@ -4,6 +4,7 @@ import "../db/state.js";
 import storage from "../lib/storage.js";
 
 import "./referendum.js";
+import "./settings.js";
 import "./speechesList.js";
 import "./video.js";
 
@@ -39,7 +40,7 @@ const RoiQueueDrawer = {
       border: 1px solid rgb(199, 15, 15);
       color: inherit;
     }
-    ${self} .logout {
+    ${self} .settings {
       margin-top: auto;
     }
     ${self} .queue {
@@ -54,43 +55,72 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { speechFetching, speechesUpcomingByMe, myself, referendum, sak } = useSel(
+    const {
+      speechFetching,
+      speechesUpcomingByMe,
+      myself,
+      referendum,
+      sak
+    } = useSel(
       "speechFetching",
       "speechesUpcomingByMe",
       "myself",
       "referendum",
-      "sak",
+      "sak"
     );
-    const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
+    const myNewestSpeechRequest = speechesUpcomingByMe.sort(
+      (a, b) => b.id - a.id
+    )[0];
     let workArea = "";
-    if (referendum) workArea = html`<roi-referendum simple />`;
-    else if (sak?.id) workArea = html`<roi-speeches-list simple />`;
+    if (referendum)
+      workArea = html`
+        <roi-referendum simple />
+      `;
+    else if (sak?.id)
+      workArea = html`
+        <roi-speeches-list simple />
+      `;
 
     this.html`
       <div class=buttons>
-        ${sak?.id ? html`
+        ${
+          sak?.id
+            ? html`
+                <button
+                  tabindex="0"
+                  disabled=${speechFetching}
+                  .onclick=${() => store.doSpeechReq()}
+                  title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
+                >
+                  Innlegg
+                </button>
+                <button
+                  tabindex="0"
+                  disabled=${speechFetching}
+                  .onclick=${() => store.doSpeechReq("REPLIKK")}
+                  title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
+                >
+                  Replikk
+                </button>
+              `
+            : ""
+        }
+        ${
+          myNewestSpeechRequest
+            ? html`
+                <button
+                  .onclick=${() => store.doSpeechEnd(myNewestSpeechRequest.id)}
+                  title=${`Stryk din pågåande eller komande oppføring på talelista`}
+                >
+                  Stryk meg
+                </button>
+              `
+            : ""
+        }
         <button
-          tabindex=0
-          disabled=${speechFetching}
-          .onclick=${() => store.doSpeechReq()}
-          title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
-          >Innlegg</button>
-        <button
-          tabindex=0
-          disabled=${speechFetching}
-          .onclick=${() => store.doSpeechReq("REPLIKK")}
-          title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
-          >Replikk</button>
-          ` : ''}
-        ${myNewestSpeechRequest ? html`<button
-          .onclick=${() => store.doSpeechEnd(myNewestSpeechRequest.id)}
-          title=${`Stryk din pågåande eller komande oppføring på talelista`}
-          >Stryk meg</button>` : ''}
-        <button
-          class=logout
-          .onclick=${() => store.doMyselfLogout()}
-          title=${`Logg av som ${myself?.name} (${myself?.num})`}
-          >Logg ut</button>
+          class=settings
+          .onclick=${() => store.doClientUi("settings")}
+          >Innstillingar</button>
       </div>
       <div class=queue>
         <h2 class=title>${sak?.title || "Ingen sak"}</h2>
@@ -112,11 +142,18 @@ define("RoiQueue", {
       min-height: 400px;
     } `;
   },
-  render() {
-      // title here
+  render({ useSel }) {
+    const { clientUi } = useSel("clientUi");
     this.html`
       <roi-video />
       <RoiQueueDrawer />
+      ${
+        clientUi == "settings"
+          ? html`
+              <roi-settings />
+            `
+          : null
+      }
     `;
   }
 });

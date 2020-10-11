@@ -163,7 +163,7 @@ const sak = {
       dispatch({ type: "SAK_REQ_FAILED", error });
     }
   },
-  doSakFetch: () => async ({ dispatch }) => {
+  doSakSubscribe: () => async ({ dispatch }) => {
     dispatch({ type: "SAK_SUB_STARTED" });
     const query = `
       subscription Sak {
@@ -207,12 +207,12 @@ const sak = {
     }
   ),
 
-  reactFetchSakOnMyselfExisting: createSelector(
+  reactSakSubscribeOnMyselfExisting: createSelector(
     "selectSakRaw",
     "selectMyself",
     (raw, myself) => {
       if (!raw.started && !raw.failed && myself?.id) {
-        return { actionCreator: "doSakFetch" };
+        return { actionCreator: "doSakSubscribe" };
       }
     }
   )
@@ -740,6 +740,122 @@ const out = {
   })
 };
 
+const test = {
+  name: "test",
+  reducer: (
+    state = { requested: false, subStarted: false, subStop: null, data: [] },
+    { type, payload }
+  ) => {
+    if (type == "TEST_REQ_STARTED") return { ...state, requested: true };
+    if (type == "TEST_REQ_FAILED") return { ...state, requested: false };
+    if (type == "TEST_SUB_STARTED") return { ...state, subStarted: true };
+    if (type == "TEST_SUB_FINISHED") return { ...state, subStop: payload };
+    if (type == "TEST_SUB_UPDATED") return { ...state, data: payload };
+    if (type == "CLIENT_UI") {
+      if (!["", "settings"].includes(payload))
+        throw new Error(`Unexpecetd ui ${payload}`);
+      return { ...state, ui: payload };
+    }
+    return state;
+  },
+
+  doTestReq: ({ requesterId } = {}) => async ({ dispatch }) => {
+    requesterId = requesterId ?? store.selectMyselfId();
+    dispatch({ type: "TEST_REQ_STARTED", payload: requesterId });
+    const query = `
+      mutation NewTest($requesterId: Int!) {
+        createTest(input: {test: {requesterId: $requesterId}}) {
+          test { id }
+        }
+      }`;
+    try {
+      const res = await gql(query, { requesterId });
+      const {
+        createTest: { test }
+      } = res;
+      dispatch({ type: "TEST_REQ_FINISHED", payload: test });
+    } catch (error) {
+      dispatch({ type: "TEST_REQ_FAILED", error, payload: requesterId });
+    }
+  },
+  // Limit to self in common case, but allow "all" if admin?
+  doTestSubscribe: requesterId => async ({ dispatch }) => {
+    requesterId = requesterId ?? store.selectMyselfId();
+    const { subStop } = store.selectTestRaw();
+    dispatch({ type: "TEST_SUB_STARTED", payload: requesterId });
+    if (subStop) subStop();
+    const query = `
+      subscription Tests($requesterId: Int!) {
+        tests(condition: {requesterId: $requesterId}) {
+          nodes {
+            id
+            requesterId
+            createdAt
+            finishedAt
+          }
+        }
+      }`;
+    const variables = { requesterId };
+    try {
+      const stop = await live({ query, variables }, ({ data }) => {
+        const {
+          tests: { nodes }
+        } = data;
+        dispatch({ type: "TEST_SUB_UPDATED", payload: nodes });
+      });
+      dispatch({ type: "TEST_SUB_FINISHED", payload: stop });
+    } catch (error) {
+      dispatch({ type: "TEST_SUB_FAILED", error });
+    }
+  },
+
+  selectTestRaw: state => state.test,
+  selectTests: state => state.test.data,
+  selectTest: createSelector(
+    "selectTests",
+    "selectMyselfId",
+    (tests, myselfId) =>
+      tests.filter(t => t.requesterId == myselfId).find(t => !t.finishedAt)
+  ),
+  selectTestStatus: createSelector(
+    "selectTestRaw",
+    "selectTest",
+    (raw, test) => {
+      if (test?.startedAt) return "active";
+      if (test) return "waiting";
+      if (raw.requesting) return "requesting";
+      if (raw.subStarted) return "listening";
+      return "";
+    }
+  ),
+
+  reactSakSubscribeOnMyselfExisting: createSelector(
+    "selectTestRaw",
+    "selectMyselfId",
+    (raw, myselfId) => {
+      if (!raw.subStarted && myselfId) {
+        return { actionCreator: "doTestSubscribe" };
+      }
+    }
+  )
+};
+
+const client = {
+  name: "client",
+  reducer: (state = { ui: "" }, { type, payload }) => {
+    if (type == "CLIENT_UI") {
+      if (!["", "settings"].includes(payload))
+        throw new Error(`Unexpecetd ui ${payload}`);
+      return { ...state, ui: payload };
+    }
+    return state;
+  },
+
+  doClientUi: ui => ({ type: "CLIENT_UI", payload: ui }),
+
+  selectClientUi: state => state.client.ui
+};
+
 const errors = {
   name: "errors",
   getMiddleware: () => store => next => action => {
@@ -762,6 +878,8 @@ const store = composeBundles(
   people,
   referendum,
   out,
+  test,
+  client,
   errors
 )();
 window.store = store;

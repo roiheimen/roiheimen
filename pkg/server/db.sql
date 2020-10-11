@@ -98,6 +98,18 @@ create index on roiheimen.speech(created_at);
 create index on roiheimen.speech(started_at);
 create index on roiheimen.speech(ended_at);
 
+-- test
+create table roiheimen.test (
+  id               serial primary key,
+  requester_id     integer not null references roiheimen.person(id) on delete cascade,
+  created_at       timestamptz default now(),
+  started_at       timestamptz,
+  finished_at      timestamptz
+);
+comment on table roiheimen.test is 'A test (soundcheck, or talk to people) opened by a person.';
+create index on roiheimen.test(requester_id);
+create index on roiheimen.test(finished_at);
+
 -- vote
 create type roiheimen.referendum_type as enum (
   'open',
@@ -289,6 +301,9 @@ grant select on table roiheimen.speech to roiheimen_anonymous, roiheimen_person;
 grant insert, update, delete on table roiheimen.speech to roiheimen_person;
 grant usage on sequence roiheimen.speech_id_seq to roiheimen_person;
 
+grant select, insert, update, delete on table roiheimen.test to roiheimen_person;
+grant usage on sequence roiheimen.test_id_seq to roiheimen_person;
+
 grant select on table roiheimen.referendum to roiheimen_anonymous, roiheimen_person;
 grant insert, update, delete on table roiheimen.referendum to roiheimen_person;
 grant usage on sequence roiheimen.referendum_id_seq to roiheimen_person;
@@ -309,6 +324,7 @@ alter table roiheimen.meeting enable row level security;
 alter table roiheimen.sak enable row level security;
 alter table roiheimen.person enable row level security;
 alter table roiheimen.speech enable row level security;
+alter table roiheimen.test enable row level security;
 alter table roiheimen.referendum enable row level security;
 alter table roiheimen.vote enable row level security;
 
@@ -344,6 +360,18 @@ create policy all_admin_speech on roiheimen.speech for all to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = speaker_id
+      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+    )
+  );
+
+create policy all_test on roiheimen.test for all to roiheimen_person
+  with check (requester_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer);
+create policy all_admin_test on roiheimen.test for all to roiheimen_person
+  using (
+    coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
+    and exists (
+      select 1 from roiheimen.person
+      where id = requester_id
       and meeting_id = current_setting('jwt.claims.meeting_id', true)
     )
   );
