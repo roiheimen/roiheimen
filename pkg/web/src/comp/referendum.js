@@ -36,7 +36,7 @@ export default define("RoiReferendum", {
   },
   render({ useSel, useStore }) {
     this.store = useStore();
-    const { referendum } = useSel("referendum");
+    const { referendum, referendumVote } = useSel("referendum", "referendumVote");
     if (!referendum) {
       return this.html` `;
     }
@@ -45,25 +45,30 @@ export default define("RoiReferendum", {
       .map(a => ({ sort: Math.random(), value: a }))
       .sort((a, b) => a.sort - b.sort)
       .map(a => a.value);
+    const humanType = { OPEN: "open røysting", CLOSED: "lukka røysting" }[type] || type;
+    const chooser = () => html`
+      <ul style="list-style: none">
+      ${choices.map(
+        c =>
+          html`
+            <li>
+              <label
+                ><input type="radio" name="choice" value=${c} /> ${c}</label
+              >
+            </li>
+          `
+      )}
+      </ul>
+      <p><input type=submit name=vote value=Røyst>
+      <p><button name=blank onclick=${this}>Røyst blank</button>
+    `;
+    const didVote = () => html`
+      Du har røysta.
+    `;
     this.html`
       <form data-id=${id}>
-        <h3>${title} (${{ OPEN: "Open røysting", CLOSED: "Lukka røysting" }[
-      type
-    ] || type})</h3>
-        <ul style="list-style: none">
-        ${choices.map(
-          c =>
-            html`
-              <li>
-                <label
-                  ><input type="radio" name="choice" value=${c} /> ${c}</label
-                >
-              </li>
-            `
-        )}
-        </ul>
-        <p><input type=submit name=vote value=Røyst>
-        <p><button name=blank onclick=${this}>Røyst blank</button>
+        <h3>${title} (${humanType})</h3>
+        ${referendumVote ? didVote() : chooser()}
       </form>
       `;
   }

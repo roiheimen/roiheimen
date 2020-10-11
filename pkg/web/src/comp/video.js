@@ -44,10 +44,10 @@ const WherebyEmbed = {
     const { myself } = useSel("myself");
     // You can set this to override the room or even full URL,
     // to use a mock website or local whereby if you have
-    const room = localStorage.debug_room || myself.room || "/test";
+    const room = localStorage.debug_room || myself?.room || "/test";
     this.html`
       <whereby-embed
-        displayName=${myself.name}
+        displayName=${myself?.name}
         embed
         people=off
         background=off

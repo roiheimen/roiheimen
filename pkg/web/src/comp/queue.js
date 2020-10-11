@@ -73,13 +73,13 @@ const RoiQueueDrawer = {
           tabindex=0
           disabled=${speechFetching}
           .onclick=${() => store.doSpeechReq()}
-          title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
+          title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
           >Innlegg</button>
         <button
           tabindex=0
           disabled=${speechFetching}
           .onclick=${() => store.doSpeechReq("REPLIKK")}
-          title=${`Før deg opp på talelista som ${myself.name} (${myself.num})`}
+          title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
           >Replikk</button>
           ` : ''}
         ${myNewestSpeechRequest ? html`<button
@@ -89,7 +89,7 @@ const RoiQueueDrawer = {
         <button
           class=logout
           .onclick=${() => store.doMyselfLogout()}
-          title=${`Logg av som ${myself.name} (${myself.num})`}
+          title=${`Logg av som ${myself?.name} (${myself?.num})`}
           >Logg ut</button>
       </div>
       <div class=queue>

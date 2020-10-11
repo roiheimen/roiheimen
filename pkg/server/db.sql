@@ -251,6 +251,15 @@ $$ language sql stable;
 --     limit 1
 -- $$ language sql stable;
 
+create or replace function roiheimen.vote_count(sak_id integer) returns table(referendum_id integer, choice text, cnt bigint) as $$
+  select referendum_id, vote, count(vote)
+    from roiheimen.vote
+    where referendum_id in (
+      select id from roiheimen.referendum where sak_id = $1)
+    group by referendum_id, vote;
+$$ language sql stable security definer;
+comment on function roiheimen.vote_count(integer) is 'Returns the number of votes for each choice in a referendum.';
+
 create function roiheimen.current_person() returns roiheimen.person as $$
   select *
   from roiheimen.person
@@ -293,6 +302,7 @@ grant execute on function roiheimen.register_person(integer, text, text, text, t
 grant execute on function roiheimen.register_people(text, people_input[]) to roiheimen_person;
 grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
+grant execute on function roiheimen.vote_count(integer) to roiheimen_person;
 
 -- Row lewel security policy
 alter table roiheimen.meeting enable row level security;
@@ -362,10 +372,12 @@ create policy select_vote on roiheimen.vote for select to roiheimen_person
       and meeting_id = current_setting('jwt.claims.meeting_id', true)
     )
   );
-create policy select_vote_yourself on roiheimen.vote for select to roiheimen_person
-  using (
-    person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
-  );
+-- Actually not a good idea, since admins will have access to users pws,
+-- and can therefore read their votes
+-- create policy select_vote_yourself on roiheimen.vote for select to roiheimen_person
+--   using (
+--     person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+--   );
 create policy insert_vote on roiheimen.vote for insert to roiheimen_person
   with check (
     person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer

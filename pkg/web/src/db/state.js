@@ -50,6 +50,7 @@ const myself = {
   },
 
   selectMyself: state => state.myself.data,
+  selectMyselfId: state => state.myself.data?.id,
   selectMyselfMeetingId: state => state.myself.data?.meetingId
 };
 
@@ -154,7 +155,9 @@ const sak = {
       }`;
     try {
       const res = await gql(gqlNewSak, { title, meetingId });
-      const { createSak: { sak } } = res;
+      const {
+        createSak: { sak }
+      } = res;
       dispatch({ type: "SAK_REQ_FINISHED", payload: sak });
     } catch (error) {
       dispatch({ type: "SAK_REQ_FAILED", error });
@@ -174,7 +177,9 @@ const sak = {
       }`;
     try {
       await live({ query }, ({ data }) => {
-        const { saks: { nodes } } = data;
+        const {
+          saks: { nodes }
+        } = data;
         dispatch({ type: "SAK_SUB_UPDATED", payload: nodes[0] });
       });
       dispatch({ type: "SAK_SUB_FINISHED" });
@@ -195,7 +200,7 @@ const sak = {
         ...sak,
         speeches: (speeches || []).map(speech => ({
           ...speech,
-          speaker: peopleById[speech.speakerId] || {},
+          speaker: peopleById[speech.speakerId] || {}
         }))
       };
       return nsak;
@@ -220,7 +225,8 @@ const speech = {
     { type, payload }
   ) => {
     if (type == "SPEECH_REQ_STARTED") return { ...state, fetching: true };
-    if (type == "SPEECH_REQ_FINISHED") return { ...state, fetching: false, current: payload };
+    if (type == "SPEECH_REQ_FINISHED")
+      return { ...state, fetching: false, current: payload };
     if (type == "SPEECH_SUB_STARTED") return { ...state, subStarted: true };
     if (type == "SPEECH_SUB_FINISHED") return { ...state, stopSub: payload };
     if (type == "SPEECH_SUB_UPDATED") return { ...state, data: payload };
@@ -232,20 +238,24 @@ const speech = {
     const result = next(action);
     const newSakId = store.selectSak()?.id;
     if (oldSakId != newSakId) {
-
     }
     return result;
   },
 
-  doSpeechReq: (type = "INNLEGG", { speakerId, sakId, parentId } = {}) => async ({
-    dispatch,
-    store
-  }) => {
+  doSpeechReq: (
+    type = "INNLEGG",
+    { speakerId, sakId, parentId } = {}
+  ) => async ({ dispatch, store }) => {
     speakerId = speakerId ?? store.selectMyself().id;
     sakId = sakId ?? store.selectSak().id;
-    const { current } = store.selectSpeechState();
-    parentId = parentId ?? (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
-    dispatch({ type: "SPEECH_REQ_STARTED", payload: { type, speakerId, sakId, parentId } });
+    const { current } = store.selectSpeechState();
+    parentId =
+      parentId ??
+      (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
+    dispatch({
+      type: "SPEECH_REQ_STARTED",
+      payload: { type, speakerId, sakId, parentId }
+    });
     const gqlCreateSpeech = `
       mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!, $parentId: Int) {
         createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId, parentId: $parentId}}) {
@@ -263,7 +273,7 @@ const speech = {
         sakId,
         speakerId,
         type,
-        parentId,
+        parentId
       });
       const {
         createSpeech: { speech }
@@ -376,7 +386,7 @@ const speech = {
       dispatch({ type: "SPEECH_UPDATE_FAILED", error });
     }
   },
-  doSpeechSubscribe: (sakId) => async ({ dispatch }) => {
+  doSpeechSubscribe: sakId => async ({ dispatch }) => {
     sakId = sakId ?? store.selectSak().id;
     const { stopSub } = store.selectSpeechRaw();
     dispatch({ type: "SPEECH_SUB_STARTED", payload: sakId });
@@ -400,7 +410,9 @@ const speech = {
     const variables = { sakId };
     try {
       const stop = await live({ query, variables }, ({ data }) => {
-        const { speeches: { nodes } } = data;
+        const {
+          speeches: { nodes }
+        } = data;
         dispatch({ type: "SPEECH_SUB_UPDATED", payload: nodes });
       });
       dispatch({ type: "SPEECH_SUB_FINISHED", payload: stop });
@@ -415,15 +427,18 @@ const speech = {
   selectSpeechFetching: state => state.speech.fetching,
   selectSpeechScheduled: state => !!state.speech.current,
   selectSpeeches: createSelector("selectSpeechRaw", raw => {
-    return raw.data.map((speech) => ({ ...speech, 
-          status: speech.startedAt
-            ? speech.endedAt
-              ? "ended"
-              : "started"
-            : speech.endedAt
-            ? "cancelled"
-            : "waiting"
-    })).sort((a, b) => (a.parentId || a.id) - (b.parentId || b.id));
+    return raw.data
+      .map(speech => ({
+        ...speech,
+        status: speech.startedAt
+          ? speech.endedAt
+            ? "ended"
+            : "started"
+          : speech.endedAt
+          ? "cancelled"
+          : "waiting"
+      }))
+      .sort((a, b) => (a.parentId || a.id) - (b.parentId || b.id));
   }),
   selectSpeechesValid: createSelector("selectSpeeches", speeches =>
     speeches
@@ -494,15 +509,21 @@ const referendum = {
       subStarted: false,
       data: [],
       subStop: null,
-      fetching: false
+      fetching: false,
+      count: []
     },
     { type, payload }
   ) => {
     if (type == "REFERENDUM_REQ_STARTED") return { ...state, fetching: true };
-    if (type == "REFERENDUM_REQ_FINISHED") return { ...state, fetching: false, current: payload };
-    if (type == "REFERENDUM_SUB_STARTED") return { ...state, subStarted: true, subStop: null };
-    if (type == "REFERENDUM_SUB_FINISHED") return { ...state, subStop: payload };
+    if (type == "REFERENDUM_REQ_FINISHED")
+      return { ...state, fetching: false, current: payload };
+    if (type == "REFERENDUM_SUB_STARTED")
+      return { ...state, subStarted: true, subStop: null };
+    if (type == "REFERENDUM_SUB_FINISHED")
+      return { ...state, subStop: payload };
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
+    if (type == "REFERENDUM_COUNT_FINISHED")
+      return { ...state, count: payload };
     return state;
   },
   getMiddleware: () => store => next => action => {
@@ -519,7 +540,10 @@ const referendum = {
     store
   }) => {
     sakId = sakId ?? store.selectSak().id;
-    dispatch({ type: "REFERENDUM_REQ_STARTED", payload: { type, title, choices, sakId } });
+    dispatch({
+      type: "REFERENDUM_REQ_STARTED",
+      payload: { type, title, choices, sakId }
+    });
     const query = `
       mutation CreateReferendum($title: String!, $sakId: Int!, $choices: JSON!, $type: ReferendumType!) {
         createReferendum(input: {referendum: {title: $title, sakId: $sakId, choices: $choices, type: $type}}) {
@@ -531,7 +555,7 @@ const referendum = {
         sakId,
         type,
         title,
-        choices,
+        choices
       });
       dispatch({ type: "REFERENDUM_REQ_FINISHED", payload: res });
     } catch (error) {
@@ -554,7 +578,7 @@ const referendum = {
       dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
     }
   },
-  doReferendumSubscribe: (sakId) => async ({ dispatch }) => {
+  doReferendumSubscribe: sakId => async ({ dispatch }) => {
     sakId = sakId ?? store.selectSak().id;
     const { subStop } = store.selectReferendumRaw();
     dispatch({ type: "REFERENDUM_SUB_STARTED", payload: sakId });
@@ -571,6 +595,7 @@ const referendum = {
             finishedAt
             votes {
               nodes {
+                id
                 personId
               }
             }
@@ -581,7 +606,9 @@ const referendum = {
     const variables = { sakId };
     try {
       const stop = await live({ query, variables }, ({ data }) => {
-        const { referendums: { nodes } } = data;
+        const {
+          referendums: { nodes }
+        } = data;
         dispatch({ type: "REFERENDUM_SUB_UPDATED", payload: nodes });
       });
       dispatch({ type: "REFERENDUM_SUB_FINISHED", payload: stop });
@@ -589,9 +616,15 @@ const referendum = {
       dispatch({ type: "REFERENDUM_SUB_FAILED", error });
     }
   },
-  doReferendumVote: ({ referendumId, choice }) => async ({ dispatch, store }) => {
+  doReferendumVote: ({ referendumId, choice }) => async ({
+    dispatch,
+    store
+  }) => {
     const personId = store.selectMyself().id;
-    dispatch({ type: "REFERENDUM_VOTE_STARTED", payload: { personId, choice, referendumId } });
+    dispatch({
+      type: "REFERENDUM_VOTE_STARTED",
+      payload: { personId, choice, referendumId }
+    });
     const query = `
     mutation ReferendumVote($referendumId: Int!, $personId: Int!, $choice: String!) {
       createVote(input: {vote: {vote: $choice, referendumId: $referendumId, personId: $personId}}) {
@@ -604,13 +637,73 @@ const referendum = {
       const id = res.createVote.vote.id;
       dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: id });
     } catch (error) {
-      dispatch({ type: "REFERENDUM_VOTE_FAILED", error, payload: referendumId });
+      dispatch({
+        type: "REFERENDUM_VOTE_FAILED",
+        error,
+        payload: referendumId
+      });
+    }
+  },
+  doReferendumCount: ({ sakId } = {}) => async ({ dispatch, store }) => {
+    sakId = sakId ?? store.selectSakId();
+    dispatch({ type: "REFERENDUM_COUNT_STARTED", payload: { sakId } });
+    const query = `
+      query VoteCount($sakId: Int!) {
+        voteCount(sakId: $sakId) {
+          nodes {
+            referendumId
+            choice
+            cnt
+          }
+        }
+      }
+    `;
+    try {
+      const res = await gql(query, { sakId });
+      dispatch({
+        type: "REFERENDUM_COUNT_FINISHED",
+        payload: res.voteCount.nodes
+      });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_COUNT_FAILED", error, payload: sakId });
     }
   },
 
   selectReferendumRaw: state => state.referendum,
-  selectReferendums: state => state.referendum.data,
-  selectReferendum: createSelector("selectReferendums", referendums => referendums.filter(r => !r.finishedAt)[0]),
+  selectReferendumsData: state => state.referendum.data,
+  selectReferendumCountData: state => state.referendum.count,
+  selectReferendum: createSelector(
+    "selectReferendums",
+    referendums => referendums.filter(r => !r.finishedAt)[0]
+  ),
+  selectReferendumVote: createSelector(
+    "selectMyselfId",
+    "selectReferendum",
+    (myselfId, referendum) =>
+      referendum?.votes.nodes.find(v => v.personId == myselfId)
+  ),
+  selectReferendums: createSelector(
+    "selectReferendumsData",
+    "selectReferendumCountData",
+    (referendumsData, referendumCountData) => {
+      const refCnt = {};
+      for (const c of referendumCountData) {
+        const id = c.referendumId;
+        if (!refCnt[id]) refCnt[id] = [];
+        refCnt[id].push(c);
+      }
+      return referendumsData.map(r => {
+        if (refCnt[r.id]) {
+          const counts = [...r.choices, ""].map(choice => ({
+            choice,
+            count: +refCnt[r.id]?.find(rf => rf.choice == choice)?.cnt || 0
+          }));
+          return { ...r, counts };
+        }
+        return r;
+      });
+    }
+  ),
 
   reactSpeechesUpdateOnSakChange: createSelector(
     "selectReferendumRaw",
@@ -662,7 +755,15 @@ const errors = {
   }
 };
 
-const store = composeBundles(myself, speech, sak, people, referendum, out, errors)();
+const store = composeBundles(
+  myself,
+  speech,
+  sak,
+  people,
+  referendum,
+  out,
+  errors
+)();
 window.store = store;
 
 function addSelect(sel) {
