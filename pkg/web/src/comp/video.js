@@ -42,9 +42,9 @@ const WherebyEmbed = {
   },
   render({ useSel }) {
     const { myself } = useSel("myself");
-    // You can set this to override the room or even full URL,
-    // to use a mock website or local whereby if you have
-    const room = localStorage.debug_room || myself?.room || "/test";
+    if (!myself) return;
+    const room = myself.room;
+    if (!room) return this.html`You seem to have no room! Contact support.`;
     this.html`
       <whereby-embed
         displayName=${myself?.name}
@@ -74,15 +74,16 @@ define("RoiVideo", {
   },
   render({ useSel, useStore, useEffect }) {
     const youtubeId = "NMre6IAAAiU";
-    const { speechFetching, speechScheduled, speechInWhereby } = useSel(
+    const { speechFetching, speechScheduled, speechInWhereby, testActive } = useSel(
       "speechFetching",
       "speechScheduled",
-      "speechInWhereby"
+      "speechInWhereby",
+      "testActive"
     );
 
     if (speechFetching) {
       this.html`Waiting...`;
-    } else if (speechInWhereby) {
+    } else if (speechInWhereby || testActive) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
       this.html`<YouTubeIframe .id=${youtubeId} />`;
