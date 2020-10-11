@@ -75,8 +75,7 @@ define("RoiLogin", {
       const res2 = await gql(gqlMyself);
       const { currentPerson } = res2;
       Object.assign(storage("myself"), currentPerson);
-      if (currentPerson.admin) location.assign("/manage.html");
-      else location.assign("/queue.html");
+      location.assign("/queue.html");
     } catch (e) {
       if (e.extra?.body?.errors) {
         this.err = e.extra.body.errors.map((e) => e.message);
@@ -85,7 +84,11 @@ define("RoiLogin", {
       this.err = ["" + e];
     }
   },
-  render({ useEffect, useStore }) {
+  render({ useEffect, useStore, useSel }) {
+    const { myselfId } = useSel("myselfId");
+    useEffect(() => {
+      if (myselfId) location.assign("/queue.html");
+    }, [myselfId]);
     useEffect(() => {
       if (new URLSearchParams(location.search).has("logout")) {
         useStore().doMyselfLogout();
