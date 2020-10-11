@@ -617,7 +617,7 @@ const referendum = {
     }
   ),
 
-  reactSpeechesUpdateOnSakChange: createSelector("selectReferendumRaw", "selectSakId", (referendumRaw, sakId) => {
+  reactReferendumUpdateOnSakChange: createSelector("selectReferendumRaw", "selectSakId", (referendumRaw, sakId) => {
     if (sakId && !referendumRaw.subStarted) {
       return { actionCreator: "doReferendumSubscribe", args: [sakId] };
     }
