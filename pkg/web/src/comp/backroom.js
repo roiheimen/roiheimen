@@ -70,7 +70,7 @@ define("RoiBackroom", {
       return this.html`Ingen på lista`;
     }
     const testButtons = (t) => {
-      if (!peopleById[t.requesterId].room) return null;
+      if (!peopleById[t.requesterId]?.room) return null;
       if (!t.startedAt) return html`<button name="test_start">Test</button>`;
       if (!t.finishedAt) return html`<button name="test_end">Avslutt</button>`;
       return "Ferdig";
@@ -83,8 +83,8 @@ define("RoiBackroom", {
         (t) =>
           html`
             <tr class=${`status-${t.status}`} data-id=${t.id}>
-              <td>${peopleById[t.requesterId].num}</td>
-              <td>${peopleById[t.requesterId].name}</td>
+              <td>${peopleById[t.requesterId]?.num}</td>
+              <td>${peopleById[t.requesterId]?.name}</td>
               <td>${testButtons(t)}</td>
             </tr>
           `
