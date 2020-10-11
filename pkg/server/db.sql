@@ -365,7 +365,7 @@ create policy all_admin_speech on roiheimen.speech for all to roiheimen_person
   );
 
 create policy all_test on roiheimen.test for all to roiheimen_person
-  with check (requester_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer);
+  using (requester_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer);
 create policy all_admin_test on roiheimen.test for all to roiheimen_person
   using (
     coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean

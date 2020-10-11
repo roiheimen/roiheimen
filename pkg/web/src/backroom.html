@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Bakrommet</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/footer.js></script>
+<script type=module src=/comp/layout.js></script>
+<script type=module src=/comp/backroom.js></script>
+<script type=module src=/lib/polyfills.js></script>
+<style>
+  body {
+    margin: 20px 0 0;
+  }
+  section {
+    min-height: 300px;
+  }
+</style>
+<body>
+  <section class="card lg">
+    <roi-backroom></roi-backroom>
+  </section>
+  <footer is="roi-footer"></footer>
+</body>
+
+<script type=module>
+  import storage from "../lib/storage.js";
+  if (!storage("myself").admin) location.assign("/");
+</script>

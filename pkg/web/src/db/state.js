@@ -650,10 +650,13 @@ const out = {
 
 const test = {
   name: "test",
-  reducer: (state = { requested: false, subStarted: false, subStop: null, data: [] }, { type, payload }) => {
+  reducer: (
+    state = { requested: false, subStarted: false, subStop: null, listenTo: null, data: [] },
+    { type, payload }
+  ) => {
     if (type == "TEST_REQ_STARTED") return { ...state, requested: true };
-    if (type == "TEST_REQ_FAILED") return { ...state, requested: false };
-    if (type == "TEST_SUB_STARTED") return { ...state, subStarted: true };
+    if (type == "TEST_REQ_FAILED") return { ...state, requested: false, listenTo: null };
+    if (type == "TEST_SUB_STARTED") return { ...state, subStarted: true, subStop: null, listenTo: payload };
     if (type == "TEST_SUB_FINISHED") return { ...state, subStop: payload };
     if (type == "TEST_SUB_UPDATED") return { ...state, data: payload };
     if (type == "CLIENT_UI") {
@@ -682,15 +685,15 @@ const test = {
       dispatch({ type: "TEST_REQ_FAILED", error, payload: requesterId });
     }
   },
-  // Limit to self in common case, but allow "all" if admin?
   doTestSubscribe: (requesterId) => async ({ dispatch }) => {
     requesterId = requesterId ?? store.selectMyselfId();
     const { subStop } = store.selectTestRaw();
+    // Limit to self in common case, but allow "all"
     dispatch({ type: "TEST_SUB_STARTED", payload: requesterId });
     if (subStop) subStop();
     const query = `
-      subscription Tests($requesterId: Int!) {
-        tests(condition: {requesterId: $requesterId}) {
+      subscription Tests${requesterId == "all" ? "" : "($requesterId: Int!)"} {
+        tests${requesterId == "all" ? "" : "(condition: {requesterId: $requesterId})"} {
           nodes {
             id
             requesterId
@@ -715,6 +718,7 @@ const test = {
 
   selectTestRaw: (state) => state.test,
   selectTests: (state) => state.test.data,
+  selectTestListenAll: (state) => state.test.listenTo == "all",
   selectTest: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
     tests.filter((t) => t.requesterId == myselfId).find((t) => !t.finishedAt)
   ),
@@ -722,7 +726,8 @@ const test = {
     if (test?.startedAt) return "active";
     if (test) return "waiting";
     if (raw.requesting) return "requesting";
-    if (raw.subStarted) return "listening";
+    if (raw.subStop) return "listening";
+    if (raw.subStarted) return "starting";
     return "";
   }),
 

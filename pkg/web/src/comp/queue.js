@@ -55,12 +55,13 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { speechFetching, speechesUpcomingByMe, myself, referendum, sak } = useSel(
-      "speechFetching",
-      "speechesUpcomingByMe",
+    const { myself, referendum, sak, speechFetching, speechesUpcomingByMe, testStatus } = useSel(
       "myself",
       "referendum",
-      "sak"
+      "sak",
+      "speechFetching",
+      "speechesUpcomingByMe",
+      "testStatus"
     );
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = "";
@@ -109,6 +110,7 @@ const RoiQueueDrawer = {
           >Innstillingar</button>
       </div>
       <div class=queue>
+        ${testStatus == "waiting" ? html` <div class="info">Du er i kø for ein prat på bakrommet.</div> ` : null}
         <h2 class=title>${sak?.title || "Ingen sak"}</h2>
         ${workArea}
       </div>
