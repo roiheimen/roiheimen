@@ -690,7 +690,7 @@ const test = {
     const query = `
       mutation {
         updateTest(input: {id: ${id}, patch: {${
-      { start: `startedAt: "now()"`, stop: `startedAt: "now()"` }[status]
+      { start: `startedAt: "now()"`, stop: `finishedAt: "now()"` }[status]
     }}}) {
           test { id }
         }

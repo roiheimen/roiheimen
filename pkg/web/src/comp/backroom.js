@@ -20,10 +20,11 @@ const WherebyEmbed = {
   },
   render({ useSel, usePrevious }) {
     const { testActive, peopleById, myself } = useSel("testActive", "peopleById", "myself");
-    const person = peopleById[testActive.requesterId]
-    const room = person.room;
+    const person = peopleById[testActive?.requesterId];
+
+    const room = person?.room;
     const prevRoom = usePrevious(room);
-    if (!room) return this.html`Person ${person.num} ${person.name} has no room!`;
+    if (!room) return this.html`Person ${person?.num} ${person?.name} has no room!`;
     if (room == prevRoom) return;
     this.html`
       <whereby-embed
@@ -49,7 +50,7 @@ define("RoiBackroom", {
       this.store.doTestUpdateStatus(id, "start");
     }
     if (e.target.name == "test_end") {
-      this.store.doTestUpdateStatus(id, "end");
+      this.store.doTestUpdateStatus(id, "stop");
     }
   },
   render({ useEffect, useSel, useStore }) {
