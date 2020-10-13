@@ -653,13 +653,14 @@ const out = {
 const test = {
   name: "test",
   reducer: (
-    state = { requested: false, subStarted: false, subStop: null, listenTo: null, data: [] },
+    state = { requested: false, subPerson: 0, subscribing: false, subStop: null, data: [] },
     { type, payload }
   ) => {
     if (type == "TEST_REQ_STARTED") return { ...state, requested: true };
-    if (type == "TEST_REQ_FAILED") return { ...state, requested: false, listenTo: null };
-    if (type == "TEST_SUB_STARTED") return { ...state, subStarted: true, subStop: null, listenTo: payload };
-    if (type == "TEST_SUB_FINISHED") return { ...state, subStop: payload };
+    if (type == "TEST_REQ_FAILED") return { ...state, requested: false };
+    if (type == "TEST_SUB_STARTED") return { ...state, subPerson: payload, subscribing: true, subStop: null };
+    if (type == "TEST_SUB_FINISHED") return { ...state, subStop: payload, subscribing: false };
+    if (type == "TEST_SUB_FAILED") return { ...state, subscribing: false };
     if (type == "TEST_SUB_UPDATED") return { ...state, data: payload };
     if (type == "CLIENT_UI") {
       if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
@@ -758,7 +759,8 @@ const test = {
   }),
 
   reactTestSubscribeOnMyselfExisting: createSelector("selectTestRaw", "selectMyselfId", (raw, myselfId) => {
-    if (!raw.subStarted && myselfId) {
+    // subPerson can be "all", or your own ID
+    if (!raw.subPerson && raw.subPerson != myselfId && !raw.subscribing) {
       return { actionCreator: "doTestSubscribe" };
     }
   }),
