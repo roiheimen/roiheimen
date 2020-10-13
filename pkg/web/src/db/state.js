@@ -194,11 +194,12 @@ const sak = {
 
 const speech = {
   name: "speech",
-  reducer: (state = { subStarted: false, data: [], fetching: false, scheduled: false }, { type, payload }) => {
+  reducer: (state = { subSak: 0, subscribing: false, data: [], fetching: false, scheduled: false }, { type, payload }) => {
     if (type == "SPEECH_REQ_STARTED") return { ...state, fetching: true };
     if (type == "SPEECH_REQ_FINISHED") return { ...state, fetching: false, current: payload };
-    if (type == "SPEECH_SUB_STARTED") return { ...state, subStarted: true };
-    if (type == "SPEECH_SUB_FINISHED") return { ...state, stopSub: payload };
+    if (type == "SPEECH_SUB_STARTED") return { ...state, subSak: payload, subscribing: true };
+    if (type == "SPEECH_SUB_FINISHED") return { ...state, stopSub: payload, subscribing: false };
+    if (type == "SPEECH_SUB_FAILED") return { ...state, subscribing: false };
     if (type == "SPEECH_SUB_UPDATED") return { ...state, data: payload };
     //if (type == "SAK_SUB_UPDATED") return { ...state, started: false, data: [] };
     return state;
@@ -370,7 +371,6 @@ const speech = {
 
   selectSpeechRaw: (state) => state.speech,
   selectSpeech: (state) => state.speech.current,
-  selectSpeechStarted: (state) => state.speech.subStarted,
   selectSpeechFetching: (state) => state.speech.fetching,
   selectSpeechScheduled: (state) => !!state.speech.current,
   selectSpeeches: createSelector("selectSpeechRaw", (raw) => {
@@ -423,8 +423,8 @@ const speech = {
     }
   ),
 
-  reactSpeechesUpdateOnSakChange: createSelector("selectSakId", "selectSpeechStarted", (sakId, speechStarted) => {
-    if (sakId && !speechStarted) {
+  reactSpeechesUpdateOnSakChange: createSelector("selectSpeechRaw", "selectSakId", (raw, sakId) => {
+    if (sakId && sakId != raw.subSak && !raw.subscribing) {
       return { actionCreator: "doSpeechSubscribe", args: [sakId] };
     }
   }),
