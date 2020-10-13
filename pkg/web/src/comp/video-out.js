@@ -55,8 +55,8 @@ define("RoiVideoOut", {
     this.html`
     <whereby-embed
       displayName=${this.type}
+      embed
       background=off
-      audio=off
       room=${room + "?floatSelf"} />
     `;
   },
