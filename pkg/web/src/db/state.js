@@ -760,7 +760,7 @@ const test = {
 
   reactTestSubscribeOnMyselfExisting: createSelector("selectTestRaw", "selectMyselfId", (raw, myselfId) => {
     // subPerson can be "all", or your own ID
-    if (!raw.subPerson && raw.subPerson != myselfId && !raw.subscribing) {
+    if (myselfId && !raw.subscribing && !raw.subPerson && raw.subPerson != myselfId) {
       return { actionCreator: "doTestSubscribe" };
     }
   }),

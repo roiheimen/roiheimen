@@ -42,14 +42,18 @@ export async function gql(query, variables, { nocreds } = {}) {
 }
 
 const liveCurrent = {};
-let id = 0;
+let curId = 0;
 let timeout;
 const send = (ws, o) => ws.send(JSON.stringify(o));
 export async function live({ query, variables = {} }, cb) {
   const ws = await openWs();
-  liveCurrent[++id] = { query, variables, cb };
+  const id = ++curId;
+  const name = getName(query);
+  liveCurrent[id] = { query, variables, cb };
+  console.info(`ws live subscribe id:${id} name:${name}`);
   send(ws, { id, type: "start", payload: { query, variables } });
   return () => {
+    console.info(`ws live stop id:${id} name:${name}`);
     delete liveCurrent[id];
     send(ws, { id, type: "stop" });
   };
