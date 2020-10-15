@@ -9,7 +9,9 @@ define("RoiYoutube", {
       height: 100%;
     }`;
   },
-  render() {
+  render({ usePrevious }) {
+    const prevId = usePrevious(this.id);
+    if (this.id && this.id == prevId) return;
     this.html`
       <iframe
         width="560"

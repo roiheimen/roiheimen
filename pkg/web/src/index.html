@@ -14,6 +14,13 @@
   color: white;
   font-size: 24px;
 }
+.warn {
+  margin: 20px;
+  padding: 10px;
+  background-color: yellow;
+  color: black;
+  font-size: 20px;
+}
 </style>
 
 <body>
@@ -29,6 +36,10 @@
     tilfelle i det heile teke. (Dette inkluderer andre moderne netlesarar,
     som Vivaldi, Brave og Opera).
     <p><code class=feilextra></code>
+  </div>
+  <div class=warn style="display: none">
+    Dette systemet fungerer best i nyaste Chrome og Firefox på datamaskin. På mobil gjeld det same
+    for Android, medan for Iphone må du bruka Safari i det tilfellet.
   </div>
   <section class="card sm login">
     <!--<p>Kom attende seinare. Systemet er ikkje klart for bruk enno. :)-->
@@ -52,11 +63,13 @@
         throw new Error("Din Chrome er for gamal, må vera versjon 80 eller nyare");
       }
     }
-    if (ua.indexOf("Firefox/") != -1) {
+    else if (ua.indexOf("Firefox/") != -1) {
       num = +/Firefox\/(\d+)/.exec(ua)[1];
       if (num < 75) {
         throw new Error("Din Firefox er for gamal, må vera versjon 75 eller nyare");
       }
+    } else {
+      document.querySelector(".warn").style.display = "block";
     }
   } catch (e) {
     document.querySelector(".feil").style.display = "block";

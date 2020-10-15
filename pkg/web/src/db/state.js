@@ -2,7 +2,7 @@ import "/web_modules/@ungap/custom-elements-builtin.js";
 import { defineHook } from "/web_modules/heresy.js";
 import { composeBundles, createSelector } from "/web_modules/redux-bundler.js";
 
-import storage from "../lib/storage.js";
+import storage, { save } from "../lib/storage.js";
 import { gql, live } from "../lib/graphql.js";
 
 const creds = storage("creds");
@@ -42,6 +42,7 @@ const myself = {
   doMyselfLogout: () => () => {
     if (Object.keys(creds).length) {
       Object.keys(creds).forEach((k) => delete creds[k]);
+      save("creds");
       location.assign("/");
     }
   },
@@ -690,7 +691,7 @@ const test = {
     }
   },
   doTestUpdateStatus: (id, status) => async ({ dispatch }) => {
-    dispatch({ type: "TEST_UPD_STARTED", payload: id });
+    dispatch({ type: "TEST_UPD_STARTED", payload: { id, status }});
     const query = `
       mutation {
         updateTest(input: {id: ${id}, patch: {${
