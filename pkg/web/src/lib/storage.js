@@ -1,8 +1,12 @@
 const db = Object.create(null);
 
+export function save(name) {
+  localStorage.setItem(name, JSON.stringify(db[name]));
+}
+
 function handleEvent() {
   const { name } = this;
-  localStorage.setItem(name, JSON.stringify(db[name]));
+  save(name);
 }
 
 function set(name) {

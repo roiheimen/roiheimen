@@ -1,6 +1,6 @@
 import { define, html } from "/web_modules/heresy.js";
 
-import storage from "../lib/storage.js";
+import storage, { save } from "../lib/storage.js";
 import { gql } from "../lib/graphql.js";
 
 const gqlLogin = `
@@ -75,6 +75,8 @@ define("RoiLogin", {
       const res2 = await gql(gqlMyself);
       const { currentPerson } = res2;
       Object.assign(storage("myself"), currentPerson);
+      save("creds");
+      save("myself");
       location.assign("/queue.html");
     } catch (e) {
       if (e.extra?.body?.errors) {
