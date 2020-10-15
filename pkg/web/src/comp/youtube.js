@@ -1,22 +1,23 @@
-import { define } from "/web_modules/heresy.js";
+import { define, html } from "/web_modules/heresy.js";
 
 define("RoiYoutube", {
-  includes: { Video, YouTubeIframe },
-  oninit() {
-    this.creds = storage("creds");
-  },
+  mappedAttributes: ["id"],
   style(self) {
     return `
-    ${self} { 
-      background: #767d6f;
-      grid-row: 1 / 3;
-      grid-column: 2 / 3;
-    } `;
+    ${self} iframe {
+      width: 100%;
+      height: 100%;
+    }`;
   },
   render() {
     this.html`
-
+      <iframe
+        width="560"
+        height="600"
+        src="https://www.youtube.com/embed/${this.id}?autoplay=1"
+        frameborder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
     `;
-    //<Video .creds=${this.creds} />
   },
 });

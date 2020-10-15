@@ -1,31 +1,11 @@
+import "https://whereby.dev/embed/whereby-embed.js";
+
 import { define, html } from "/web_modules/heresy.js";
 
 import "../db/state.js";
 import storage from "../lib/storage.js";
 
-import "https://whereby.dev/embed/whereby-embed.js";
-
-const YouTubeIframe = {
-  mappedAttributes: ["id"],
-  style(self) {
-    return `
-    ${self} iframe {
-      width: 100%;
-      height: 100%;
-    }`;
-  },
-  render() {
-    this.html`
-      <iframe
-        width="560"
-        height="315"
-        src="https://www.youtube.com/embed/${this.id}?autoplay=1"
-        frameborder="0"
-        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
-    `;
-  },
-};
+import "./youtube.js";
 
 const WherebyEmbed = {
   style(self) {
@@ -57,7 +37,7 @@ const WherebyEmbed = {
 };
 
 define("RoiVideo", {
-  includes: { WherebyEmbed, YouTubeIframe },
+  includes: { WherebyEmbed },
   oninit() {
     this.creds = storage("creds");
   },
@@ -91,7 +71,7 @@ define("RoiVideo", {
     } else if (speechInWhereby || testActive) {
       this.html`<WherebyEmbed .creds=${this.creds} />`;
     } else {
-      this.html`<YouTubeIframe .id=${youtubeId} />`;
+      this.html`<roi-youtube .id=${youtubeId} />`;
     }
   },
 });
