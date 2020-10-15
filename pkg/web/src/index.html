@@ -8,6 +8,12 @@
 .card.login {
   min-height: 200px;
 }
+.feil {
+  min-height: 300px;
+  background-color: red;
+  color: white;
+  font-size: 24px;
+}
 </style>
 
 <body>
@@ -17,6 +23,13 @@
       Noregs Mållag landsmøte 2020
     </h1>
   </header>
+  <div class=feil style="display: none">
+    <p>Nettleseren din er diverre ikkje støtta, du bør ha ein nyare versjon
+    av Chrome eller Firefox for at det skal fungera best. Og i mange
+    tilfelle i det heile teke. (Dette inkluderer andre moderne netlesarar,
+    som Vivaldi, Brave og Opera).
+    <p><code class=feilextra></code>
+  </div>
   <section class="card sm login">
     <!--<p>Kom attende seinare. Systemet er ikkje klart for bruk enno. :)-->
     <roi-login>
@@ -28,3 +41,25 @@
       <a href=https://www.youtube.com/watch?v=Q1-U0mHw8-I>Eg er ikkje utsending og vil sjå på</a>
   </section>
 </body>
+
+<script>
+  var ua, m, num;
+  try {
+    ua = navigator.userAgent;
+    if (ua.indexOf("Chrome/") != -1) {
+      num = +/Chrome\/(\d+)/.exec(ua)[1];
+      if (num < 80) {
+        throw new Error("Din Chrome er for gamal, må vera versjon 80 eller nyare");
+      }
+    }
+    if (ua.indexOf("Firefox/") != -1) {
+      num = +/Firefox\/(\d+)/.exec(ua)[1];
+      if (num < 75) {
+        throw new Error("Din Firefox er for gamal, må vera versjon 75 eller nyare");
+      }
+    }
+  } catch (e) {
+    document.querySelector(".feil").style.display = "block";
+    document.querySelector(".feilextra").innerHTML = ""+e.message;
+  }
+</script>
