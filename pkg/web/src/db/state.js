@@ -746,6 +746,9 @@ const test = {
   selectTest: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
     tests.filter((t) => t.requesterId == myselfId).find((t) => !t.finishedAt)
   ),
+  selectTestHasHad: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
+    tests.some((t) => t.requesterId == myselfId)
+  ),
   selectTestActive: createSelector("selectTests", (tests) =>
     tests.filter((t) => t.startedAt && !t.finishedAt)[0]
   ),

@@ -47,6 +47,7 @@ define("RoiFooter<footer>", {
         <a href="queue.html" class=${isActive("queue") && "active"}>talekø</a>
         | <a href="manage.html" class=${isActive("manage") && "active"}>ordstyring</a>
         | <a href="admin.html" class=${isActive("admin") && "active"}>administrasjon</a>
+        | <a href="backroom.html" class=${isActive("backroom") && "active"}>bakrom</a>
         ${this.nologout ? "" : html`| <a href="/?logout">logg ut</a>`}
       `;
   },

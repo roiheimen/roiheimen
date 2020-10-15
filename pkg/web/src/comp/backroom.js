@@ -13,8 +13,8 @@ const WherebyEmbed = {
     }
     ${self} whereby-embed {
       display: block;
-      height: 100%;
-      min-height: 400px;
+      height: 500px;
+      max-height: 80vh;
     }
     `;
   },
@@ -72,24 +72,39 @@ define("RoiBackroom", {
     }
     const testButtons = (t) => {
       if (!peopleById[t.requesterId]?.room) return null;
-      if (!t.startedAt) return html`<button name="test_start">Test</button>`;
+      if (!t.startedAt && t.finishedAt) return "Avbrutt";
+      if (!t.startedAt) return html`<button name="test_start">Test</button> <button name="test_end">Avbryt</button>`;
       if (!t.finishedAt) return html`<button name="test_end">Avslutt</button>`;
-      return "Ferdig";
+      if (t.finishedAt) return "Ferdig";
+      return "?";
     };
-    this.html`
-      ${testActive ? html`<WherebyEmbed />` : null}
-      <table onclick=${this}>
-      <tr><th>Nummer <th>Namn </tr>
-      ${tests.map(
-        (t) =>
+    tests.sort((a, b) => {
+      return a.createdAt - b.createdAt;
+    });
+    const ferdig = [];
+    const starta = [];
+    const ustarta = [];
+    for (const t of tests) {
+      if (t.finishedAt) ferdig.push(t);
+      else if (t.startedAt) starta.push(t);
+      else if (!t.startedAt) ustarta.push(t);
+      else ustarta.push(t);
+    }
+    const row = (t) =>
           html`
             <tr class=${`status-${t.status}`} data-id=${t.id}>
               <td>${peopleById[t.requesterId]?.num}</td>
               <td>${peopleById[t.requesterId]?.name}</td>
               <td>${testButtons(t)}</td>
             </tr>
-          `
-      )}
+          `;
+    this.html`
+      ${testActive ? html`<WherebyEmbed />` : null}
+      <table onclick=${this}>
+      <tr><th>Nummer <th>Namn </tr>
+      ${starta.map(row)}
+      ${ustarta.map(row)}
+      ${ferdig.map(row)}
       </table>
     `;
   },

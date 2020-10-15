@@ -55,13 +55,14 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { myself, referendum, sak, speechFetching, speechesUpcomingByMe, testStatus } = useSel(
+    const { myself, referendum, sak, speechFetching, speechesUpcomingByMe, testHasHad, test } = useSel(
       "myself",
       "referendum",
       "sak",
       "speechFetching",
       "speechesUpcomingByMe",
-      "testStatus"
+      "testHasHad",
+      "test"
     );
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = "";
@@ -70,6 +71,7 @@ const RoiQueueDrawer = {
 
     this.html`
       <div class=buttons>
+        ${testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button></div>`}
         ${
           sak?.id
             ? html`
@@ -110,7 +112,7 @@ const RoiQueueDrawer = {
           >Innstillingar</button>
       </div>
       <div class=queue>
-        ${testStatus == "waiting" ? html` <div class="info">Du er i kø for ein prat på bakrommet.</div> ` : null}
+        ${test ? html`<div class="info">Du er i ${!test.startedAt ? "kø for" : ""} ein prat på bakrommet. <button .onclick=${() => store.doTestUpdateStatus(test?.id, "stop")}>Avbryt</button></div> ` : null}
         <h2 class=title>${sak?.title || "Ingen sak"}</h2>
         ${workArea}
       </div>
