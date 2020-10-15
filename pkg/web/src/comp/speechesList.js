@@ -19,8 +19,9 @@ export default define("RoiSpeechesList", {
   render({ useSel }) {
     const { sakObj, speechState } = useSel("sakObj", "speechState");
     let speeches = sakObj?.speeches;
-    if (!speeches?.length) {
-      return this.html`Ingen på lista`;
+    if (!speeches) {
+      this.html`<p>Ingen på lista</p>`;
+      return;
     }
     if (this.simple) {
       speeches = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);

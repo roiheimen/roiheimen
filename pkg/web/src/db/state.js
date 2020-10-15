@@ -742,7 +742,7 @@ const test = {
 
   selectTestRaw: (state) => state.test,
   selectTests: (state) => state.test.data,
-  selectTestListenAll: (state) => state.test.listenTo == "all",
+  selectTestListenAll: (state) => state.test.subPerson == "all",
   selectTest: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
     tests.filter((t) => t.requesterId == myselfId).find((t) => !t.finishedAt)
   ),
@@ -754,7 +754,7 @@ const test = {
     if (test) return "waiting";
     if (raw.requesting) return "requesting";
     if (raw.subStop) return "listening";
-    if (raw.subStarted) return "starting";
+    if (raw.subPerson) return "starting";
     return "";
   }),
 
@@ -818,7 +818,10 @@ defineHook("useSel", ({ useMemo, useRef, useState, useEffect }) => (...args) => 
     });
   }, [selectors, prevSelectors]);
 
-  return prevSelectors.current === selectors ? state : { ...store.select(selectors) };
+  if(prevSelectors.current === selectors) {
+    return state;
+  }
+  return { ...store.select(selectors) };
 });
 
 defineHook("useStore", () => () => store);

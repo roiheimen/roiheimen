@@ -92,6 +92,11 @@ async function openWs(reconnect) {
   ws.onmessage = (event) => {
     const { data } = event;
     const d = JSON.parse(data);
+    clearTimeout(kaTimeout);
+    kaTimeout = setTimeout(() => {
+      console.log("WS Timed out! last:", d);
+      reconn();
+    }, 20 * 1000 + (Math.random() * 1000));
     if (d.type == "connection_ack") {
       connTries = 0;
       for (const [id, { query, variables }] of Object.entries(liveCurrent)) {
@@ -110,8 +115,6 @@ async function openWs(reconnect) {
     } else {
       console.log("????", d);
     }
-    clearTimeout(kaTimeout);
-    kaTimeout = setTimeout(reconn, 19 * 1000 + (Math.random() * 1000));
   };
   ws.onopen = (e) => {
     setTimeout(() => {

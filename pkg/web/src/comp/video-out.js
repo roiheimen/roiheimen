@@ -34,7 +34,12 @@ define("RoiVideoOut", {
   render({ useSel, usePrevious }) {
     const { speechState, peopleById } = useSel("speechState", "peopleById");
     const { current, next } = speechState;
-    const speech = { [current?.out]: current, [next?.out]: next }[this.type];
+    let speech;
+    if (["c", "d"].includes(this.type)) {
+      speech = current || next;
+    } else {
+      speech = { [current?.out]: current, [next?.out]: next }[this.type];
+    }
     const speaker = peopleById[speech?.speakerId];
     const room = speaker?.room;
     const prevRoom = usePrevious(room);
@@ -57,7 +62,7 @@ define("RoiVideoOut", {
       displayName=${this.type}
       embed
       background=off
-      room=${room + "?floatSelf"} />
+      room=${room + "?floatSelf&aec=off&agc=off"} />
     `;
   },
 });
