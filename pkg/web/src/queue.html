@@ -10,3 +10,8 @@
   <roi-queue></roi-queue>
   <footer is=roi-footer nologout></footer>
 </body>
+
+<script type=module>
+  import storage from "/lib/storage.js";
+  if (!storage("creds")?.jwt) location.assign("/");
+</script>
