@@ -936,6 +936,11 @@
   resolved "https://registry.yarnpkg.com/@ungap/create-content/-/create-content-0.1.4.tgz#e30b40c527d40dbac598672fc2ad497f912b30c6"
   integrity sha512-YM6YQkF5wUxJlw5yDzEAzJfPK/kXR/GxIARx4NNJCInfx/nirHmy3ujPjfi7CaXjcVCwyfpv3vKQm6h762lbRA==
 
+"@ungap/custom-elements-builtin@^0.6.3":
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/@ungap/custom-elements-builtin/-/custom-elements-builtin-0.6.3.tgz#bef578ab6645748fe6edb87d667429755f13e81a"
+  integrity sha512-vH+rnNpEM5RsIuRhb+2wfhXzipp4ar5/tx9L/09DGyHQ+t5oRhFWapyBnAtOXrK2ub+it7cF3z9AcY0VOy4JnQ==
+
 "@ungap/event@^0.1.4":
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/@ungap/event/-/event-0.1.4.tgz#44a8f1f6fbbfaf8d4e3d61c22e165bdf833ec4e5"

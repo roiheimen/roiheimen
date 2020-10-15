@@ -1,3 +1,4 @@
+import "/web_modules/@ungap/custom-elements-builtin.js";
 import { defineHook } from "/web_modules/heresy.js";
 import { composeBundles, createSelector } from "/web_modules/redux-bundler.js";
 
