@@ -16,9 +16,10 @@ export default define("RoiSpeechesList", {
     ${self} .simple .status-cancelled { display: none }
     `;
   },
-  render({ useSel, useState }) {
-    const { sakObj, speechState } = useSel("sakObj", "speechState");
+  render({ useSel, useState, useStore }) {
+    const { sakObj, speechState, myself } = useSel("sakObj", "speechState", "myself");
     const [showAll, setShowAll] = useState(false);
+    const store = useStore();
     const { speeches } = sakObj || {};
     if (!speeches) {
       this.html`<p>Ingen på lista</p>`;
@@ -30,7 +31,14 @@ export default define("RoiSpeechesList", {
     }
     const toggle = () => {
       if (this.simple) return null;
-      return html`<button style="margin-left: auto" .onclick=${() => setShowAll(s => !s)}>${shownSpeeches.length < speeches.length ? "Vis alle" : "Skjul ferdige"}</button>`;
+      return html`<button style="margin-left: auto" .onclick=${() => setShowAll((s) => !s)}>
+        ${shownSpeeches.length < speeches.length ? "Vis alle" : "Skjul ferdige"}
+      </button>`;
+    };
+    const rm = (speech) => {
+      if (speech.endedAt) return null;
+      if (myself.admin || speech.speakerId == myself.id)
+        return html`<button style="margin-left: auto" .onclick=${() => store.doSpeechEnd(speech.id)}>Stryk</button>`;
     };
     this.html`
       <table class=${this.simple ? "simple" : ""}>
@@ -43,7 +51,7 @@ export default define("RoiSpeechesList", {
               title=${`${speech.type} av ${speech.speaker.name}`}
             >
               <td>${speech.speaker.num}</td>
-              <td>${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}</td>
+              <td style="display: flex">${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}${rm(speech)}</td>
             </tr>
           `
       )}
