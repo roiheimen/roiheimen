@@ -60,7 +60,7 @@ define("RoiBackroom", {
       "testActive",
       "testListenAll",
       "testStatus",
-      "tests",
+      "tests"
     );
     useEffect(() => {
       if (testStatus && testStatus !== "starting" && !testListenAll) {
@@ -91,13 +91,13 @@ define("RoiBackroom", {
       else ustarta.push(t);
     }
     const row = (t) =>
-          html`
-            <tr class=${`status-${t.status}`} data-id=${t.id}>
-              <td>${peopleById[t.requesterId]?.num}</td>
-              <td>${peopleById[t.requesterId]?.name}</td>
-              <td>${testButtons(t)}</td>
-            </tr>
-          `;
+      html`
+        <tr class=${`status-${t.status}`} data-id=${t.id}>
+          <td>${peopleById[t.requesterId]?.num}</td>
+          <td>${peopleById[t.requesterId]?.name}</td>
+          <td>${testButtons(t)}</td>
+        </tr>
+      `;
     this.html`
       ${testActive ? html`<WherebyEmbed />` : null}
       <table onclick=${this}>

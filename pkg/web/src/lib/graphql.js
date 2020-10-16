@@ -66,7 +66,7 @@ async function reconn() {
   console.info(`ws reconn after ${ms} ms, conntries ${connTries}`);
 
   const orgConnTries = connTries;
-  await new Promise(res => setTimeout(res, ms));
+  await new Promise((res) => setTimeout(res, ms));
   if (orgConnTries != connTries) {
     console.info(`ws reconn: already tried during our break`);
     return;
@@ -88,7 +88,7 @@ async function openWs(reconnect) {
   ws.onclose = (e) => {
     console.info("ws close", e);
     reconn();
-  }
+  };
   ws.onmessage = (event) => {
     const { data } = event;
     const d = JSON.parse(data);
@@ -96,7 +96,7 @@ async function openWs(reconnect) {
     kaTimeout = setTimeout(() => {
       console.log("WS Timed out! last:", d);
       reconn();
-    }, 20 * 1000 + (Math.random() * 1000));
+    }, 20 * 1000 + Math.random() * 1000);
     if (d.type == "connection_ack") {
       connTries = 0;
       for (const [id, { query, variables }] of Object.entries(liveCurrent)) {

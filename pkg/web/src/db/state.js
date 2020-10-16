@@ -196,7 +196,10 @@ const sak = {
 
 const speech = {
   name: "speech",
-  reducer: (state = { subSak: 0, subStop: null, subscribing: false, data: [], fetching: false, scheduled: false }, { type, payload }) => {
+  reducer: (
+    state = { subSak: 0, subStop: null, subscribing: false, data: [], fetching: false, scheduled: false },
+    { type, payload }
+  ) => {
     if (type == "SPEECH_REQ_STARTED") return { ...state, fetching: true };
     if (type == "SPEECH_REQ_FINISHED") return { ...state, fetching: false, current: payload };
     if (type == "SPEECH_SUB_STARTED") return { ...state, subSak: payload, subscribing: true, subStop: null };
@@ -698,7 +701,7 @@ const test = {
     }
   },
   doTestUpdateStatus: (id, status) => async ({ dispatch }) => {
-    dispatch({ type: "TEST_UPD_STARTED", payload: { id, status }});
+    dispatch({ type: "TEST_UPD_STARTED", payload: { id, status } });
     const query = `
       mutation {
         updateTest(input: {id: ${id}, patch: {${
@@ -758,9 +761,7 @@ const test = {
   selectTestHasHad: createSelector("selectTests", "selectMyselfId", (tests, myselfId) =>
     tests.some((t) => t.requesterId == myselfId)
   ),
-  selectTestActive: createSelector("selectTests", (tests) =>
-    tests.filter((t) => t.startedAt && !t.finishedAt)[0]
-  ),
+  selectTestActive: createSelector("selectTests", (tests) => tests.filter((t) => t.startedAt && !t.finishedAt)[0]),
   selectTestStatus: createSelector("selectTestRaw", "selectTest", (raw, test) => {
     if (test?.startedAt) return "active";
     if (test) return "waiting";
@@ -830,7 +831,7 @@ defineHook("useSel", ({ useMemo, useRef, useState, useEffect }) => (...args) => 
     });
   }, [selectors, prevSelectors]);
 
-  if(prevSelectors.current === selectors) {
+  if (prevSelectors.current === selectors) {
     return state;
   }
   return { ...store.select(selectors) };

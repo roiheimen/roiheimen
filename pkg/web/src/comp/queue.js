@@ -112,7 +112,14 @@ const RoiQueueDrawer = {
           >Innstillingar</button>
       </div>
       <div class=queue>
-        ${test ? html`<div class="info">Du er i ${!test.startedAt ? "kø for" : ""} ein prat på bakrommet. <button .onclick=${() => store.doTestUpdateStatus(test?.id, "stop")}>Avbryt</button></div> ` : null}
+        ${
+          test
+            ? html`<div class="info">
+                Du er i ${!test.startedAt ? "kø for" : ""} ein prat på bakrommet.
+                <button .onclick=${() => store.doTestUpdateStatus(test?.id, "stop")}>Avbryt</button>
+              </div> `
+            : null
+        }
         <h2 class=title>${sak?.title || "Ingen sak"}</h2>
         ${workArea}
       </div>
