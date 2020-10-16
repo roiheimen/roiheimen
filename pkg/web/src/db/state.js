@@ -436,12 +436,13 @@ const referendum = {
   name: "referendum",
   reducer: (
     state = {
-      subSak: 0,
+      count: [],
       data: [],
+      fetching: false,
+      prevChoice: null,
+      subSak: 0,
       subStop: null,
       subscribing: false,
-      fetching: false,
-      count: [],
     },
     { type, payload }
   ) => {
@@ -451,6 +452,11 @@ const referendum = {
     if (type == "REFERENDUM_SUB_FINISHED") return { ...state, subStop: payload, subscribing: false };
     if (type == "REFERENDUM_SUB_FAILED") return { ...state, subscribing: false };
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
+    if (type == "REFERENDUM_VOTE_STARTED")
+      return {
+        ...state,
+        prevChoice: state.data.find((r) => r.id == payload.referendumId)?.type == "OPEN" ? payload.choice : null,
+      };
     if (type == "REFERENDUM_COUNT_FINISHED") return { ...state, count: payload };
     return state;
   },
@@ -594,6 +600,7 @@ const referendum = {
   selectReferendumRaw: (state) => state.referendum,
   selectReferendumsData: (state) => state.referendum.data,
   selectReferendumCountData: (state) => state.referendum.count,
+  selectReferendumPrevChoice: (state) => state.referendum.prevChoice,
   selectReferendum: createSelector("selectReferendums", (referendums) => referendums.filter((r) => !r.finishedAt)[0]),
   selectReferendumVote: createSelector("selectMyselfId", "selectReferendum", (myselfId, referendum) =>
     referendum?.votes.nodes.find((v) => v.personId == myselfId)

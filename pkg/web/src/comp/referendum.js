@@ -36,7 +36,11 @@ export default define("RoiReferendum", {
   },
   render({ useSel, useStore, useMemo }) {
     this.store = useStore();
-    const { referendum, referendumVote } = useSel("referendum", "referendumVote");
+    const { referendum, referendumVote, referendumPrevChoice: prev } = useSel(
+      "referendum",
+      "referendumVote",
+      "referendumPrevChoice"
+    );
     if (!referendum) {
       return this.html` `;
     }
@@ -44,16 +48,16 @@ export default define("RoiReferendum", {
     const choices = useMemo(
       () =>
         referendum.choices
-          .map(a => ({ sort: Math.random(), value: a }))
+          .map((a) => ({ sort: Math.random(), value: a }))
           .sort((a, b) => a.sort - b.sort)
-          .map(a => a.value),
+          .map((a) => a.value),
       [referendum.id]
     );
-    const humanType = { OPEN: "open røysting", CLOSED: "lukka røysting" }[type] || type;
+    const humanType = { OPEN: "ei ope røysting", CLOSED: "ei lukka røysting" }[type] || type;
     const chooser = () => html`
       <ul style="list-style: none">
         ${choices.map(
-          c =>
+          (c) =>
             html`
               <li>
                 <label><input type="radio" name="choice" value=${c} /> ${c}</label>
@@ -64,10 +68,7 @@ export default define("RoiReferendum", {
       <p><input type="submit" name="vote" value="Røyst" /></p>
       <p><button name="blank" onclick=${this}>Røyst blank</button></p>
     `;
-    const didVote = () =>
-      html`
-        Du har røysta.
-      `;
+    const didVote = () => html` Du har røysta. ${prev ? `Du valde «${prev}».` : null} `;
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>
