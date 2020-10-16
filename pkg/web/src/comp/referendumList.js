@@ -38,7 +38,7 @@ export default define("RoiReferendumList", {
     }
     this.html`
       <table>
-      <tr><th>Votering <th>Type <th>Val <th>Anna </tr>
+      <tr><th>Votering <th>Type <th>Val <th>Tal <th>Anna </tr>
       ${referendums.map(
         (r) =>
           html`
@@ -52,6 +52,7 @@ export default define("RoiReferendumList", {
                     : html` <span class="choice">${c.choice || "<blank>"} (${c.count})</span> `
                 )}
               </td>
+              <td>${r.counts?.reduce((o, v) => o + (v.count || 0), 0)}</td>
               <td>${r.finishedAt ? "Ferdig" : html` <button name="end" onclick=${this}>Avslutt</button> `}</td>
             </tr>
           `
