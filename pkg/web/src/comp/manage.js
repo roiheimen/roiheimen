@@ -311,6 +311,9 @@ define("RoiManage", {
     roi-referendum-list, roi-speeches-list {
       margin-bottom: 20px;
     }
+    roi-speeches-list table {
+        width: 100%;
+    }
     ${self} h2 { text-align: center }
     roi-person-list table { width: 100% }
     `;

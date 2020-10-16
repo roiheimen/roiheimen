@@ -25,25 +25,22 @@ export default define("RoiSpeechesList", {
       this.html`<p>Ingen på lista</p>`;
       return;
     }
-    let shownSpeeches = speeches;
-    if (!showAll) {
-      shownSpeeches = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
-    }
+    const interesting = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
     const toggle = () => {
-      if (this.simple) return null;
+      if (this.simple || speeches.length == interesting.length) return null;
       return html`<button style="margin-left: auto" .onclick=${() => setShowAll((s) => !s)}>
-        ${shownSpeeches.length < speeches.length ? "Vis alle" : "Skjul ferdige"}
+        ${showAll ? "Skjul ferdige" : "Vis alle"}
       </button>`;
     };
     const rm = (speech) => {
       if (speech.endedAt) return null;
-      if (myself.admin || speech.speakerId == myself.id)
-        return html`<button style="margin-left: auto" .onclick=${() => store.doSpeechEnd(speech.id)}>Stryk</button>`;
+      if (speech.speakerId == myself.id || (myself.admin && !this.simple))
+        return html`<button style="margin-left: auto" .onclick=${() => store.doSpeechEnd(speech.id)}>${speech.startedAt ? "Avslutt" : "Stryk"}</button>`;
     };
     this.html`
       <table class=${this.simple ? "simple" : ""}>
       <tr><th>Nummer <th style="display: flex">Namn ${toggle()}</tr>
-      ${shownSpeeches.map(
+      ${(showAll ? speeches : interesting).map(
         (speech) =>
           html`
             <tr
