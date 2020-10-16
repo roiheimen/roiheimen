@@ -80,11 +80,16 @@ define("RoiSettings", {
     const testHtml = {
       active: html` <div class="info">Du er i eit test-møte.</div> `,
       waiting: html`
-        <div class="info">Du har spurt om test, du blir teken inn når det er din tur. Du kan lukka dette vindauga.</div>
+        <div class="info">
+          Du har spurt om test, du er no i ein kø. Du vert teken inn når det er din tur. Dette vil berre skje når
+          skrivarstova er aktiv. Du kan lukka dette vindauga.
+        </div>
       `,
       requesting: html` <div>Spør om test.</div> `,
       listening: html`
-        <button tabindex="0" .onclick=${() => this.store.doTestReq()}>Be om prat med bakrommet</button>
+        <button tabindex="0" .onclick=${() => this.store.doTestReq()}>
+          Be om prat med skrivarstova (t.d. for test)
+        </button>
       `,
       "": "",
     }[testStatus];
@@ -92,7 +97,7 @@ define("RoiSettings", {
       <div class=settings>
         <button name=close class=close>Lukk</button>
         <div>
-          <h2>Prat med bakrommet</h2>
+          <h2>Prat med skrivarstova</h2>
           <p>Det er lurt å gjera dette før du held eit innlegg, so du kan testa lyd og bilete.</p>
           ${testHtml}
         </div>
