@@ -16,20 +16,26 @@ export default define("RoiSpeechesList", {
     ${self} .simple .status-cancelled { display: none }
     `;
   },
-  render({ useSel }) {
+  render({ useSel, useState }) {
     const { sakObj, speechState } = useSel("sakObj", "speechState");
-    let speeches = sakObj?.speeches;
+    const [showAll, setShowAll] = useState(false);
+    const { speeches } = sakObj || {};
     if (!speeches) {
       this.html`<p>Ingen på lista</p>`;
       return;
     }
-    if (this.simple) {
-      speeches = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
+    let shownSpeeches = speeches;
+    if (!showAll) {
+      shownSpeeches = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
     }
+    const toggle = () => {
+      if (this.simple) return null;
+      return html`<button style="margin-left: auto" .onclick=${() => setShowAll(s => !s)}>${shownSpeeches.length < speeches.length ? "Vis alle" : "Skjul ferdige"}</button>`;
+    };
     this.html`
       <table class=${this.simple ? "simple" : ""}>
-      <tr><th>Nummer <th>Namn </tr>
-      ${speeches.map(
+      <tr><th>Nummer <th style="display: flex">Namn ${toggle()}</tr>
+      ${shownSpeeches.map(
         (speech) =>
           html`
             <tr
