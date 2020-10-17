@@ -55,13 +55,14 @@ export default define("RoiSpeechesList", {
     };
     this.html`
       <table class=${[this.simple && "simple", this.color && "color"].join(" ")}>
-      <tr><th>Nummer <th style="display: flex">Namn ${toggle()}</tr>
+      <tr><th>Nummer <th style="display: flex">Namn ${toggle()} <th>Lag </tr>
       ${(showAll ? speeches : interesting).map(
         (speech) =>
           html`
             <tr class=${speechClass(speech)} title=${`${speech.type} av ${speech.speaker.name}`}>
               <td>${speech.speaker.num}</td>
               <td style="display: flex">${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}${rm(speech)}</td>
+              <td>${speech.speaker.org}</td>
             </tr>
           `
       )}
