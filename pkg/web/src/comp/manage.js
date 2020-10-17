@@ -337,7 +337,7 @@ define("RoiManage", {
               <SakSpeakerAdderInput />
               <div class=list>
                 <roi-referendum-list />
-                <roi-speeches-list />
+                <roi-speeches-list color />
               </list>
             `
           : html`<button class="new" onclick=${this}>Ny sak</button>`
