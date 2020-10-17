@@ -120,7 +120,7 @@ const RoiQueueDrawer = {
               </div> `
             : null
         }
-        <h2 class=title>${sak?.title || "Ingen sak"}</h2>
+        <h2 class=title>${sak?.title || "Inga sak"}</h2>
         ${workArea}
       </div>
     `;
