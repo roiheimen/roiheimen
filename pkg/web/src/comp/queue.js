@@ -109,7 +109,7 @@ const RoiQueueDrawer = {
         <button
           class=settings
           .onclick=${() => store.doClientUi("settings")}
-          >Innstillingar</button>
+          >Til skrivarstova</button>
       </div>
       <div class=queue>
         ${
