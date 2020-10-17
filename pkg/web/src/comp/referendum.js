@@ -66,7 +66,6 @@ export default define("RoiReferendum", {
         )}
       </ul>
       <p><input type="submit" name="vote" value="Røyst" /></p>
-      <p><button name="blank" onclick=${this}>Røyst blank</button></p>
     `;
     const didVote = () => html` Du har røysta. ${prev ? `Du valde «${prev}».` : null} `;
     this.html`
