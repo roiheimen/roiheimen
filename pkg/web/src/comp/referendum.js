@@ -53,7 +53,7 @@ export default define("RoiReferendum", {
           .map((a) => a.value),
       [referendum.id]
     );
-    const humanType = { OPEN: "ei ope røysting", CLOSED: "ei lukka røysting" }[type] || type;
+    const humanType = { OPEN: "ei open røysting", CLOSED: "ei lukka røysting" }[type] || type;
     const chooser = () => html`
       <ul style="list-style: none">
         ${choices.map(
