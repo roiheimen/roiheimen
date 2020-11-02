@@ -801,7 +801,7 @@ const errors = {
     if (
       action.type.endsWith("_FAILED") &&
       action.error?.extra?.body?.errors?.[0]?.message == "jwt expired" &&
-      location.pathname != "/"
+      !["/", "/login.html"].includes(location.pathname)
     ) {
       location.assign("/");
     }
