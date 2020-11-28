@@ -34,13 +34,13 @@ const RoiQueueDrawer = {
       color: var(--roi-theme-main-color2);
       font-size: 20px;
       padding: 10px;
+      margin: 1px 2px;
     }
     ${self} .buttons button:hover {
-      background: white;
-      border: 1px solid rgb(199, 15, 15);
-      color: inherit;
+      background: var(--roi-theme-main-color2);
+      color: var(--roi-theme-main-color);
     }
-    ${self} .settings {
+    ${self} .buttons .settings {
       margin-top: auto;
     }
     ${self} .queue {

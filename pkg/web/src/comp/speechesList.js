@@ -54,7 +54,7 @@ export default define("RoiSpeechesList", {
         </button>`;
     };
     this.html`
-      <table class=${[this.simple && "simple", this.color && "color"].join(" ")}>
+      <table class=${[this.simple && "simple", this.color && "color"].filter(Boolean).join(" ")}>
       <tr><th>Nummer <th style="display: flex">Namn ${toggle()} <th>Lag </tr>
       ${(showAll ? speeches : interesting).map(
         (speech) =>
