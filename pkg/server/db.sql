@@ -263,6 +263,21 @@ $$ language sql stable;
 --     limit 1
 -- $$ language sql stable;
 
+create or replace function roiheimen.current_speech(meeting_id text) returns roiheimen.speech as $$
+select *
+  from roiheimen.speech
+  where ended_at is null
+  and started_at is not null
+  and sak_id = (
+    select id
+      from roiheimen.sak
+      where finished_at is null
+      and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+      order by created_at desc
+      limit 1)
+  limit 1;
+$$ language sql stable;
+
 create or replace function roiheimen.vote_count(sak_id integer) returns table(referendum_id integer, choice text, cnt bigint) as $$
   select referendum_id, vote, count(vote)
     from roiheimen.vote
@@ -316,6 +331,7 @@ grant execute on function roiheimen.authenticate(integer, text, text) to roiheim
 grant execute on function roiheimen.register_person(integer, text, text, text, text, text) to roiheimen_person;
 grant execute on function roiheimen.register_people(text, people_input[]) to roiheimen_person;
 grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roiheimen_person;
+grant execute on function roiheimen.current_speech(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.vote_count(integer) to roiheimen_person;
 

@@ -1,0 +1,12 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "node tests.js && scripts/artillery.sh"
+  },
+  "devDependencies": {
+    "artillery": "^1.6.1"
+  }
+}
