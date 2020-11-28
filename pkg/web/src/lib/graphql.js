@@ -38,6 +38,11 @@ export async function gql(query, variables, { nocreds } = {}) {
   }
   const { data, errors } = await res.json();
   printErrors(name, errors);
+  if (!data && errors) {
+    const e = new Error(`Error returned for ${name}`);
+    e.extra = { body: { errors } };
+    throw e;
+  }
   return data;
 }
 

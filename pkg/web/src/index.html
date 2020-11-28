@@ -3,7 +3,9 @@
 <title>Roiheimen</title>
 <link rel=stylesheet href=style.css>
 <script type=module src=/db/state.js></script>
+<script type=module src=/comp/meetingList.js></script>
 <script type=module src=/comp/login.js></script>
+<script type=module src=/comp/title.js></script>
 <style>
 .card.login {
   min-height: 200px;
@@ -25,9 +27,9 @@
 
 <body>
   <header>
-    <h1>
+    <h1 is=roi-title>
       <span>roiheimen</span><br>
-      Noregs Mållag landsmøte 2020
+      &ndash;
     </h1>
   </header>
   <div class=feil style="display: none">
@@ -41,8 +43,10 @@
     Dette systemet fungerer best i nyaste Chrome og Firefox på datamaskin. På mobil gjeld det same
     for Android, medan for Iphone må du bruka Safari i det tilfellet.
   </div>
-  <section class="card sm login">
-    <p>Landsmøtet er ferdig!
+  <section class="card sm">
+    <roi-meeting-list>
+      <p></p>
+    </roi-meeting-list>
   </section>
 </body>
 

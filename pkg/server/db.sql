@@ -28,10 +28,11 @@ create type roiheimen.jwt_token as (
 -- meeting
 create table roiheimen.meeting (
   id               text primary key check (char_length(id) < 32),
+  title            text default '' check (char_length(id) < 128),
   created_at       timestamptz default now(),
   updated_at       timestamptz default now()
 );
-comment on table roiheimen.meeting is 'A meeting, i.e. "nmlm12"';
+comment on table roiheimen.meeting is 'A meeting, i.e. "meet20"';
 
 -- sak (like agendaitem)
 create table roiheimen.sak (
@@ -451,33 +452,33 @@ create trigger speech_updated_at before update
   execute procedure roiheimen_private.set_updated_at();
 
 -- Test data
-insert into roiheimen.meeting (id) values ('nmlm12');
+insert into roiheimen.meeting (id, title) values ('meet20', 'Test Meeting 2020');
 select roiheimen.register_people(
-  'nmlm12',
+  'meet20',
   array[
-    (10, 'Gro Morken Endresen', 'test', 'Oslo Mållag', null),
-    (11, 'Astrid Marie Grov', 'test', 'Oslo Mållag', null),
-    (12, 'Per Henning Arntsen', 'test', 'Oslo Mållag', null),
-    (13, 'Ingar Arnøy', 'test', 'Stavanger Mållag', null),
-    (14, 'Erik Grov', 'test', 'Stavanger Mållag', null),
-    (15, 'Hege Lothe', 'test', 'Stavanger Mållag', null),
-    (16, 'Marit Aakre Tennø', 'test', 'Stavanger Mållag', null),
-    (1000, 'Odin Hørthe Omdal', 'test', '', null)
+    (10, 'Kong Harald', 'test', 'Oslo-laget', null),
+    (11, 'Timmi Bristol', 'test', 'Oslo-laget', null),
+    (12, 'Dalai Lama', 'test', 'Oslo-laget', null),
+    (13, 'Marilyn Monroe', 'test', 'Stavanger-laget', null),
+    (14, 'Queen Elizabeth', 'test', 'Stavanger-laget', null),
+    (15, 'Ivar Aasen', 'test', 'Stavanger-laget', null),
+    (16, 'Arne Garborg', 'test', 'Stavanger-laget', null),
+    (1000, 'Hulda Garborg', 'test', 'Teknisk', null)
   ]::people_input[]
 );
-update roiheimen.person set admin = true where num = 1000 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r1000' where num = 1000 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r10' where num = 10 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r11' where num = 11 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r12' where num = 12 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r13' where num = 13 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r14' where num = 14 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r15' where num = 15 and meeting_id = 'nmlm12';
-update roiheimen.person set room = 'https://nm.whereby.com/r16' where num = 16 and meeting_id = 'nmlm12';
+update roiheimen.person set admin = true where num >= 1000 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r1000' where num = 1000 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r10' where num = 10 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r11' where num = 11 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r12' where num = 12 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r13' where num = 13 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r14' where num = 14 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r15' where num = 15 and meeting_id = 'meet20';
+update roiheimen.person set room = 'https://nm.whereby.com/r16' where num = 16 and meeting_id = 'meet20';
 
 
 COPY roiheimen.sak (id, title, meeting_id, created_at, updated_at, finished_at) FROM stdin;
-1	Opning	nmlm12	2020-09-29 20:54:07.189976+02	2020-09-29 20:54:07.189976+02	\N
+1	Opning	meet20	2020-09-29 20:54:07.189976+02	2020-09-29 20:54:07.189976+02	\N
 \.
 
 

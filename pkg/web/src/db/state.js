@@ -6,23 +6,31 @@ import storage, { save } from "../lib/storage.js";
 import { gql, live } from "../lib/graphql.js";
 
 const creds = storage("creds");
+const meeting_ = storage("meeting");
 
-const myself = {
-  name: "myself",
+const meeting = {
+  name: "meeting",
   init(store) {
-    if (creds.jwt) setTimeout(() => store.doMyselfFetch(), 0);
+    setTimeout(() => store.doMeetingInfoFetch(), 0);
   },
   reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
-    if (type == "MYSELF_FETCH_STARTED") return { ...state, started: true };
-    if (type == "MYSELF_FETCH_FINISHED") return { ...state, data: payload };
-    if (type == "MYSELF_FETCH_FAILED") return { ...state, failed: error || true };
+    if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
+    if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.meetings };
+    if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
     return state;
   },
 
-  doMyselfFetch: () => async ({ dispatch }) => {
-    dispatch({ type: "MYSELF_FETCH_STARTED" });
-    const gqlMyself = `
-      query Myself {
+  doMeetingInfoFetch: () => async ({ dispatch }) => {
+    dispatch({ type: "MEETING_FETCH_STARTED" });
+    const query = `
+      query StartInfo {
+        meetings {
+          nodes {
+            id
+            createdAt
+            title
+          }
+        }
         currentPerson {
           name
           id
@@ -33,23 +41,67 @@ const myself = {
         }
       }`;
     try {
-      const { currentPerson } = await gql(gqlMyself);
-      dispatch({ type: "MYSELF_FETCH_FINISHED", payload: currentPerson });
+      const {
+        currentPerson,
+        meetings: { nodes: meetings },
+      } = await gql(query);
+      dispatch({ type: "MEETING_FETCH_FINISHED", payload: { currentPerson, meetings } });
     } catch (error) {
-      dispatch({ type: "MYSELF_FETCH_FAILED", error });
+      dispatch({ type: "MEETING_FETCH_FAILED", error });
     }
   },
-  doMyselfLogout: () => () => {
+
+  selectMeetings: (state) => state.meeting.data,
+  selectMeetingId: createSelector("selectQueryObject", (queryObject) => queryObject.m || meeting_.id),
+  selectMeeting: createSelector("selectMeetingId", "selectMeetings", (meetingId, meetings) =>
+    meetings?.find((m) => m.id === meetingId)
+  ),
+};
+
+const myself = {
+  name: "myself",
+  reducer: (state = { started: false, data: null, errors: null }, { type, payload, error }) => {
+    if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.currentPerson, errors: null };
+    if (type == "MYSELF_LOGIN_FAILED") return { ...state, errors: payload };
+    return state;
+  },
+
+  doMyselfLogout: () => ({ dispatch }) => {
     if (Object.keys(creds).length) {
+      dispatch({ type: "MYSELF_LOGOUT" });
       Object.keys(creds).forEach((k) => delete creds[k]);
       save("creds");
       location.assign("/");
+    }
+  },
+  doMyselfLogin: (num, password) => async ({ dispatch, store }) => {
+    dispatch({ type: "MYSELF_LOGIN_STARTED" });
+    const gqlLogin = `
+      mutation Login($num: Int!, $mId: String!, $password: String!) {
+        authenticate(input: {num: $num, meetingId: $mId, password: $password}) {
+          jwtToken
+        }
+      }`;
+    try {
+      const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { nocreds: true });
+      const { authenticate: { jwtToken } } = res;
+      if (!jwtToken) {
+        throw new Error("Feil nummer/passord");
+      }
+      creds.jwt = jwtToken;
+      save("creds");
+      dispatch({ type: "MYSELF_LOGIN_FINISHED" });
+      location.assign("/queue.html");
+    } catch (error) {
+      const payload = error.extra?.body?.errors?.map((e) => e.message) || ["" + error];
+      dispatch({ type: "MYSELF_LOGIN_FAILED", payload, error });
     }
   },
 
   selectMyself: (state) => state.myself.data,
   selectMyselfId: (state) => state.myself.data?.id,
   selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
+  selectMyselfErrors: (state) => state.myself.errors,
 };
 
 const people = {
@@ -803,13 +855,13 @@ const errors = {
       action.error?.extra?.body?.errors?.[0]?.message == "jwt expired" &&
       !["/", "/login.html"].includes(location.pathname)
     ) {
-      location.assign("/");
+      store.doMyselfLogout();
     }
     return result;
   },
 };
 
-const store = composeBundles(myself, speech, sak, people, referendum, out, test, client, errors)();
+const store = composeBundles(meeting, myself, speech, sak, people, referendum, out, test, client, errors)();
 window.store = store;
 
 function addSelect(sel) {
