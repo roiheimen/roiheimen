@@ -44,10 +44,7 @@ define("RoiVideo", {
   style(self) {
     return `
     ${self} { 
-      background-image: url('https://www.nm.no/app/uploads/2020/03/framside_2.jpg'); /* #767d6f; */
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
+      background: var(--roi-theme-video-bg);
       display: block;
       height: 60vh;
     } `;

@@ -20,7 +20,7 @@ const RoiQueueDrawer = {
     }
     ${self} .buttons {
       align-self: start;
-      background: rgb(199, 15, 15);
+      background: var(--roi-theme-main-color);
       display: flex;
       flex-direction: column;
       margin: 10px;
@@ -31,7 +31,7 @@ const RoiQueueDrawer = {
       background: transparent;
       border-radius: 4px;
       border: none;
-      color: white;
+      color: var(--roi-theme-main-color2);
       font-size: 20px;
       padding: 10px;
     }

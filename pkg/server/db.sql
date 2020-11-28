@@ -29,6 +29,7 @@ create type roiheimen.jwt_token as (
 create table roiheimen.meeting (
   id               text primary key check (char_length(id) < 32),
   title            text default '' check (char_length(id) < 128),
+  theme            jsonb default '{}',
   created_at       timestamptz default now(),
   updated_at       timestamptz default now()
 );
@@ -452,7 +453,13 @@ create trigger speech_updated_at before update
   execute procedure roiheimen_private.set_updated_at();
 
 -- Test data
-insert into roiheimen.meeting (id, title) values ('meet20', 'Test Meeting 2020');
+insert into roiheimen.meeting (id, title, theme) values (
+  'meet20',
+  'Test Meeting 2020',
+  '{
+    "main-color": "#5359ab",
+    "video-bg": "url(''/assets/bgpattern.webp'') center / cover no-repeat"
+   }');
 select roiheimen.register_people(
   'meet20',
   array[

@@ -1,3 +1,9 @@
+:root {
+  --roi-theme-main-color: #2b2c3a;
+  --roi-theme-main-color2: #ffffff;
+  --roi-theme-video-bg: #9c9fbd;
+}
+
 body {
   background-color: #fefbf8; /* #eeefee; */
   color: #333;
@@ -28,13 +34,13 @@ tr {
 tr:last-child {
   border-bottom: none;
 }
-a { color: #459745; }
-a:visited { color: #5a8d51; }
+a { color: var(--roi-theme-main-color, #459745); }
+a:visited { opacity: 0.6; }
 body > header {
   display: flex;
 }
 body > header h1 {
-  color: #459745;
+  color: var(--roi-theme-main-color, #459745);
   font-size: 42px;
   margin: 10px auto;
 }

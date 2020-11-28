@@ -29,6 +29,7 @@ const meeting = {
             id
             createdAt
             title
+            theme
           }
         }
         currentPerson {
@@ -898,3 +899,5 @@ defineHook("usePrevious", ({ useRef, useEffect }) => (value) => {
   }, [value]);
   return ref.current;
 });
+
+export default store;
