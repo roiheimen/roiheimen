@@ -137,11 +137,39 @@ define("RoiQueue", {
     ${self} { 
       display: block;
       min-height: 400px;
-    } `;
+    }
+    ${self} .top {
+      background: var(--roi-theme-main-color);
+      color: var(--roi-theme-main-color2);
+      display: flex;
+      margin: 0 10px 10px;
+      padding: 10px;
+    }
+    `;
   },
-  render({ useSel }) {
-    const { clientUi } = useSel("clientUi");
+  onchange(e) {
+    const youtubeSize = e.target.form.youtubeSize?.value;
+    this.store.doClientYoutubeSize(youtubeSize);
+  },
+  render({ useSel, useState, useStore, useEffect }) {
+    this.store = useStore();
+    const { clientUi, clientYoutubeSize } = useSel("clientUi", "clientYoutubeSize");
     this.html`
+      <div class=top>
+        <div style="margin-left: auto">
+          Sending:
+          <form class=radio-group onchange=${this}>
+            <input type="radio" id="option-one" value=big name="youtubeSize" checked=${clientYoutubeSize === "big"}>
+            <label for="option-one">Stor</label>
+
+            <input type="radio" id="option-two" value=small name="youtubeSize" checked=${clientYoutubeSize === "small"}>
+            <label for="option-two">Liten</label>
+
+            <input type="radio" id="option-three" value=none name="youtubeSize" checked=${clientYoutubeSize === "none"}>
+            <label for="option-three">Ingen</label>
+          </form>
+        </div>
+      </div>
       <roi-video />
       <RoiQueueDrawer />
       ${clientUi == "settings" ? html` <roi-settings /> ` : null}

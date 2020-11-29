@@ -834,17 +834,22 @@ const test = {
 
 const client = {
   name: "client",
-  reducer: (state = { ui: "" }, { type, payload }) => {
+  reducer: (state = { ui: "", youtubeSize: "" }, { type, payload }) => {
     if (type == "CLIENT_UI") {
       if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
       return { ...state, ui: payload };
     }
+    if (type == "CLIENT_YOUTUBE_SIZE") return { ...state, youtubeSize: payload };
     return state;
   },
 
   doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
+  doClientYoutubeSize: (big) => ({ type: "CLIENT_YOUTUBE_SIZE", payload: big }),
 
+  selectClientRaw: (state) => state.client,
   selectClientUi: (state) => state.client.ui,
+  selectClientYoutubeSize: createSelector("selectClientRaw", (raw) => raw.youtubeSize || "big"),
+  selectClientWherebyActive: createSelector("selectSpeechInWhereby", "selectTestActive", (speechInWhereby, testActive) => speechInWhereby || testActive),
 };
 
 const errors = {

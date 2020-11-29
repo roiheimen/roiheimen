@@ -63,3 +63,33 @@ section.card {
 }
 section.card.lg { max-width: 960px; }
 section.card.sm { max-width: 300px; }
+
+.radio-group {
+  border: solid 1px var(--roi-theme-main-color2);
+  display: inline-flex;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.radio-group input[type=radio] {
+  height: 0;
+  left: -9999px;
+  position: absolute;
+  width: 0;
+}
+.radio-group label {
+  color: var(--roi-theme-main-color2);
+  cursor: pointer;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+}
+.radio-group input[type=radio]:checked + label{
+  color: var(--roi-theme-main-color);
+  background: var(--roi-theme-main-color2);
+  font-weight: bold;
+  opacity: 0.5;
+}
+.radio-group input[type=radio]:focus + label{
+  outline: 5px solid white;
+  opacity: 1;
+}

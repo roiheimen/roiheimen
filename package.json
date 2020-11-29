@@ -2,9 +2,12 @@
   "name": "roiheimen",
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "start": "(cd pkg/web; yarn start --ssl-cert=cert.crt --ssl-key=cert.key) & (cd pkg/server; yarn start)"
+    "start:web": "cd pkg/web; yarn start --ssl-cert=cert.crt --ssl-key=cert.key",
+    "start:server": "cd pkg/server; yarn start",
+    "start": "run-p start:server start:web"
   },
   "devDependencies": {
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.1.2"
   }
 }
