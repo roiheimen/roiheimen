@@ -13,6 +13,8 @@
 </body>
 
 <script type=module>
-  import storage from "/lib/storage.js";
-  if (!storage("creds")?.jwt) location.assign("/");
+  import store from "../db/state.js";
+  store.subscribeToSelectors(["selectMyself"], ({ myself }) => {
+    // if (myself?.admin === false) location.assign("/");
+  });
 </script>

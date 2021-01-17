@@ -74,6 +74,18 @@ create table roiheimen_private.person_account (
 comment on table roiheimen_private.person_account is 'Private information about a person’s account.';
 create index on roiheimen_private.person_account(person_id);
 
+-- person_login
+create table roiheimen_private.person_login (
+  id               serial primary key,
+  person_id        integer references roiheimen.person(id) on delete cascade,
+  login_at         timestamp default now(),
+  logout_at        timestamp null
+);
+comment on table roiheimen_private.person_login is 'Private information about a person’s login.';
+create index on roiheimen_private.person_login(person_id);
+create index on roiheimen_private.person_login(logout_at);
+create unique index idx_no_double_login on roiheimen_private.person_login (person_id, (logout_at is null)) where logout_at is null;
+
 -- speech
 create type roiheimen.speech_type as enum (
   'innleiing',
@@ -173,6 +185,11 @@ begin
     where person.id = a.person_id;
 
   if account.password_hash = crypt(password, account.password_hash) then
+    update roiheimen_private.person_login
+      set logout_at = now()
+      where logout_at is null;
+    insert into roiheimen_private.person_login (person_id)
+      values (account.person_id);
     return (
       'roiheimen_person',
       account.person_id,
@@ -186,6 +203,14 @@ begin
 end;
 $$ language plpgsql strict security definer;
 comment on function roiheimen.authenticate(integer, text, text) is 'Creates a JWT token that will securely identify a person and give them certain permissions. This token expires in 2 days.';
+
+create function roiheimen.logout(person_id integer) returns roiheimen_private.person_login as $$
+  update roiheimen_private.person_login
+    set logout_at = now()
+    where logout_at is null
+    and person_id = coalesce($1::text, current_setting('jwt.claims.person_id', true))::integer
+    returning *;
+$$ language sql strict security definer;
 
 create function roiheimen.person_latest_speech(person roiheimen.person) returns roiheimen.speech as $$
   select speech.*
