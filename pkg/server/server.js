@@ -1,15 +1,12 @@
 const express = require("express");
 const { postgraphile } = require("postgraphile");
 const pg_simplify_inflector = require("@graphile-contrib/pg-simplify-inflector");
+const { DEV, DATABASE_URL, OWNER_DATABASE_URL } = require("./config.js");
 
 const app = express();
 
-const DEV = process.env.NODE_ENV !== "production";
-
-process.env["PGHOST"] = "/run/postgresql";
-
 app.use(
-  postgraphile(process.env.DATABASE_URL || "postgres://roiheimen_postgraphile:xyz@localhost/", "roiheimen", {
+  postgraphile(DATABASE_URL, "roiheimen", {
     //pgSettings(req) {
     //  console.log("req", req.query);
     //  if ('person' in req.query) return { role: "roiheimen_person" };
@@ -18,7 +15,7 @@ app.use(
     pgDefaultRole: "roiheimen_anonymous",
     jwtSecret: "secret_kitten",
     jwtPgTypeIdentifier: "roiheimen.jwt_token",
-    ownerConnectionString: "postgres:///",
+    ownerConnectionString: OWNER_DATABASE_URL,
 
     disableQueryLog: !DEV, // querylog is slow
     enhanceGraphiql: DEV,
