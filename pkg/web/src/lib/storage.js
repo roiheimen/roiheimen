@@ -10,7 +10,7 @@ function handleEvent() {
 }
 
 function set(name) {
-  addEventListener("beforeunload", { name, handleEvent }, false);
+  //addEventListener("beforeunload", { name, handleEvent }, false);
   return (db[name] = JSON.parse(localStorage.getItem(name) || "{}"));
 }
 

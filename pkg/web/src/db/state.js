@@ -72,7 +72,7 @@ const myself = {
       dispatch({ type: "MYSELF_LOGOUT" });
       Object.keys(creds).forEach((k) => delete creds[k]);
       save("creds");
-      location.assign("/");
+      if (!["/", "/login.html"].includes(location.pathname)) location.assign("/");
     }
   },
   doMyselfLogin: (num, password) => async ({ dispatch, store }) => {
@@ -858,8 +858,7 @@ const errors = {
     const result = next(action);
     if (
       action.type.endsWith("_FAILED") &&
-      action.error?.extra?.body?.errors?.[0]?.message == "jwt expired" &&
-      !["/", "/login.html"].includes(location.pathname)
+      action.error?.extra?.body?.errors?.[0]?.message == "jwt expired"
     ) {
       store.doMyselfLogout();
     }
