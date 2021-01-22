@@ -55,7 +55,8 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { myself, referendum, sak, speechFetching, speechesUpcomingByMe, testHasHad, test } = useSel(
+    const { meeting, myself, referendum, sak, speechFetching, speechesUpcomingByMe, testHasHad, test } = useSel(
+      "meeting",
       "myself",
       "referendum",
       "sak",
@@ -64,6 +65,10 @@ const RoiQueueDrawer = {
       "testHasHad",
       "test"
     );
+    const title = `${sak?.title ? sak.title + " – " : ""}${meeting?.title}`;
+    if (title && document.title !== title) {
+      document.title = title;
+    }
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = "";
     if (referendum) workArea = html` <roi-referendum simple /> `;
