@@ -165,10 +165,10 @@ define("RoiQueue", {
           Sending:
           <form class=radio-group onchange=${this}>
             <input type="radio" id="option-one" value=big name="youtubeSize" checked=${clientYoutubeSize === "big"}>
-            <label for="option-one">Stor</label>
+            <label for="option-one">Liten</label>
 
             <input type="radio" id="option-two" value=small name="youtubeSize" checked=${clientYoutubeSize === "small"}>
-            <label for="option-two">Liten</label>
+            <label for="option-two">Stor</label>
 
             <input type="radio" id="option-three" value=none name="youtubeSize" checked=${clientYoutubeSize === "none"}>
             <label for="option-three">Ingen</label>

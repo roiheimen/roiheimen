@@ -9,8 +9,6 @@ function isActive(path) {
 
 define("RoiFooter<footer>", {
   oninit() {
-    this.creds = storage("creds");
-    this.myself = storage("myself");
     this.nologout = this.getAttribute("nologout") != null;
   },
   style(self) {
@@ -34,8 +32,9 @@ define("RoiFooter<footer>", {
     `;
   },
 
-  render() {
-    if (!this.myself?.admin) {
+  render({ useSel }) {
+    const { myself } = useSel("myself");
+    if (!myself?.admin) {
       if (this.nologout) return this.html`${null}`;
       return this.html`
         <a href="/?logout"}>
@@ -48,7 +47,7 @@ define("RoiFooter<footer>", {
         | <a href="manage.html" class=${isActive("manage") && "active"}>ordstyring</a>
         | <a href="admin.html" class=${isActive("admin") && "active"}>administrasjon</a>
         | <a href="backroom.html" class=${isActive("backroom") && "active"}>bakrom</a>
-        ${this.nologout ? "" : html`| <a href="/?logout">logg ut</a>`}
+        ${this.nologout ? "" : html` | <a href="/?logout">logg ut</a>`}
       `;
   },
 });

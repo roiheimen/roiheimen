@@ -491,11 +491,17 @@ select roiheimen.register_people(
     (10, 'Kong Harald', 'test', 'Oslo-laget', null),
     (11, 'Timmi Bristol', 'test', 'Oslo-laget', null),
     (12, 'Dalai Lama', 'test', 'Oslo-laget', null),
-    (13, 'Marilyn Monroe', 'test', 'Stavanger-laget', null),
+    (13, 'Marilyn Monroe', 'test', 'Oslo-laget', null),
     (14, 'Queen Elizabeth', 'test', 'Stavanger-laget', null),
     (15, 'Ivar Aasen', 'test', 'Stavanger-laget', null),
     (16, 'Arne Garborg', 'test', 'Stavanger-laget', null),
-    (1000, 'Hulda Garborg', 'test', 'Teknisk', null)
+    (1000, 'Hulda Garborg', 'test', 'Teknisk', null),
+    (1001, 'Timmi adm', 'test', 'Teknisk', null),
+    (1002, 'Dalai adm', 'test', 'Teknisk', null),
+    (1003, 'Marilyn adm', 'test', 'Teknisk', null),
+    (1004, 'Queen adm', 'test', 'Teknisk', null)
+    (1005, 'Ivar adm', 'test', 'Teknisk', null)
+    (1006, 'Arne adm', 'test', 'Teknisk', null)
   ]::people_input[]
 );
 update roiheimen.person set admin = true where num >= 1000 and meeting_id = 'meet20';

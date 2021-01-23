@@ -23,6 +23,8 @@
 </body>
 
 <script type=module>
-  import storage from "../lib/storage.js";
-  if (!storage("myself").admin) location.assign("/");
+  import store from "../db/state.js";
+  store.subscribeToSelectors(["selectMyself"], ({ myself }) => {
+    if (myself?.admin === false) location.assign("/");
+  });
 </script>
