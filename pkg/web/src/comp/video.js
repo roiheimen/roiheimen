@@ -1,8 +1,7 @@
-import "https://whereby.dev/embed/whereby-embed.js";
-
 import { define, html } from "/web_modules/heresy.js";
 
 import "../db/state.js";
+import "../lib/whereby-embed.js"; // vendored this from https:/whereby.dev/embed/whereby-embed.js
 import storage from "../lib/storage.js";
 
 import "./youtube.js";

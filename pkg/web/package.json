@@ -2,26 +2,67 @@
   "name": "roiheimen-web",
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "prepare": "snowpack",
-    "start": "es-dev-server --http2 --watch --port 8080 --compatibility none --root-dir src/"
+    "build": "snowpack build",
+    "lint": "prettier --check \"src/**/*.js\"",
+    "prepare": "snowpack prepare",
+    "start": "es-dev-server --http2 --watch --port 8080 --compatibility none --root-dir src/",
+    "test": "echo \"Nothing yet\" && exit 1"
   },
   "snowpack": {
-    "installOptions": {
+    "mount": {
+      "src": {
+        "url": "/"
+      }
+    },
+    "packageOptions": {
       "dest": "src/web_modules"
     },
+    "plugins": [
+      [
+        "@snowpack/plugin-babel"
+      ]
+    ],
     "dedupe": [
       "heresy"
     ]
   },
+  "babel": {
+    "plugins": [
+      [
+        "@babel/plugin-proposal-optional-chaining",
+        {
+          "loose": true
+        }
+      ],
+      [
+        "@babel/plugin-proposal-nullish-coalescing-operator",
+        {
+          "loose": true
+        }
+      ]
+    ]
+  },
+  "browserslist": [
+    "since 2019-07",
+    "not and_qq > 1",
+    "not Safari < 14",
+    "not ios_saf < 14",
+    "not Samsung < 12",
+    "not Android < 86"
+  ],
   "dependencies": {
     "@ungap/custom-elements-builtin": "^0.6.3",
+    "core-js": "^3.8.3",
     "heresy": "^0.26.1",
     "redux-bundler": "^27.0.2"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
+    "@snowpack/plugin-babel": "^2.1.6",
     "es-dev-server": "^1.45.2",
     "koa-http2-proxy": "^0.0.3-2",
-    "prettier": "^1.19.1",
-    "snowpack": "^1.6.0"
+    "prettier": "^2.0.5",
+    "snowpack": "^3.0.11"
   }
 }
