@@ -485,6 +485,19 @@ insert into roiheimen.meeting (id, title, theme) values (
     "main-color": "#5359ab",
     "video-bg": "url(''/assets/bgpattern.webp'') center / cover no-repeat"
    }');
+insert into roiheimen.meeting (id, title, theme) values (
+  'mdglm21',
+  'Landsmøte 2021',
+  '{
+    "font": "Avenir",
+    "head-font": "MDG",
+    "head-size": "68px",
+    "main-color": "#6a9325",
+    "video-bg": "#daf3f4",
+    ":external-css": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"
+   }');
+
+
 select roiheimen.register_people(
   'meet20',
   array[
@@ -499,8 +512,8 @@ select roiheimen.register_people(
     (1001, 'Timmi adm', 'test', 'Teknisk', null),
     (1002, 'Dalai adm', 'test', 'Teknisk', null),
     (1003, 'Marilyn adm', 'test', 'Teknisk', null),
-    (1004, 'Queen adm', 'test', 'Teknisk', null)
-    (1005, 'Ivar adm', 'test', 'Teknisk', null)
+    (1004, 'Queen adm', 'test', 'Teknisk', null),
+    (1005, 'Ivar adm', 'test', 'Teknisk', null),
     (1006, 'Arne adm', 'test', 'Teknisk', null)
   ]::people_input[]
 );

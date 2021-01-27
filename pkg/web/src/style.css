@@ -2,13 +2,16 @@
   --roi-theme-main-color: #2b2c3a;
   --roi-theme-main-color2: #ffffff;
   --roi-theme-video-bg: #9c9fbd;
+  --roi-theme-font: "sans-serif";
+  --roi-theme-head-size: 42px;
+  --roi-theme-head-font: inherit;
 }
 
 body {
   background-color: #fefbf8; /* #eeefee; */
   color: #333;
   display: grid;
-  font-family: "sans-serif";
+  font-family: var(--roi-theme-font);
   font-size: 20px;
   line-height: 145%;
   margin: 0;
@@ -41,8 +44,10 @@ body > header {
 }
 body > header h1 {
   color: var(--roi-theme-main-color, #459745);
-  font-size: 42px;
+  font-size: var(--roi-theme-head-size);
   margin: 10px auto;
+  font-family: var(--roi-theme-head-font);
+  line-height: 1;
 }
 body > header span {
   color: #666;

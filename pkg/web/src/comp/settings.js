@@ -7,7 +7,7 @@ define("RoiSettings", {
     return `
     ${self} {
       display: flex;
-      position: absolute;
+      position: fixed;
       overflow-y: scroll;
       top: 0;
       bottom: 0;
@@ -15,7 +15,7 @@ define("RoiSettings", {
       left: 0;
       justify-content: center;
       align-items: center;
-      background-color: rgba(234, 113, 7, 0.4);
+      background-color: rgba(34, 34, 34, 0.6);
     }
     ${self} .settings {
       background: white;
