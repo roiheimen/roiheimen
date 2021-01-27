@@ -11,10 +11,15 @@ export default define("RoiSpeechesList", {
       display: flex;
       justify-content: center;
     }
-    ${self} .status-started { font-size: 140%; }
+    ${self} .status-started {
+      background: var(--roi-theme-main-color);
+      color: var(--roi-theme-main-color2);
+      font-size: 140%;
+    }
     ${self} .status-ended { text-decoration: line-through; color: #666; }
     ${self} .status-cancelled { text-decoration: line-through; color: #875; }
     ${self} .simple .status-cancelled { display: none }
+    ${self} .color tr { color: var(--roi-theme-font-color)}
     ${self} .color .is-prev { background-color: #eee }
     ${self} .color .is-current { background-color: #cea }
     ${self} .color .is-next { background-color: #ffa }
