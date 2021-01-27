@@ -43,8 +43,8 @@ define("RoiMeetingList", {
   },
   render({ useEffect, useStore, useSel }) {
     const { id } = this.meeting;
-    const { meetings, meetingId } = useSel("meetings", "meetingId");
-    if (meetingId) {
+    const { meeting, meetings } = useSel("meeting", "meetings");
+    if (meeting) {
       return this.html`<roi-login>
         <p>Ver venleg og logg inn</p>
       </roi-login>

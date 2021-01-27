@@ -859,6 +859,7 @@ const errors = {
     if (
       action.type.endsWith("_FAILED") &&
       action.error?.extra?.body?.errors?.[0]?.message == "jwt expired"
+      || ["MEETING_FETCH_FAILED", "MYSELF_LOGIN_FAILED"].includes(action.type)
     ) {
       store.doMyselfLogout();
     }
