@@ -878,7 +878,7 @@ function addSelect(sel) {
 defineHook("useSel", ({ useMemo, useRef, useState, useEffect }) => (...args) => {
   const selectors = useMemo(() => addSelect(args), args);
   const [state, setState] = useState(() => store.select(selectors));
-  const prevSelectors = useRef(selectors);
+  const prevSelectors = useRef();
 
   useEffect(() => {
     if (prevSelectors.current !== selectors) {
