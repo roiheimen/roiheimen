@@ -30,6 +30,7 @@ create table roiheimen.meeting (
   id               text primary key check (char_length(id) < 32),
   title            text default '' check (char_length(id) < 128),
   theme            jsonb default '{}',
+  config           jsonb default '{}',
   created_at       timestamptz default now(),
   updated_at       timestamptz default now()
 );
@@ -479,22 +480,27 @@ create trigger speech_updated_at before update
 
 -- Test data
 insert into roiheimen.meeting (id, title, theme) values (
-  'meet20',
+  'test20',
   'Test Meeting 2020',
   '{
     "main-color": "#5359ab",
     "video-bg": "url(''/assets/bgpattern.webp'') center / cover no-repeat"
    }');
-insert into roiheimen.meeting (id, title, theme) values (
-  'mdglm21',
+-- XXX speechRoom actually has to be hidden from anon!
+insert into roiheimen.meeting (id, title, theme, config) values (
+  'meet20',
   'Landsmøte 2021',
   '{
     "font": "Avenir",
     "head-font": "MDG",
     "head-size": "68px",
     "main-color": "#6a9325",
-    "video-bg": "#daf3f4",
-    ":external-css": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"
+    "video-bg": "#daf3f4"
+  }',
+  '{
+    "speechRoom": "https://nm.whereby.com/r10",
+    "waitRoom": "https://nm.whereby.com/r11",
+    "externalCss": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"
    }');
 
 

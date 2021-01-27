@@ -30,6 +30,7 @@ const meeting = {
             createdAt
             title
             theme
+            config
           }
         }
         currentPerson {
