@@ -67,8 +67,9 @@ define("RoiVideo", {
     //const youtubeId = "8BuXWdlwlEc";
     //const youtubeId = "-lMCCA47IRY";
     const youtubeId = "mBwwjtRy7sI";
-    const { speechFetching, speechScheduled, clientYoutubeSize, clientWherebyActive } = useSel(
+    const { speechFetching, speechInWhereby, speechScheduled, clientYoutubeSize, clientWherebyActive } = useSel(
       "speechFetching",
+      "speechInWhereby",
       "speechScheduled",
       "clientYoutubeSize",
       "clientWherebyActive",
@@ -82,8 +83,9 @@ define("RoiVideo", {
     if (speechFetching) {
       this.html`Waiting...`;
     } else {
+      const showYoutube = clientYoutubeSize !== "none" && !speechInWhereby;
       this.html`
-        ${clientYoutubeSize !== "none" ? html`<roi-youtube .id=${youtubeId} />` : null}
+        ${showYoutube ? html`<roi-youtube .id=${youtubeId} />` : null}
         ${clientWherebyActive ? html`<WherebyEmbed .creds=${this.creds} />` : null}
       `;
     }
