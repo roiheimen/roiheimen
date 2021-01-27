@@ -10,11 +10,14 @@ function toCss(theme) {
 define("RoiMeetingList", {
   oninit() {
     this.meeting = storage("meeting");
-    if (!this.meeting) {
-      console.warn("Setting meeting to meet20 directly");
-      this.meeting.id = a.dataset.id;
+    try {
+      const m = new URLSearchParams(location.search).get("m");
+      if (m) {
+          console.warn(`Setting meeting to ${m} directly`);
+      this.meeting.id = m;
       save("meeting");
-    }
+      }
+    } catch(e) {}
   },
   style(self) {
     return `
