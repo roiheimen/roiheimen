@@ -61,9 +61,9 @@ const meeting = {
 
 const myself = {
   name: "myself",
-  reducer: (state = { started: false, data: null, errors: null }, { type, payload, error }) => {
-    if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.currentPerson, errors: null };
-    if (type == "MYSELF_LOGIN_FAILED") return { ...state, errors: payload };
+  reducer: (state = { started: false, data: null, errors: null, fetched: false }, { type, payload, error }) => {
+    if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.currentPerson, errors: null, fetched: true };
+    if (type == "MYSELF_LOGIN_FAILED") return { ...state, errors: payload, fetched: true };
     return state;
   },
 
@@ -101,6 +101,7 @@ const myself = {
 
   selectMyself: (state) => state.myself.data,
   selectMyselfId: (state) => state.myself.data?.id,
+  selectMyselfAnonymous: (state) => state.myself.fetched ? !state.myself.data : null,
   selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
   selectMyselfErrors: (state) => state.myself.errors,
 };
