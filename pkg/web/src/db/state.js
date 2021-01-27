@@ -86,7 +86,9 @@ const myself = {
       }`;
     try {
       const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { nocreds: true });
-      const { authenticate: { jwtToken } } = res;
+      const {
+        authenticate: { jwtToken },
+      } = res;
       if (!jwtToken) {
         throw new Error("Feil nummer/passord");
       }
@@ -102,7 +104,7 @@ const myself = {
 
   selectMyself: (state) => state.myself.data,
   selectMyselfId: (state) => state.myself.data?.id,
-  selectMyselfAnonymous: (state) => state.myself.fetched ? !state.myself.data : null,
+  selectMyselfAnonymous: (state) => (state.myself.fetched ? !state.myself.data : null),
   selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
   selectMyselfErrors: (state) => state.myself.errors,
 };
@@ -474,14 +476,9 @@ const speech = {
   selectSpeechesUpcomingByMe: createSelector("selectMyself", "selectSpeechesValid", (myself, speeches) => {
     return speeches.filter((speech) => !speech.endedAt && speech.speakerId == myself.id);
   }),
-  selectSpeechInWhereby: createSelector(
-    "selectMyself",
-    "selectSpeechesUpcomingByMe",
-    "selectSpeechState",
-    (myself, speechesUpcomingByMe, speechState) => {
-      return speechState.next?.speakerId == myself?.id || speechState.current?.speakerId == myself?.id;
-    }
-  ),
+  selectSpeechInWhereby: createSelector("selectMyself", "selectSpeechState", (myself, speechState) => {
+    return speechState.next?.speakerId == myself?.id || speechState.current?.speakerId == myself?.id;
+  }),
 
   reactSpeechesUpdateOnSakChange: createSelector("selectSpeechRaw", "selectSakId", (raw, sakId) => {
     if (sakId && sakId != raw.subSak && !raw.subscribing) {
@@ -836,22 +833,42 @@ const test = {
 
 const client = {
   name: "client",
-  reducer: (state = { ui: "", youtubeSize: "" }, { type, payload }) => {
+  reducer: (state = { ui: "", youtubeSize: "", useWaitRoom: null }, { type, payload }) => {
     if (type == "CLIENT_UI") {
       if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
       return { ...state, ui: payload };
     }
     if (type == "CLIENT_YOUTUBE_SIZE") return { ...state, youtubeSize: payload };
+    if (type == "CLIENT_USE_WAIT_ROOM") return { ...state, useWaitRoom: payload };
     return state;
   },
 
   doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
   doClientYoutubeSize: (big) => ({ type: "CLIENT_YOUTUBE_SIZE", payload: big }),
+  doClientUseWaitRoom: (use) => ({ type: "CLIENT_USE_WAIT_ROOM", payload: use }),
 
   selectClientRaw: (state) => state.client,
   selectClientUi: (state) => state.client.ui,
+  selectClientUseWaitRoom: (state) => state.client.useWaitRoom,
   selectClientYoutubeSize: createSelector("selectClientRaw", (raw) => raw.youtubeSize || "big"),
-  selectClientWherebyActive: createSelector("selectSpeechInWhereby", "selectTestActive", (speechInWhereby, testActive) => speechInWhereby || testActive),
+  selectClientWherebyActive: createSelector(
+    "selectSpeechInWhereby",
+    "selectTestActive",
+    (speechInWhereby, testActive) => speechInWhereby || testActive
+  ),
+  selectClientWherebyActiveRoom: createSelector(
+    "selectClientUseWaitRoom",
+    "selectSpeechInWhereby",
+    "selectTestActive",
+    "selectSpeechesUpcomingByMe",
+    "selectMeeting",
+    "selectMyself",
+    (clientUseWaitRoom, speechInWhereby, testActive, speechesUpcomingByMe, meeting, myself) => {
+      if (speechInWhereby) return meeting?.config.speechRoom || myself?.room;
+      if (testActive) return meeting?.config.waitRoom || myself?.room;
+      if (clientUseWaitRoom && speechesUpcomingByMe.length) return meeting?.config.waitRoom;
+    }
+  ),
 };
 
 const errors = {
@@ -859,9 +876,8 @@ const errors = {
   getMiddleware: () => (store) => (next) => (action) => {
     const result = next(action);
     if (
-      action.type.endsWith("_FAILED") &&
-      action.error?.extra?.body?.errors?.[0]?.message == "jwt expired"
-      || ["MEETING_FETCH_FAILED", "MYSELF_LOGIN_FAILED"].includes(action.type)
+      (action.type.endsWith("_FAILED") && action.error?.extra?.body?.errors?.[0]?.message == "jwt expired") ||
+      ["MEETING_FETCH_FAILED", "MYSELF_LOGIN_FAILED"].includes(action.type)
     ) {
       store.doMyselfLogout();
     }

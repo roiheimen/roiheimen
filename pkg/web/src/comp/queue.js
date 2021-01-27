@@ -55,12 +55,25 @@ const RoiQueueDrawer = {
   },
   render({ useStore, useSel }) {
     const store = useStore();
-    const { meeting, myself, referendum, sak, speechFetching, speechesUpcomingByMe, testHasHad, test } = useSel(
+    const {
+      clientUseWaitRoom,
+      meeting,
+      myself,
+      referendum,
+      sak,
+      speechFetching,
+      speechInWhereby,
+      speechesUpcomingByMe,
+      testHasHad,
+      test,
+    } = useSel(
+      "clientUseWaitRoom",
       "meeting",
       "myself",
       "referendum",
       "sak",
       "speechFetching",
+      "speechInWhereby",
       "speechesUpcomingByMe",
       "testHasHad",
       "test"
@@ -76,7 +89,14 @@ const RoiQueueDrawer = {
 
     this.html`
       <div class=buttons>
-        ${testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button></div>`}
+        ${meeting?.config.waitRoom || testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button>`}
+        ${
+          meeting?.config.waitRoom && myNewestSpeechRequest && !speechInWhereby
+            ? html`<button .onclick=${() => store.doClientUseWaitRoom(!clientUseWaitRoom)}>
+                ${clientUseWaitRoom ? "Gå ut av venterom" : "Gå inn i venterom"}
+              </button>`
+            : ""
+        }
         ${
           sak?.id
             ? html`

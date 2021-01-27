@@ -28,29 +28,35 @@ define("RoiVideoOut", {
     this.type = event.target.value;
   },
   ontype(t) {
-    history.replaceState({}, "", new URL(`?type=${this.type}`, location.href));
+    if (this.type) {
+      history.replaceState({}, "", new URL(`?type=${this.type}`, location.href));
+    }
     this.render();
   },
   render({ useSel, usePrevious }) {
-    const { speechState, peopleById } = useSel("speechState", "peopleById");
-    const { current, next } = speechState;
-    let speech;
-    if (["c", "d"].includes(this.type)) {
-      speech = current || next;
-    } else {
-      speech = { [current?.out]: current, [next?.out]: next }[this.type];
-    }
-    const speaker = peopleById[speech?.speakerId];
-    const room = speaker?.room;
-    const prevRoom = usePrevious(room);
-    if (!this.type) {
-      return this.html`
-      Video-out type?
-        <button value=a onclick=${this}>a</button>
-        <button value=b onclick=${this}>b</button>
-        `;
-    }
+    const { speechState, peopleById, meeting } = useSel("speechState", "peopleById", "meeting");
+    let room = meeting?.config.speechRoom;
+    let speaker;
     if (!room) {
+      const { current, next } = speechState;
+      let speech;
+      if (["c", "d"].includes(this.type)) {
+        speech = current || next;
+      } else {
+        speech = { [current?.out]: current, [next?.out]: next }[this.type];
+      }
+      speaker = peopleById[speech?.speakerId];
+      room = speaker?.room;
+    }
+    const prevRoom = usePrevious(room);
+    if (!room) {
+      if (!this.type) {
+        return this.html`
+        Video-out type?
+          <button value=a onclick=${this}>a</button>
+          <button value=b onclick=${this}>b</button>
+          `;
+      }
       return this.html`
       Nothing on out ${this.type} at the moment.
       ${speaker ? "Speaker has no room!" : ""}
@@ -59,7 +65,7 @@ define("RoiVideoOut", {
     if (room == prevRoom) return;
     this.html`
     <whereby-embed
-      displayName=${this.type}
+      displayName=${this.type || meeting?.title}
       embed
       background=off
       room=${room + "?floatSelf&aec=off&agc=off"} />

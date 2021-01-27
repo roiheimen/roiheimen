@@ -20,10 +20,9 @@ const WherebyEmbed = {
     `;
   },
   render({ useSel, usePrevious }) {
-    const { myself } = useSel("myself");
-    if (!myself) return;
-    const room = myself.room;
+    const { clientWherebyActiveRoom: room, myself, meeting } = useSel("clientWherebyActiveRoom", "myself", "meeting");
     const prevRoom = usePrevious(room);
+    if (!myself) return;
     if (!room) return this.html`You seem to have no room! Contact support.`;
     if (room === prevRoom) return;
     this.html`
@@ -62,18 +61,18 @@ define("RoiVideo", {
     //const youtubeId = "mBwwjtRy7sI";
     const youtubeId = "b3Jn24w8JqI";
 
-    const { speechFetching, speechInWhereby, speechScheduled, clientYoutubeSize, clientWherebyActive } = useSel(
+    const { speechFetching, speechInWhereby, speechScheduled, clientYoutubeSize, clientWherebyActiveRoom } = useSel(
       "speechFetching",
       "speechInWhereby",
       "speechScheduled",
       "clientYoutubeSize",
-      "clientWherebyActive",
+      "clientWherebyActiveRoom",
     );
     useEffect(() => {
       if (["big", "small"].includes(clientYoutubeSize)) {
-        this.classList.toggle("bigyoutube", clientYoutubeSize === "big" && !clientWherebyActive);
+        //this.classList.toggle("bigyoutube", clientYoutubeSize === "big" && !clientWherebyActiveRoom);
       }
-    }, [clientYoutubeSize]);
+    }, [clientYoutubeSize, clientWherebyActiveRoom]);
 
     if (speechFetching) {
       this.html`Waiting...`;
@@ -81,7 +80,7 @@ define("RoiVideo", {
       const showYoutube = clientYoutubeSize !== "none" && !speechInWhereby;
       this.html`
         ${showYoutube ? html`<roi-youtube .id=${youtubeId} />` : null}
-        ${clientWherebyActive ? html`<WherebyEmbed .creds=${this.creds} />` : null}
+        ${clientWherebyActiveRoom ? html`<WherebyEmbed .creds=${this.creds} />` : null}
       `;
     }
   },
