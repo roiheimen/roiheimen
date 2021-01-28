@@ -17,6 +17,10 @@ export default define("RoiReferendumList", {
     `;
   },
   onclick({ target }) {
+    if (target.name == "start") {
+      const id = +target.closest("tr").dataset.id;
+      this.store.doReferendumStart(id);
+    }
     if (target.name == "end") {
       const id = +target.closest("tr").dataset.id;
       this.store.doReferendumEnd(id);
@@ -53,7 +57,7 @@ export default define("RoiReferendumList", {
                 )}
               </td>
               <td>${r.counts?.reduce((o, v) => o + (v.count || 0), 0)}</td>
-              <td>${r.finishedAt ? "Ferdig" : html` <button name="end" onclick=${this}>Avslutt</button> `}</td>
+              <td>${r.startedAt ? (r.finishedAt ? "Ferdig" : html` <button name="end" onclick=${this}>Avslutt</button> `) : html`<button name="start" onclick=${this}>Start</button>`}</td>
             </tr>
           `
       )}

@@ -548,6 +548,22 @@ const referendum = {
       dispatch({ type: "REFERENDUM_REQ_FAILED", error });
     }
   },
+  doReferendumStart: (referendumId) => async ({ dispatch, store }) => {
+    dispatch({ type: "REFERENDUM_START_STARTED", payload: referendumId });
+    const query = `
+    mutation ReferendumEnd($id: Int!) {
+      updateReferendum(input: {id: $id, patch: { startedAt: "now()" }}) {
+        clientMutationId
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { id: referendumId });
+      dispatch({ type: "REFERENDUM_START_FINISHED", payload: referendumId });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_START_FAILED", error, payload: referendumId });
+    }
+  },
   doReferendumEnd: (referendumId) => async ({ dispatch, store }) => {
     dispatch({ type: "REFERENDUM_END_STARTED", payload: referendumId });
     const query = `
@@ -578,6 +594,7 @@ const referendum = {
             title
             type
             createdAt
+            startedAt
             finishedAt
             votes {
               nodes {
@@ -656,7 +673,7 @@ const referendum = {
   selectReferendumsData: (state) => state.referendum.data,
   selectReferendumCountData: (state) => state.referendum.count,
   selectReferendumPrevChoice: (state) => state.referendum.prevChoice,
-  selectReferendum: createSelector("selectReferendums", (referendums) => referendums.filter((r) => !r.finishedAt)[0]),
+  selectReferendum: createSelector("selectReferendums", (referendums) => referendums.filter((r) => r.startedAt && !r.finishedAt)[0]),
   selectReferendumVote: createSelector("selectMyselfId", "selectReferendum", (myselfId, referendum) =>
     referendum?.votes.nodes.find((v) => v.personId == myselfId)
   ),

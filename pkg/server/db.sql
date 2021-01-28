@@ -138,10 +138,12 @@ create table roiheimen.referendum (
   sak_id           integer not null references roiheimen.sak(id) on delete cascade,
   created_at       timestamptz default now(),
   updated_at       timestamptz default now(),
+  started_at       timestamptz default null,
   finished_at      timestamptz default null
 );
 comment on table roiheimen.referendum is 'A referendum opened on a sak.';
 create index on roiheimen.referendum(sak_id);
+create index on roiheimen.referendum(started_at);
 create index on roiheimen.referendum(created_at);
 create index on roiheimen.referendum(finished_at);
 
