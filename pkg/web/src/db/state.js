@@ -17,6 +17,7 @@ const meeting = {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
     if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.meetings };
     if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
+    if (type == "MYSELF_LOGOUT") return { ...state, started: false };
     return state;
   },
 
@@ -53,10 +54,19 @@ const meeting = {
     }
   },
 
+  selectMeetingRaw: (state) => state.meeting,
   selectMeetings: (state) => state.meeting.data,
   selectMeetingId: createSelector("selectQueryObject", (queryObject) => queryObject.m || meeting_.id),
   selectMeeting: createSelector("selectMeetingId", "selectMeetings", (meetingId, meetings) =>
     meetings?.find((m) => m.id === meetingId)
+  ),
+
+  reactMeetingsFetch: createSelector(
+    "selectMeetingRaw",
+    (raw) => {
+      if (raw.started) return;
+      return { actionCreator: "doMeetingInfoFetch" };
+    }
   ),
 };
 
