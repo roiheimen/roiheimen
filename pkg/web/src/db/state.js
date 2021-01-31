@@ -83,8 +83,8 @@ const myself = {
       dispatch({ type: "MYSELF_LOGOUT" });
       Object.keys(creds).forEach((k) => delete creds[k]);
       save("creds");
-      if (!["/", "/login.html"].includes(location.pathname)) location.assign("/");
     }
+    if (!["/", "/login.html"].includes(location.pathname)) location.assign("/");
   },
   doMyselfLogin: (num, password) => async ({ dispatch, store }) => {
     dispatch({ type: "MYSELF_LOGIN_STARTED" });
