@@ -20,7 +20,6 @@ const RoiQueueDrawer = {
     }
     ${self} .buttons {
       align-self: start;
-      background: var(--roi-theme-main-color);
       display: flex;
       flex-direction: column;
       margin: 10px;
@@ -29,16 +28,20 @@ const RoiQueueDrawer = {
     }
     ${self} .buttons button {
       background: transparent;
+      color: var(--roi-theme-main-color);
       border-radius: 4px;
       border: none;
-      color: var(--roi-theme-main-color2);
       font-size: 20px;
       padding: 10px;
       margin: 1px 2px;
     }
+    ${self} .buttons button.main {
+      background: transparent;
+      border: 3px solid var(--roi-theme-main-color);
+    }
     ${self} .buttons button:hover {
-      background: var(--roi-theme-main-color2);
-      color: var(--roi-theme-main-color);
+      background: var(--roi-theme-main-color);
+      color: var(--roi-theme-main-color2);
     }
     ${self} .buttons .settings {
       margin-top: auto;
@@ -102,6 +105,7 @@ const RoiQueueDrawer = {
             ? html`
                 <button
                   tabindex="0"
+                  class="main"
                   disabled=${speechFetching}
                   .onclick=${() => store.doSpeechReq()}
                   title=${`Før deg opp på talelista som ${myself?.name} (${myself?.num})`}
