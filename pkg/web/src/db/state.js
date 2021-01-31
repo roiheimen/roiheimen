@@ -878,12 +878,28 @@ const client = {
   selectClientUi: (state) => state.client.ui,
   selectClientUseWaitRoom: (state) => state.client.useWaitRoom,
   selectClientYoutubeSize: createSelector("selectClientRaw", (raw) => raw.youtubeSize || "big"),
-  selectClientWherebyActive: createSelector(
+  selectClientShowYoutube: createSelector("selectClientRaw", "selectWherebyParticipants", (raw, wherebyParticipants) => {
+    if (raw.youtubeSize === "none") return false;
+    return wherebyParticipants < 2;
+  }),
+};
+
+const whereby = {
+  name: "whereby",
+  reducer: (state = { participants: 0 }, { type, payload }) => {
+    if (type === "WHEREBY_PARTICIPANTS") return { ...state, participants: payload };
+    return state;
+  },
+
+  doWherebyParticipants: (count) => ({ type: "WHEREBY_PARTICIPANTS", payload: count }),
+
+  selectWherebyParticipants: state => state.whereby.participants,
+  selectWherebyActive: createSelector(
     "selectSpeechInWhereby",
     "selectTestActive",
     (speechInWhereby, testActive) => speechInWhereby || testActive
   ),
-  selectClientWherebyActiveRoom: createSelector(
+  selectWherebyActiveRoom: createSelector(
     "selectClientUseWaitRoom",
     "selectSpeechInWhereby",
     "selectTestActive",
@@ -894,8 +910,7 @@ const client = {
       if (speechInWhereby) return meeting?.config.speechRoom || myself?.room;
       if (testActive) return meeting?.config.waitRoom || myself?.room;
       if (clientUseWaitRoom && speechesUpcomingByMe.length) return meeting?.config.waitRoom;
-    }
-  ),
+    }),
 };
 
 const errors = {
@@ -912,7 +927,7 @@ const errors = {
   },
 };
 
-const store = composeBundles(meeting, myself, speech, sak, people, referendum, out, test, client, errors)();
+const store = composeBundles(meeting, myself, speech, sak, people, referendum, out, test, client, whereby, errors)();
 window.store = store;
 
 function addSelect(sel) {

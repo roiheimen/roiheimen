@@ -19,14 +19,26 @@ const WherebyEmbed = {
     }
     `;
   },
-  render({ useSel, usePrevious }) {
-    const { clientWherebyActiveRoom: room, myself, meeting } = useSel("clientWherebyActiveRoom", "myself", "meeting");
+  ondisconnected() {
+    this.store.doWherebyParticipants(0);
+  },
+  onparticipantupdate({ detail: { count } }) {
+    store.doWherebyParticipants(count);
+  },
+  render({ useSel, useStore, usePrevious, useEffect }) {
+    this.store = useStore();
+    const { wherebyActiveRoom: room, myself } = useSel("wherebyActiveRoom", "myself");
     const prevRoom = usePrevious(room);
+    useEffect(() => {
+      this.embed.addEventListener("participantupdate", this);
+      // no cleanup needed, since the above call is idempotent
+    }, []);
     if (!myself) return;
     if (!room) return this.html`You seem to have no room! Contact support.`;
     if (room === prevRoom) return;
     this.html`
       <whereby-embed
+        ref=${(ref) => (this.embed = ref)}
         displayName=${myself?.name}
         embed
         people=off
@@ -60,26 +72,33 @@ define("RoiVideo", {
   render({ useSel, useStore, useEffect }) {
     const youtubeId = "iK0qElBdeOM";
 
-    const { speechFetching, speechInWhereby, speechScheduled, clientYoutubeSize, clientWherebyActiveRoom } = useSel(
+    const {
+      speechFetching,
+      speechInWhereby,
+      speechScheduled,
+      clientShowYoutube,
+      clientYoutubeSize,
+      wherebyActiveRoom,
+    } = useSel(
       "speechFetching",
       "speechInWhereby",
       "speechScheduled",
       "clientYoutubeSize",
-      "clientWherebyActiveRoom",
+      "clientShowYoutube",
+      "wherebyActiveRoom"
     );
     useEffect(() => {
       if (["big", "small"].includes(clientYoutubeSize)) {
-        //this.classList.toggle("bigyoutube", clientYoutubeSize === "big" && !clientWherebyActiveRoom);
+        //this.classList.toggle("bigyoutube", clientYoutubeSize === "big" && !wherebyActiveRoom);
       }
-    }, [clientYoutubeSize, clientWherebyActiveRoom]);
+    }, [clientYoutubeSize, wherebyActiveRoom]);
 
     if (speechFetching) {
       this.html`Waiting...`;
     } else {
-      const showYoutube = clientYoutubeSize !== "none" && !speechInWhereby;
       this.html`
-        ${showYoutube ? html`<roi-youtube .id=${youtubeId} />` : null}
-        ${clientWherebyActiveRoom ? html`<WherebyEmbed .creds=${this.creds} />` : null}
+        ${clientShowYoutube ? html`<roi-youtube .id=${youtubeId} />` : null}
+        ${wherebyActiveRoom ? html`<WherebyEmbed .creds=${this.creds} />` : null}
       `;
     }
   },
