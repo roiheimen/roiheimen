@@ -40,6 +40,7 @@ comment on table roiheimen.meeting is 'A meeting, i.e. "meet20"';
 create table roiheimen.sak (
   id               serial primary key,
   title            text not null,
+  config           jsonb default '{}',
   meeting_id       text not null references roiheimen.meeting(id) on delete cascade,
   created_at       timestamptz default now(),
   updated_at       timestamptz default now(),
@@ -491,7 +492,7 @@ insert into roiheimen.meeting (id, title, theme) values (
 -- XXX speechRoom actually has to be hidden from anon!
 insert into roiheimen.meeting (id, title, theme, config) values (
   'meet20',
-  'Landsmøte 2021',
+  'MDG Landsmøte 2021',
   '{
     "font": "Avenir",
     "head-font": "MDG",
@@ -500,6 +501,7 @@ insert into roiheimen.meeting (id, title, theme, config) values (
     "video-bg": "#daf3f4"
   }',
   '{
+    "speechAllowed": true,
     "speechRoom": "https://nm.whereby.com/r10",
     "waitRoom": "https://nm.whereby.com/r11",
     "externalCss": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"

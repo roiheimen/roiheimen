@@ -64,6 +64,7 @@ const RoiQueueDrawer = {
       myself,
       referendum,
       sak,
+      sakSpeechAllowed,
       speechFetching,
       speechInWhereby,
       speechesUpcomingByMe,
@@ -75,6 +76,7 @@ const RoiQueueDrawer = {
       "myself",
       "referendum",
       "sak",
+      "sakSpeechAllowed",
       "speechFetching",
       "speechInWhereby",
       "speechesUpcomingByMe",
@@ -101,7 +103,7 @@ const RoiQueueDrawer = {
             : ""
         }
         ${
-          sak?.id
+          sakSpeechAllowed
             ? html`
                 <button
                   tabindex="0"

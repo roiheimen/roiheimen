@@ -61,13 +61,10 @@ const meeting = {
     meetings?.find((m) => m.id === meetingId)
   ),
 
-  reactMeetingsFetch: createSelector(
-    "selectMeetingRaw",
-    (raw) => {
-      if (raw.started) return;
-      return { actionCreator: "doMeetingInfoFetch" };
-    }
-  ),
+  reactMeetingsFetch: createSelector("selectMeetingRaw", (raw) => {
+    if (raw.started) return;
+    return { actionCreator: "doMeetingInfoFetch" };
+  }),
 };
 
 const myself = {
@@ -193,12 +190,32 @@ const sak = {
       dispatch({ type: "SAK_FINISH_FAILED", error, payload: sakId });
     }
   },
-  doSakReq: (title, { meetingId } = {}) => async ({ dispatch }) => {
+  doSakUpd: ({ sakId, config, title } = {}) => async ({ dispatch, store }) => {
+    const sak = store.selectSak();
+    sakId = sakId || sak.id;
+    title = title || sak.title;
+    config = { ...sak.config, ...config };
+    dispatch({ type: "SAK_UPDATE_STARTED", payload: sakId });
+    const query = `
+    mutation SakUpd($sakId: Int!, $config: JSON!, $title: String!) {
+      updateSak(input: {id: $sakId, patch: { config: $config, title: $title }}) {
+        clientMutationId
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { sakId, title, config });
+      dispatch({ type: "SAK_UPDATE_FINISHED", payload: sakId });
+    } catch (error) {
+      dispatch({ type: "SAK_UPDATE_FAILED", error, payload: sakId });
+    }
+  },
+  doSakReq: (title, { meetingId, config = {} } = {}) => async ({ dispatch }) => {
     dispatch({ type: "SAK_REQ_STARTED" });
     meetingId = meetingId ?? store.selectMyself().meetingId;
     const gqlNewSak = `
-      mutation NewSak($meetingId: String!, $title: String!) {
-        createSak(input: {sak: {title: $title, meetingId: $meetingId}}) {
+      mutation NewSak($meetingId: String!, $title: String!, $config: JSON!) {
+        createSak(input: {sak: {title: $title, config: $config, meetingId: $meetingId}}) {
           sak {
             id
             title
@@ -206,7 +223,7 @@ const sak = {
         }
       }`;
     try {
-      const res = await gql(gqlNewSak, { title, meetingId });
+      const res = await gql(gqlNewSak, { title, meetingId, config });
       const {
         createSak: { sak },
       } = res;
@@ -223,6 +240,7 @@ const sak = {
           nodes {
             id
             title
+            config
             createdAt
           }
         }
@@ -253,6 +271,11 @@ const sak = {
     };
     return nsak;
   }),
+  selectSakSpeechAllowed: createSelector(
+    "selectSak",
+    "selectMeeting",
+    (sak, meeting) => sak?.config?.speechAllowed ?? meeting?.config.speechAllowed
+  ),
 
   reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectMyselfId", (raw, myselfId) => {
     if (!raw.started && !raw.failed && myselfId) {
@@ -683,7 +706,10 @@ const referendum = {
   selectReferendumsData: (state) => state.referendum.data,
   selectReferendumCountData: (state) => state.referendum.count,
   selectReferendumPrevChoice: (state) => state.referendum.prevChoice,
-  selectReferendum: createSelector("selectReferendums", (referendums) => referendums.filter((r) => r.startedAt && !r.finishedAt)[0]),
+  selectReferendum: createSelector(
+    "selectReferendums",
+    (referendums) => referendums.filter((r) => r.startedAt && !r.finishedAt)[0]
+  ),
   selectReferendumVote: createSelector("selectMyselfId", "selectReferendum", (myselfId, referendum) =>
     referendum?.votes.nodes.find((v) => v.personId == myselfId)
   ),
@@ -878,10 +904,14 @@ const client = {
   selectClientUi: (state) => state.client.ui,
   selectClientUseWaitRoom: (state) => state.client.useWaitRoom,
   selectClientYoutubeSize: createSelector("selectClientRaw", (raw) => raw.youtubeSize || "big"),
-  selectClientShowYoutube: createSelector("selectClientRaw", "selectWherebyParticipants", (raw, wherebyParticipants) => {
-    if (raw.youtubeSize === "none") return false;
-    return wherebyParticipants < 2;
-  }),
+  selectClientShowYoutube: createSelector(
+    "selectClientRaw",
+    "selectWherebyParticipants",
+    (raw, wherebyParticipants) => {
+      if (raw.youtubeSize === "none") return false;
+      return wherebyParticipants < 2;
+    }
+  ),
 };
 
 const whereby = {
@@ -893,7 +923,7 @@ const whereby = {
 
   doWherebyParticipants: (count) => ({ type: "WHEREBY_PARTICIPANTS", payload: count }),
 
-  selectWherebyParticipants: state => state.whereby.participants,
+  selectWherebyParticipants: (state) => state.whereby.participants,
   selectWherebyActive: createSelector(
     "selectSpeechInWhereby",
     "selectTestActive",
@@ -910,7 +940,8 @@ const whereby = {
       if (speechInWhereby) return meeting?.config.speechRoom || myself?.room;
       if (testActive) return meeting?.config.waitRoom || myself?.room;
       if (clientUseWaitRoom && speechesUpcomingByMe.length) return meeting?.config.waitRoom;
-    }),
+    }
+  ),
 };
 
 const errors = {

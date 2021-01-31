@@ -236,7 +236,10 @@ const NewSakDialog = {
   },
   onsubmit(e) {
     const title = e.target.title.value;
-    this.store.doSakReq(title);
+    const config = {
+      speechAllowed: e.target.speechAllowed.checked,
+    };
+    this.store.doSakReq(title, { config });
     this.close();
     //this.newSak(title, () => {
     //  e.target.title.value = "";
@@ -267,6 +270,9 @@ const NewSakDialog = {
       <h1>Neste sak</h1>
       <form>
         <label>Tittel <input name=title placeholder="" required></label>
+        <div class=config>
+          <label><input name=speechAllowed type=checkbox checked> Innlegg ope</label>
+        </div>
         <input type=submit value="Legg til og bytt">
       </form>
       ${this.err && html` <p style="color:red">${this.err}</p> `}
@@ -290,6 +296,7 @@ define("RoiManage", {
       grid-template-columns: 1fr 1fr 100px;
       grid-template-areas:
         'title title finish'
+        'config config update'
         'adder adder .'
         'list  list  list';
       grid-gap: 10px;
@@ -302,6 +309,7 @@ define("RoiManage", {
       width: 100%;
     }
     ${self} .finish { grid-area: finish; }
+    ${self} .config { grid-area: config; }
     ${adder} { grid-area: adder; }
     ${self} .list { grid-area: list; }
     ${self} .people {
@@ -318,15 +326,19 @@ define("RoiManage", {
     roi-person-list table { width: 100% }
     `;
   },
-  onclick(e) {
-    if (e.target.classList.contains("new")) {
+  onclick({ target }) {
+    if (target.classList.contains("new")) {
       this.newSakDialog.current.showModal();
+    } else if (target.name == "update") {
+      const title = this.querySelector(".title").value;
+      const speechAllowed = this.querySelector(".speechAllowed").checked;
+      this.store.doSakUpd({ title, config: { speechAllowed } });
     } else {
       this.store.doSakFinish();
     }
   },
   render({ useSel, useStore }) {
-    const { sak } = useSel("sak");
+    const { sak, sakSpeechAllowed } = useSel("sak", "sakSpeechAllowed");
     this.store = useStore();
     this.html`
       ${
@@ -334,13 +346,17 @@ define("RoiManage", {
           ? html`
               <input class=title value=${sak?.title} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
+              <div class=config>
+                <label><input class=speechAllowed type=checkbox checked=${sakSpeechAllowed}> Taleliste open</label>
+              </div>
+              <button class=update name=update onclick=${this}>Oppdater</button>
               <SakSpeakerAdderInput />
               <div class=list>
                 <roi-referendum-list />
                 <roi-speeches-list color />
               </list>
             `
-          : html`<button class="new" onclick=${this}>Ny sak</button>`
+          : html`<button class="new" name="new" onclick=${this}>Ny sak</button>`
       }
 
       <div class=people>
