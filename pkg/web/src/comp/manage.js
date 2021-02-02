@@ -198,6 +198,116 @@ const SakSpeakerAdderInput = {
   },
 };
 
+const MoreDialog = {
+  extends: "dialog",
+  mappedAttributes: ["err"],
+  oninit() {
+    this.addEventListener("submit", this);
+  },
+  style(self) {
+    return `
+    ${self} h1 {
+      margin: 0 0 20px;
+      font-size: 24px;
+      text-align: center;
+    }
+    ${self} form {
+      display: flex;
+      flex-direction: column;
+    }
+    ${self}::backdrop {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    ${self} input {
+      font-size: 16px;
+      padding: 3px;
+    }
+    ${self} input[type=submit] {
+      align-self: flex-end;
+      margin-top: 10px;
+    }
+    ${self} .tabs { padding: 0; }
+    ${self} .tabs li {
+      display: inline-block;
+      list-style: none;
+  }
+    ${self} .tabs button {
+      background: transparent;
+      border: none;
+      padding: 5px 20px;
+      display: inline-block;
+    }
+    ${self} .tabs button.active {
+      background: var(--roi-theme-main-color);
+      color: var(--roi-theme-main-color2);
+    }
+    `;
+  },
+  onerr() {
+    this.render();
+  },
+  async onsubmit(e) {
+    e.preventDefault();
+    const { name } = e.target;
+    if (name === "sak") {
+      for (const s of e.target.saker.value.split("\n")) {
+        const st = s.trim();
+        if (s) await this.store.doSakReq(s);
+      }
+    } else if (name === "vot") {
+      const sakId = +e.target.sakId.value;
+      for (const v of e.target.voteringer.value.split("\n")) {
+        const action = parseAdderLine(v);
+        if (!action.vote) continue;
+        await this.store.doReferendumReq({ sakId, type: action.vote, ...action });
+      }
+    }
+    this.close();
+  },
+  onclick(e) {
+    this.tab = e.target.name;
+    this.render();
+  },
+  render({ useStore, useSel }) {
+    this.store = useStore();
+    const { saks, sakId } = useSel("saks", "sakId");
+    this.html`
+      <h1>Legg til ting-og-tang</h1>
+      <ul class=tabs>
+        <li><button onclick=${this} name=sak class=${this.tab === "sak" && "active"}>Lag nye saker</button>
+        <li><button onclick=${this} name=vot class=${this.tab === "vot" && "active"}>Lag voteringer</button>
+      </ul>
+      <form name=${this.tab}>
+        ${
+          {
+            vot: html`
+              <label
+                >Sak<br />
+                <select>
+                  ${saks.map((s) => html` <option value=${s.id} selected=${sakId === s.id}>${s.title}</option> `)}
+                </select>
+              </label>
+              <label
+                >Voteringer<br />
+                <textarea cols="64" rows="8" name="voteringer"></textarea>
+              </label>
+              <input type="submit" name="vot" value="Legg til" />
+            `,
+            sak: html`
+              <label
+                >Saker<br />
+                <textarea cols="64" rows="8" name="saker"></textarea>
+              </label>
+              <input type="submit" name="sak" value="Legg til" />
+            `,
+          }[this.tab]
+        }
+      </form>
+      ${this.err && html` <p style="color:red">${this.err}</p> `}
+    `;
+  },
+};
+
 const NewSakDialog = {
   extends: "dialog",
   mappedAttributes: ["err"],
@@ -241,28 +351,7 @@ const NewSakDialog = {
     };
     this.store.doSakReq(title, { config });
     this.close();
-    //this.newSak(title, () => {
-    //  e.target.title.value = "";
-    //});
     e.preventDefault();
-  },
-  async newSak(title, onFinish) {
-    try {
-      const res = await gql(gqlNewSak, {
-        mId: storage("myself").meetingId,
-        title,
-      });
-      const {
-        createSak: { sak },
-      } = res;
-      Object.assign(storage("sak"), sak);
-      this.dispatchEvent(new CustomEvent("newsak", { detail: sak }));
-      this.close();
-      onFinish();
-    } catch (e) {
-      console.error("new sak error", e);
-      this.err = "" + e;
-    }
   },
   render({ useStore }) {
     this.store = useStore();
@@ -282,23 +371,25 @@ const NewSakDialog = {
 
 define("RoiManage", {
   includes: {
+    MoreDialog,
     NewSakDialog,
     SakSpeakerAdderInput,
   },
   oninit() {
     this.newSakDialog = ref();
+    this.moreDialog = ref();
   },
-  style(self, dialog, adder) {
+  style(self, dialog, more, adder) {
     return `
     ${self} {
       display: grid;
       grid-auto-rows: minmax(48px, auto);
       grid-template-columns: 1fr 1fr 100px;
       grid-template-areas:
-        'title title finish'
+        'title  title  finish'
         'config config update'
-        'adder adder .'
-        'list  list  list';
+        'adder  adder  more'
+        'list   list   list';
       grid-gap: 10px;
     }
     ${self} .title {
@@ -311,6 +402,7 @@ define("RoiManage", {
     ${self} .finish { grid-area: finish; }
     ${self} .config { grid-area: config; }
     ${adder} { grid-area: adder; }
+    ${more} { grid-area: more; }
     ${self} .list { grid-area: list; }
     ${self} .people {
       color: #666;
@@ -329,6 +421,8 @@ define("RoiManage", {
   onclick({ target }) {
     if (target.classList.contains("new")) {
       this.newSakDialog.current.showModal();
+    } else if (target.name === "more") {
+      this.moreDialog.current.showModal();
     } else if (target.name == "update") {
       const title = this.querySelector(".title").value;
       const speechAllowed = this.querySelector(".speechAllowed").checked;
@@ -351,6 +445,7 @@ define("RoiManage", {
               </div>
               <button class=update name=update onclick=${this}>Oppdater</button>
               <SakSpeakerAdderInput />
+              <button name=more onclick=${this}>Meir</button>
               <div class=list>
                 <roi-referendum-list />
                 <roi-speeches-list color />
@@ -364,6 +459,7 @@ define("RoiManage", {
         <roi-person-list />
       </div>
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
+      <MoreDialog ref=${this.moreDialog} />
     `;
   },
 });

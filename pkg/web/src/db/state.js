@@ -166,7 +166,7 @@ const people = {
 
 const sak = {
   name: "sak",
-  reducer: (state = { started: false, failed: false, data: {} }, { type, payload, error }) => {
+  reducer: (state = { started: false, failed: false, data: [] }, { type, payload, error }) => {
     if (type == "SAK_SUB_STARTED") return { ...state, started: true };
     if (type == "SAK_SUB_FAILED") return { ...state, failed: error || true };
     if (type == "SAK_SUB_UPDATED") return { ...state, data: payload };
@@ -232,11 +232,11 @@ const sak = {
       dispatch({ type: "SAK_REQ_FAILED", error });
     }
   },
-  doSakSubscribe: () => async ({ dispatch }) => {
+  doSakSubscribe: (num = 1) => async ({ dispatch }) => {
     dispatch({ type: "SAK_SUB_STARTED" });
     const query = `
       subscription Sak {
-        saks(condition: {finishedAt: null}, orderBy: CREATED_AT_DESC, first: 1) {
+        saks(condition: {finishedAt: null}, orderBy: CREATED_AT_ASC, first: ${num}) {
           nodes {
             id
             title
@@ -250,7 +250,7 @@ const sak = {
         const {
           saks: { nodes },
         } = data;
-        dispatch({ type: "SAK_SUB_UPDATED", payload: nodes[0] });
+        dispatch({ type: "SAK_SUB_UPDATED", payload: nodes });
       });
       dispatch({ type: "SAK_SUB_FINISHED" });
     } catch (error) {
@@ -259,8 +259,9 @@ const sak = {
   },
 
   selectSakRaw: (state) => state.sak,
-  selectSak: (state) => state.sak.data,
-  selectSakId: (state) => state.sak.data?.id,
+  selectSak: (state) => state.sak.data[0],
+  selectSaks: (state) => state.sak.data,
+  selectSakId: (state) => state.sak.data[0]?.id,
   selectSakObj: createSelector("selectPeopleById", "selectSak", "selectSpeeches", (peopleById, sak, speeches) => {
     const nsak = {
       ...sak,
@@ -277,9 +278,9 @@ const sak = {
     (sak, meeting) => sak?.config?.speechAllowed ?? meeting?.config.speechAllowed
   ),
 
-  reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectMyselfId", (raw, myselfId) => {
+  reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectClientManage", "selectMyselfId", (raw, clientManage, myselfId) => {
     if (!raw.started && !raw.failed && myselfId) {
-      return { actionCreator: "doSakSubscribe" };
+      return { actionCreator: "doSakSubscribe", args: [clientManage ? 20 : 1] };
     }
   }),
 };
@@ -886,14 +887,23 @@ const test = {
 
 const client = {
   name: "client",
-  reducer: (state = { ui: "", youtubeSize: "", useWaitRoom: null }, { type, payload }) => {
-    if (type == "CLIENT_UI") {
-      if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
-      return { ...state, ui: payload };
-    }
-    if (type == "CLIENT_YOUTUBE_SIZE") return { ...state, youtubeSize: payload };
-    if (type == "CLIENT_USE_WAIT_ROOM") return { ...state, useWaitRoom: payload };
-    return state;
+  getReducer() {
+    const initialState = {
+      manage: 'manage' in document.body.dataset,
+      ui: "",
+      useWaitRoom: null,
+      userFacing: 'externals' in document.body.dataset,
+      youtubeSize: "",
+    };
+    return (state = initialState, { type, payload }) => {
+      if (type == "CLIENT_UI") {
+        if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
+        return { ...state, ui: payload };
+      }
+      if (type == "CLIENT_YOUTUBE_SIZE") return { ...state, youtubeSize: payload };
+      if (type == "CLIENT_USE_WAIT_ROOM") return { ...state, useWaitRoom: payload };
+      return state;
+    };
   },
 
   doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
@@ -902,6 +912,8 @@ const client = {
 
   selectClientRaw: (state) => state.client,
   selectClientUi: (state) => state.client.ui,
+  selectClientUserFacing: (state) => state.client.userFacing,
+  selectClientManage: (state) => state.client.manage,
   selectClientUseWaitRoom: (state) => state.client.useWaitRoom,
   selectClientYoutubeSize: createSelector("selectClientRaw", (raw) => raw.youtubeSize || "big"),
   selectClientShowYoutube: createSelector(
