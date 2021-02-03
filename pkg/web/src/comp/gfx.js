@@ -44,6 +44,79 @@ define("RoiGfxTitle", {
   },
 });
 
+define("RoiGfxSpeaker", {
+  style(self) {
+    return `
+      ${self} .box {
+        font-weight: 600;
+        margin: 0 auto;
+        opacity: 0;
+        position: relative;
+        will-change: transform opacity;
+      }
+      ${self} .topbox {
+        background: #6A9325;
+        display: block;
+        color: white;
+        font-size: 2.5vw;
+        padding: 2px 1vw;
+      }
+      ${self} .underbox {
+        color: #333;
+        font-size: 1.8vw;
+        margin-top: 0.5vw;
+      }
+      ${self} .underbox > div {
+        background: #fff;
+        display: inline-block;
+        padding: 0 1vw;
+      }
+      ${self} .hidden {
+        /*
+        opacity: 0.0001;
+        right: -2vw;
+        */
+      }
+    `;
+  },
+  oninit() {
+    this.div = ref();
+  },
+  render({ useEffect, useSel, useState, usePrevious }) {
+    const { speechState, peopleById } = useSel("speechState", "peopleById");
+    const [isHidden, setIsHidden] = useState(true);
+    const speech = speechState.current;
+    const person = peopleById[speech?.speakerId];
+    //const prevTitle = usePrevious(title);
+    //if (prevTitle && prevTitle == title) return;
+    useEffect(() => {
+      if (!this.div.current) return;
+      const DURATION = 5000;
+      this.div.current.animate(
+        [
+          { opacity: 0, transform: "translateX(-100px)" },
+          { opacity: 1, transform: "translateX(0)", offset: 0.05 },
+          { opacity: 1, transform: "translateX(0)", offset: 0.99 },
+          { opacity: 0, transform: "translateX(-50px)" },
+        ],
+        { duration: DURATION, easing: "ease-out" }
+      );
+    }, [this.div.current, person]);
+    this.html`
+      <div ref=${this.div} class=${"box" + (isHidden ? " hidden" : "")}>
+        <div class=topbox>
+          <div class=name>${person?.name}</div>
+        </div>
+        <div class=underbox>
+          <div class=number>${person?.num}</div>
+          <div class=group>${person?.org}</div>
+          <div class=reply>${speech?.parentId ? "replikk" : ""}</div>
+        </div>
+      </div>
+    `;
+  },
+});
+
 define("RoiGfxVote", {
   style(self) {
     return `
