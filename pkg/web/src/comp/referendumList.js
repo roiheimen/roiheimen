@@ -26,9 +26,10 @@ export default define("RoiReferendumList", {
       this.store.doReferendumEnd(id);
     }
   },
-  render({ useSel, useStore, useEffect }) {
+  render({ useSel, useStore, useState, useEffect }) {
     this.store = useStore();
     const { referendum, referendums } = useSel("referendum", "referendums");
+    const [showAll, setShowAll] = useState(false);
     useEffect(() => {
       this.store.doReferendumCount();
     }, []);
@@ -40,10 +41,17 @@ export default define("RoiReferendumList", {
     if (!referendums.length) {
       return this.html`${null}`;
     }
+    const interesting = referendums.filter(r => !r.finishedAt);
+    const toggle = () => {
+      if (referendums.length == interesting.length) return null;
+      return html`<button style="margin-left: auto" .onclick=${() => setShowAll((s) => !s)}>
+        ${showAll ? "Skjul ferdige" : "Vis alle"}
+      </button>`;
+    };
     this.html`
       <table>
-      <tr><th>Votering <th>Type <th>Val <th>Tal <th>Anna </tr>
-      ${referendums.map(
+      <tr><th>Avrøysting <th>Type <th>Val ${toggle()}<th>Tal <th>Anna </tr>
+      ${(showAll ? referendums : interesting).map(
         (r) =>
           html`
             <tr data-id=${r.id}>

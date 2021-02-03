@@ -270,7 +270,7 @@ const MoreDialog = {
       }
     } else if (name === "vot") {
       const sakId = +e.target.sakId.value;
-      for (const v of e.target.voteringer.value.split("\n")) {
+      for (const v of e.target.avroystinger.value.split("\n")) {
         const action = parseAdderLine(v);
         if (!action.vote) continue;
         await this.store.doReferendumReq({ sakId, type: action.vote, ...action });
@@ -289,7 +289,7 @@ const MoreDialog = {
       <h1>Legg til ting-og-tang</h1>
       <ul class=tabs>
         <li><button onclick=${this} name=sak class=${this.tab === "sak" && "active"}>Lag nye saker</button>
-        <li><button onclick=${this} name=vot class=${this.tab === "vot" && "active"}>Lag voteringer</button>
+        <li><button onclick=${this} name=vot class=${this.tab === "vot" && "active"}>Lag avrøystinger</button>
       </ul>
       <form name=${this.tab}>
         ${
@@ -302,12 +302,12 @@ const MoreDialog = {
                 </select>
               </label>
               <label
-                >Voteringer<br />
+                >Avrøystinger<br />
                 <textarea
                   cols="64"
                   rows="8"
-                  name="voteringer"
-                  placeholder="vEi votering per line? :Ja :Det er korrekt :Må vera slik
+                  name="avroystinger"
+                  placeholder="vEi avrøysting per line? :Ja :Det er korrekt :Må vera slik
 fDu kan bruka ei for/mot avrøysting òg"
                 ></textarea>
               </label>

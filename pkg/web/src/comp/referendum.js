@@ -53,7 +53,7 @@ export default define("RoiReferendum", {
           .map((a) => a.value),
       [referendum.id]
     );
-    const humanType = { OPEN: "ei open røysting", CLOSED: "ei lukka røysting" }[type] || type;
+    const humanType = { OPEN: "open avrøysting", CLOSED: "lukka votering" }[type] || type;
     const chooser = () => html`
       <ul style="list-style: none">
         ${choices.map(
@@ -65,7 +65,7 @@ export default define("RoiReferendum", {
             `
         )}
       </ul>
-      <p><input type="submit" name="vote" value="Røyst" /></p>
+      <p><input type="submit" name="vote" value="Send inn" /></p>
     `;
     const didVote = () => html` Du har røysta. ${prev ? `Du valde «${prev}».` : null} `;
     this.html`
