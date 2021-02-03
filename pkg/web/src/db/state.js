@@ -635,6 +635,7 @@ const referendum = {
               nodes {
                 id
                 personId
+                vote
               }
             }
           }

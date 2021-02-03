@@ -33,12 +33,10 @@ define("RoiGfxTitle", {
       if (!this.h1.current) return;
       const DURATION = 5000;
       const SCALE = 0.6;
-      this.h1.current.animate([
-           {transform: 'scale(1)'},
-           {transform: 'scale(1)', offset: 0.99},
-           {transform: `scale(${SCALE})`},
-         ], {duration: DURATION, easing: 'ease-out'})
-
+      this.h1.current.animate(
+        [{ transform: "scale(1)" }, { transform: "scale(1)", offset: 0.99 }, { transform: `scale(${SCALE})` }],
+        { duration: DURATION, easing: "ease-out" }
+      );
     }, [this.h1, title]);
     this.html`
       <h1 ref=${this.h1}>${title}</h1>
@@ -53,7 +51,7 @@ define("RoiGfxVote", {
         display: block;
         position: absolute;
         right: 5vw;
-        bottom: 5vh;
+        bottom: 0;
         left: 60vw;
 
         transform: translateY(0);
@@ -62,7 +60,7 @@ define("RoiGfxVote", {
 
         color: white;
         /* border: 2px solid #d94b8e; */
-        padding: 20px;
+        padding: 20px 20px 5vh;
         border-radius: 2px;
         background: white;
       }
@@ -80,6 +78,12 @@ define("RoiGfxVote", {
       ${self} .voted {
         background-color: #333;
       }
+      ${self} .voted.yes {
+        background-color: #6A9325;
+      }
+      ${self} .voted.no {
+        background-color: #d94b8e;
+      }
       ${self} .not_voted {
         background-color: #ccc;
       }
@@ -96,27 +100,30 @@ define("RoiGfxVote", {
       if (!this.div.current) return;
       const DURATION = 500;
       const SCALE = 0.6;
-      this.div.current.animate([
-           {transform: 'translateY(100px)', opacity: 0},
-           {transform: `translateY(0)`, opacity: 1},
-         ], {duration: DURATION, easing: 'ease-out'})
-
+      this.div.current.animate(
+        [
+          { transform: "translateY(100px)", opacity: 0 },
+          { transform: `translateY(0)`, opacity: 1 },
+        ],
+        { duration: DURATION, easing: "ease-out" }
+      );
     }, [this.div, title]);
     if (!title) return this.html`<div></div>`;
     this.html`
       <div class=refbox ref=${this.div}>
         <h2>${title}</h2>
-        <div class=ppl>${
-          peopleDelegates?.map(p => {
-            let cn = "not_voted";
-            const v = votesByPerson[p.id];
-            if (v) {
-              cn = "voted";
-            }
-            cn = `vote ${cn}`;
-            return html`<div class=${cn}>${p.num}</div>`;
-          })
-        }</div>
+        <div class=ppl>${peopleDelegates?.map((p) => {
+          let cn = "not_voted";
+          const v = votesByPerson[p.id];
+          if (v) {
+            cn = "voted";
+            const vote = v.vote?.toLowerCase();
+            if (["ja", "jo", "yes", "for", "godta"].includes(vote)) cn = cn + " yes";
+            if (["nei", "no", "mot", "avslå"].includes(vote)) cn = cn + " no";
+          }
+          cn = `vote ${cn}`;
+          return html`<div class=${cn}>${p.num}</div>`;
+        })}</div>
       </div>
     `;
   },
