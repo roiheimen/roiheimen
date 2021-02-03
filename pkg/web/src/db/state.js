@@ -155,6 +155,7 @@ const people = {
 
   selectPeopleRaw: (state) => state.people,
   selectPeople: (state) => state.people.data || [],
+  selectPeopleDelegates: (state) => state.people.data?.filter(p => !p.admin) || [],
   selectPeopleById: createSelector("selectPeople", (people) => people.reduce((o, v) => ({ ...o, [v.id]: v }), {})),
 
   reactFetchPeopleOnMyselfExisting: createSelector("selectPeopleRaw", "selectMyself", (raw, myself) => {
