@@ -22,7 +22,11 @@ const WherebyEmbed = {
   ondisconnected() {
     this.store.doWherebyParticipants(0);
   },
-  onparticipantupdate({ detail: { count } }) {
+  async onparticipantupdate({ detail: { count } }) {
+    if (this.store.selectClientShowYoutube() && count >= 2) {
+      console.log("Delaying removing youtube by 4s (expected lag)");
+      await new Promise(r => setTimeout(r, 4000));
+    }
     store.doWherebyParticipants(count);
   },
   render({ useSel, useStore, usePrevious, useEffect }) {
@@ -43,6 +47,7 @@ const WherebyEmbed = {
         embed
         people=off
         background=off
+        audio=off
         room=${room} />
     `;
   },
@@ -70,7 +75,7 @@ define("RoiVideo", {
     `;
   },
   render({ useSel, useStore, useEffect }) {
-    const youtubeId = "bMibbKWORM4";
+    const youtubeId = "UDSAUmxZGjE";
 
     const {
       speechFetching,
