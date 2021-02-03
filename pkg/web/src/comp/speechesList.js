@@ -30,8 +30,8 @@ export default define("RoiSpeechesList", {
     const [showAll, setShowAll] = useState(false);
     const store = useStore();
     const { speeches } = sakObj || {};
-    if (!speeches) {
-      this.html`<p>Ingen på lista</p>`;
+    if (!speeches?.length) {
+      this.html`${null}`;
       return;
     }
     const interesting = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
