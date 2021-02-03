@@ -70,7 +70,7 @@ define("RoiVideo", {
     `;
   },
   render({ useSel, useStore, useEffect }) {
-    const youtubeId = "iK0qElBdeOM";
+    const youtubeId = "bMibbKWORM4";
 
     const {
       speechFetching,

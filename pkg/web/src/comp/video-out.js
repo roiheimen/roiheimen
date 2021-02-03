@@ -63,12 +63,13 @@ define("RoiVideoOut", {
       `;
     }
     if (room == prevRoom) return;
+    // aec and agc used to be off, but echo was bad
     this.html`
     <whereby-embed
       displayName=${this.type || meeting?.title}
       embed
       background=off
-      room=${room + "?floatSelf&aec=off&agc=off"} />
+      room=${room + "?floatSelf"} />
     `;
   },
 });
