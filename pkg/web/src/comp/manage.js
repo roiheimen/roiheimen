@@ -44,12 +44,15 @@ export function parseAdderLine(line) {
     const speech = { r: "REPLIKK", i: "INNLEGG" }[line[0]] || "INNLEGG";
     return { speech, num };
   }
-  if (["v", "l"].includes(line[0])) {
+  if (["v", "l", "f"].includes(line[0])) {
     const [title, ...choices] = line
       .slice(1)
       .split(":")
       .map((p) => p.trim());
-    return { vote: { v: "OPEN", l: "CLOSED" }[line[0]], title, choices };
+    if (line[0] === "f") {
+      choices.push("For", "Mot", "Avhaldane");
+    }
+    return { vote: { v: "OPEN", f: "OPEN", l: "CLOSED" }[line[0]], title, choices };
   }
 }
 
