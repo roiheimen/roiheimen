@@ -98,6 +98,16 @@ const SakSpeakerAdderInput = {
     ${self} input {
       padding: 3px;
     }
+    ${self} p {
+      margin: 0;
+      font-size: 0.8em;
+      color: #666;
+      line-height: 1;
+    }
+    ${self} code {
+      background: #ccc;
+      color: #333;
+    }
     ${self} .err {
       position: absolute;
       color: white;
@@ -192,11 +202,12 @@ const SakSpeakerAdderInput = {
     this.html`
     ${this.err && html` <p ref=${onErrRef} class="err">${this.err}</p> `}
     <form>
-      <input onkeydown=${this} name=adder placeholder="12 for innlegg, r12 for replikk" autocomplete=off ref=${
+      <input onkeydown=${this} name=adder placeholder="" autocomplete=off ref=${
       this.adder
     }>
       <input type=submit value="Legg til">
     </form>
+    <p><small>Trykk Enter inni boks for neste. Skriv <code>12</code> for innlegg, <code>r12</code> replikk, <code>vDyr? :Katt :Andre</code> avrøysting, <code>fGlad?</code> for/mot/avh-avrøysting</small></p>
     `;
   },
 };
