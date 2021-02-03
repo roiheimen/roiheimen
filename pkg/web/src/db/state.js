@@ -727,14 +727,11 @@ const referendum = {
         refCnt[id].push(c);
       }
       return referendumsData.map((r) => {
-        if (refCnt[r.id]) {
-          const counts = [...r.choices, ""].map((choice) => ({
-            choice,
-            count: +refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0,
-          }));
-          return { ...r, counts };
-        }
-        return r;
+        const counts = [...r.choices, ""].map((choice) => ({
+          choice,
+          count: +refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0,
+        }));
+        return { ...r, counts };
       });
     }
   ),
