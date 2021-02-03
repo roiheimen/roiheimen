@@ -292,14 +292,27 @@ const MoreDialog = {
               </label>
               <label
                 >Voteringer<br />
-                <textarea cols="64" rows="8" name="voteringer"></textarea>
+                <textarea
+                  cols="64"
+                  rows="8"
+                  name="voteringer"
+                  placeholder="vEi votering per line? :Ja :Det er korrekt :Må vera slik
+fDu kan bruka ei for/mot avrøysting òg"
+                ></textarea>
               </label>
               <input type="submit" name="vot" value="Legg til" />
             `,
             sak: html`
               <label
                 >Saker<br />
-                <textarea cols="64" rows="8" name="saker"></textarea>
+                <textarea
+                  cols="64"
+                  rows="8"
+                  name="saker"
+                  placeholder="Skriv inn sakene dine her
+22/5: Ei sak per line!
+Som dette :)"
+                ></textarea>
               </label>
               <input type="submit" name="sak" value="Legg til" />
             `,
