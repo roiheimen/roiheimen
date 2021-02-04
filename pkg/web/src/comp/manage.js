@@ -272,7 +272,7 @@ const MoreDialog = {
       const sakId = +e.target.sakId.value;
       for (const v of e.target.avroystinger.value.split("\n")) {
         const action = parseAdderLine(v);
-        if (!action.vote) continue;
+        if (!action?.vote) continue;
         await this.store.doReferendumReq({ sakId, type: action.vote, ...action });
       }
     }
@@ -297,7 +297,7 @@ const MoreDialog = {
             vot: html`
               <label
                 >Sak<br />
-                <select>
+                <select name=sakId>
                   ${saks.map((s) => html` <option value=${s.id} selected=${sakId === s.id}>${s.title}</option> `)}
                 </select>
               </label>
