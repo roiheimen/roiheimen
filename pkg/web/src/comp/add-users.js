@@ -22,12 +22,11 @@ const UserTextArea = {
     } = e;
     const lines = value.split("\n");
     const userList = lines
-      .filter((l) => l)
+      .filter((l) => l?.trim())
       .map((l) =>
         l
           .split(/,\s*/g)
           .map((f) => f.trim())
-          .filter((f) => f)
       )
       .filter((l) => l.length)
       .map((l) => ({
@@ -40,15 +39,6 @@ const UserTextArea = {
     this.dispatchEvent(new CustomEvent("users", { detail: userList }));
   },
   render() {
-    this.onchange({
-      target: {
-        value: `
-    1234, odin hørtthe
-    2, Helene Urdland Karlser
-    3,jens
-    `,
-      },
-    });
     this.html`
       <textarea
        onchange=${this}
