@@ -64,7 +64,7 @@ const RoiQueueDrawer = {
       myself,
       referendum,
       sak,
-      sakSpeechAllowed,
+      sakConfig,
       speechFetching,
       speechInWhereby,
       speechesUpcomingByMe,
@@ -76,7 +76,7 @@ const RoiQueueDrawer = {
       "myself",
       "referendum",
       "sak",
-      "sakSpeechAllowed",
+      "sakConfig",
       "speechFetching",
       "speechInWhereby",
       "speechesUpcomingByMe",
@@ -103,7 +103,7 @@ const RoiQueueDrawer = {
             : ""
         }
         ${
-          sakSpeechAllowed
+          sakConfig.speechAllowed
             ? html`
                 <button
                   tabindex="0"
@@ -143,6 +143,7 @@ const RoiQueueDrawer = {
           >Innstillingar</button>
       </div>
       <div class=queue>
+        ${sakConfig.emoji ? html`<button .onclick=${() => store.doEmojiSend("like")}>Like</button>` : null}
         ${
           test
             ? html`<div class="info">

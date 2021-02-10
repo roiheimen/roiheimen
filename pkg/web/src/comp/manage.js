@@ -459,7 +459,7 @@ define("RoiManage", {
     }
   },
   render({ useSel, useStore }) {
-    const { sak, sakSpeechAllowed } = useSel("sak", "sakSpeechAllowed");
+    const { sak, sakConfig } = useSel("sak", "sakConfig");
     this.store = useStore();
     this.html`
       ${
@@ -468,7 +468,7 @@ define("RoiManage", {
               <input class=title value=${sak?.title} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
               <div class=config>
-                <label><input class=speechAllowed type=checkbox checked=${sakSpeechAllowed}> Taleliste open</label>
+                <label><input class=speechAllowed type=checkbox checked=${sakConfig.speechAllowed}> Taleliste open</label>
               </div>
               <button class=update name=update onclick=${this}>Oppdater</button>
               <SakSpeakerAdderInput />

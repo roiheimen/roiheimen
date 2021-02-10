@@ -278,6 +278,11 @@ const sak = {
     "selectMeeting",
     (sak, meeting) => sak?.config?.speechAllowed ?? meeting?.config.speechAllowed
   ),
+  selectSakConfig: createSelector(
+    "selectSak",
+    "selectMeeting",
+    (sak, meeting) => ({ ...meeting?.config, ...sak?.config })
+  ),
 
   reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectClientManage", "selectMyselfId", (raw, clientManage, myselfId) => {
     if (!raw.started && !raw.failed && myselfId) {
@@ -955,6 +960,23 @@ const whereby = {
   ),
 };
 
+const emoji = {
+  name: "emoji",
+  doEmojiSend: (type = "like") => async ({ dispatch }) => {
+    const HOST = `http://localhost:3001`;
+    dispatch({ type: "EMOJI_SEND_STARTED" });
+    try {
+      const res = await fetch(`${HOST}/emoji/${type}`, { method: "POST" });
+      const text = await res.text()
+      console.log("XX emoji send", res, text);
+      dispatch({ type: "EMOJI_SEND_FINISHED", payload: text });
+    } catch (error) {
+      console.log("XX emoji send err", error);
+      dispatch({ type: "EMOJI_SEND_FAILED", error });
+    }
+  },
+};
+
 const errors = {
   name: "errors",
   getMiddleware: () => (store) => (next) => (action) => {
@@ -969,7 +991,7 @@ const errors = {
   },
 };
 
-const store = composeBundles(meeting, myself, speech, sak, people, referendum, out, test, client, whereby, errors)();
+const store = composeBundles(meeting, myself, speech, sak, people, referendum, out, test, client, whereby, emoji, errors)();
 window.store = store;
 
 function addSelect(sel) {

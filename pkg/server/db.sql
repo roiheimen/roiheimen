@@ -161,6 +161,21 @@ create index on roiheimen.vote(referendum_id);
 create index on roiheimen.vote(person_id);
 create index on roiheimen.vote(created_at);
 
+-- log
+create type roiheimen.log_type as enum (
+  'log',
+  'emoji',
+  'online'
+);
+create table roiheimen.log (
+  id               serial primary key,
+  type             roiheimen.log_type not null default 'log',
+  data             jsonb default '{}',
+  created_at       timestamptz default now(),
+  updated_at       timestamptz default now()
+);
+comment on table roiheimen.log is 'A log of happenings';
+
 -- Views
 
 drop view if exists ordered_speech;
