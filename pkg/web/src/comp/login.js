@@ -16,10 +16,14 @@ define("RoiLogin", {
       grid-template-columns: auto auto;
       min-height: 142px;
     }
+    ${self} label {
+      padding-right: 4px;
+    }
     ${self} input {
       border-radius: 2px;
       border: thin solid #aaa;
       padding: 10px;
+      width: 100%;
     }
     ${self} input[type=submit] {
       margin: 0 0 0 auto;

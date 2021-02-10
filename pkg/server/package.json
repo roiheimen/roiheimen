@@ -3,7 +3,10 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "setup": "cat db.sql | psql",
-    "start": "node server.js"
+    "start": "run-p start:*",
+    "start:server": "node server.js",
+    "start:emoji": "node emoji_server.js",
+    "start:worker": "node worker.js"
   },
   "dependencies": {
     "@graphile-contrib/pg-simplify-inflector": "^5.0.0-beta.1",

@@ -10,9 +10,6 @@ const meeting_ = storage("meeting");
 
 const meeting = {
   name: "meeting",
-  init(store) {
-    setTimeout(() => store.doMeetingInfoFetch(), 0);
-  },
   reducer: (state = { started: false, failed: false, data: null, id: meeting_.id || null }, { type, payload, error }) => {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
     if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.meetings };

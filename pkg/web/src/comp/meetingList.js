@@ -42,7 +42,7 @@ define("RoiMeetingList", {
       if (!meetings || meetingId === "" || meeting) return;
       const m = meetings?.find((m) => m.config.hostname === location.hostname);
       this.store.doMeetingId(m?.id || "");
-    }, [location.hostname, meetings, this.store]);
+    }, [location.hostname, meeting, meetings, this.store]);
     if (meeting) {
       return this.html`<roi-login>
         <p>Ver venleg og logg inn</p>
