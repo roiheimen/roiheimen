@@ -35,7 +35,7 @@ export default define("RoiReferendumList", {
     }, []);
     useEffect(() => {
       if (!referendum) return;
-      const timer = setInterval(() => this.store.doReferendumCount(), 4000);
+      const timer = setInterval(() => this.store.doReferendumCount(), 500);
       return () => clearInterval(timer);
     }, [referendum]);
     if (!referendums.length) {
