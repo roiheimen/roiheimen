@@ -263,7 +263,7 @@ end;
 $$ language plpgsql security definer;
 comment on function roiheimen.register_person(integer, text, text, text, text, text) is 'Registers a single user and creates an account.';
 
-create function roiheimen.update_person(
+create function roiheimen.change_person(
   l_id integer,
   l_name text,
   l_password text,
@@ -285,11 +285,11 @@ begin
   return person;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.update_person(integer, text, text, text, text) is 'Updates a single person and their account.';
+comment on function roiheimen.change_person(integer, text, text, text, text) is 'Updates a single person and their account.';
 
 -- input type
-drop type people_input;
-create type people_input as (
+drop type roiheimen.people_input;
+create type roiheimen.people_input as (
   num integer,
   name text,
   password text,
@@ -299,10 +299,10 @@ create type people_input as (
 
 create function roiheimen.register_people(
   meeting_id text,
-  people people_input[]
+  people roiheimen.people_input[]
 ) returns roiheimen.person[] as $$
   declare
-    pa people_input;
+    pa roiheimen.people_input;
     p roiheimen.person[];
     pp roiheimen.person;
   begin
@@ -312,7 +312,7 @@ create function roiheimen.register_people(
         and rp.num = pa.num
         into pp;
       if pp.id <> 0 then
-        p := p || (select roiheimen.update_person(pp.id, pa.name, pa.password, pa.org, pa.email));
+        p := p || (select roiheimen.change_person(pp.id, pa.name, pa.password, pa.org, pa.email));
       else
         p := p || (select roiheimen.register_person(pa.num, pa.name, meeting_id, pa.password, pa.org, pa.email));
       end if;
@@ -406,8 +406,8 @@ grant select on roiheimen.ordered_speech to roiheimen_anonymous, roiheimen_perso
 
 grant execute on function roiheimen.authenticate(integer, text, text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.register_person(integer, text, text, text, text, text) to roiheimen_person;
-grant execute on function roiheimen.update_person(integer, text, text, text, text) to roiheimen_person;
-grant execute on function roiheimen.register_people(text, people_input[]) to roiheimen_person;
+grant execute on function roiheimen.change_person(integer, text, text, text, text) to roiheimen_person;
+grant execute on function roiheimen.register_people(text, roiheimen.people_input[]) to roiheimen_person;
 grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_speech(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
@@ -573,7 +573,7 @@ select roiheimen.register_people(
     (1004, 'Queen adm', 'test', 'Teknisk', null),
     (1005, 'Ivar adm', 'test', 'Teknisk', null),
     (1006, 'Arne adm', 'test', 'Teknisk', null)
-  ]::people_input[]
+  ]::roiheimen.people_input[]
 );
 update roiheimen.person set admin = true where num >= 1000 and meeting_id = 'meet20';
 update roiheimen.person set room = 'https://nm.whereby.com/r1000' where num = 1000 and meeting_id = 'meet20';

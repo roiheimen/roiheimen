@@ -1,10 +1,21 @@
-drop function if exists roiheimen.register_people(text, people_input[]);
+drop function if exists roiheimen.register_people(text, roiheimen.people_input[]);
+drop function if exists roiheimen.update_person(integer, text, text, text, text);
+drop function if exists roiheimen.change_person(integer, text, text, text, text);
+drop type if exists roiheimen.people_input;
+create type roiheimen.people_input as (
+  num integer,
+  name text,
+  password text,
+  org text,
+  email text
+);
+
 create function roiheimen.register_people(
   meeting_id text,
-  people people_input[]
+  people roiheimen.people_input[]
 ) returns roiheimen.person[] as $$
   declare
-    pa people_input;
+    pa roiheimen.people_input;
     p roiheimen.person[];
     pp roiheimen.person;
   begin
@@ -14,7 +25,7 @@ create function roiheimen.register_people(
         and rp.num = pa.num
         into pp;
       if pp.id <> 0 then
-        p := p || (select roiheimen.update_person(pp.id, pa.name, pa.password, pa.org, pa.email));
+        p := p || (select roiheimen.change_person(pp.id, pa.name, pa.password, pa.org, pa.email));
       else
         p := p || (select roiheimen.register_person(pa.num, pa.name, meeting_id, pa.password, pa.org, pa.email));
       end if;
@@ -24,8 +35,7 @@ create function roiheimen.register_people(
   end;
 $$ language plpgsql volatile strict set search_path from current;
 
-drop function if exists roiheimen.update_person(integer, text, text, text, text);
-create function roiheimen.update_person(
+create function roiheimen.change_person(
   l_id integer,
   l_name text,
   l_password text,
@@ -47,7 +57,7 @@ begin
   return person;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.update_person(integer, text, text, text, text) is 'Updates a single person and their account.';
+comment on function roiheimen.change_person(integer, text, text, text, text) is 'Updates a single person and their account.';
 
-grant execute on function roiheimen.update_person(integer, text, text, text, text) to roiheimen_person;
-grant execute on function roiheimen.register_people(text, people_input[]) to roiheimen_person;
+grant execute on function roiheimen.change_person(integer, text, text, text, text) to roiheimen_person;
+grant execute on function roiheimen.register_people(text, roiheimen.people_input[]) to roiheimen_person;
