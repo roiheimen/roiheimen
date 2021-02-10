@@ -13,14 +13,23 @@ const meeting = {
   init(store) {
     setTimeout(() => store.doMeetingInfoFetch(), 0);
   },
-  reducer: (state = { started: false, failed: false, data: null }, { type, payload, error }) => {
+  reducer: (state = { started: false, failed: false, data: null, id: meeting_.id || null }, { type, payload, error }) => {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
     if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.meetings };
     if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
+    if (type == "MEETING_ID") return { ...state, id: payload };
     if (type == "MYSELF_LOGOUT") return { ...state, started: false };
     return state;
   },
 
+  doMeetingId(meetingId) {
+    meeting_.id = meetingId;
+    save("meeting");
+    return {
+      type: "MEETING_ID",
+      payload: meetingId,
+    };
+  },
   doMeetingInfoFetch: () => async ({ dispatch }) => {
     dispatch({ type: "MEETING_FETCH_STARTED" });
     const query = `
@@ -56,7 +65,7 @@ const meeting = {
 
   selectMeetingRaw: (state) => state.meeting,
   selectMeetings: (state) => state.meeting.data,
-  selectMeetingId: createSelector("selectQueryObject", (queryObject) => queryObject.m || meeting_.id),
+  selectMeetingId: createSelector("selectMeetingRaw", "selectQueryObject", (raw, queryObject) => queryObject.m || raw.id),
   selectMeeting: createSelector("selectMeetingId", "selectMeetings", (meetingId, meetings) =>
     meetings?.find((m) => m.id === meetingId)
   ),

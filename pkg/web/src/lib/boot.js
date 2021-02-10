@@ -19,5 +19,6 @@ function applyTheme({ theme, config }, externals) {
 }
 
 store.subscribeToSelectors(["selectMeeting"], ({ meeting }) => {
+  if (!meeting) return;
   applyTheme(meeting, 'externals' in document.body.dataset);
 })

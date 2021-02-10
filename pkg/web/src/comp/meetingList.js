@@ -4,21 +4,12 @@ import { themeToCss } from "../lib/boot.js";
 import storage, { save } from "../lib/storage.js";
 
 function toCss(theme) {
-  return themeToCss(theme).map(([k, v]) => `${k}: ${v}`).join("; ");
+  return themeToCss(theme)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("; ");
 }
 
 define("RoiMeetingList", {
-  oninit() {
-    this.meeting = storage("meeting");
-    try {
-      const m = new URLSearchParams(location.search).get("m");
-      if (m) {
-          console.warn(`Setting meeting to ${m} directly`);
-      this.meeting.id = m;
-      save("meeting");
-      }
-    } catch(e) {}
-  },
   style(self) {
     return `
     ${self} ul {
@@ -41,12 +32,17 @@ define("RoiMeetingList", {
   },
   onclick(event) {
     const a = event.target.closest("a");
-    this.meeting.id = a.dataset.id;
-    save("meeting");
+    this.store.doMeetingId(a.dataset.id);
+    event.preventDefault();
   },
   render({ useEffect, useStore, useSel }) {
-    const { id } = this.meeting;
-    const { meeting, meetings } = useSel("meeting", "meetings");
+    this.store = useStore();
+    const { meeting, meetingId, meetings } = useSel("meeting", "meetingId", "meetings");
+    useEffect(() => {
+      if (!meetings || meetingId === "" || meeting) return;
+      const m = meetings?.find((m) => m.config.hostname === location.hostname);
+      this.store.doMeetingId(m?.id || "");
+    }, [location.hostname, meetings, this.store]);
     if (meeting) {
       return this.html`<roi-login>
         <p>Ver venleg og logg inn</p>
@@ -54,16 +50,17 @@ define("RoiMeetingList", {
       <a data-id="" href=/ onclick=${this}>Tilbake</a>
         `;
     }
-    if (!meetings) return this.html`Lastar...`
+    if (!meetings || meetingId == null) return this.html`Lastar...`;
     this.html`
     Vel eit møte:
     <ul onclick=${this}>
-      ${meetings.map(m => html`
-        <li style=${toCss(m.theme)}>
+      ${meetings.map(
+        (m) => html` <li style=${toCss(m.theme)}>
           <a data-id=${m.id} href=${`/?m=${m.id}`}>
             <span>${m.title || m.id}</span>
           </a>
-        </li>`)}
+        </li>`
+      )}
     </ul>
     `;
   },

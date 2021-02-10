@@ -516,6 +516,7 @@ insert into roiheimen.meeting (id, title, theme, config) values (
     "video-bg": "#daf3f4"
   }',
   '{
+    "hostname": "landsmote.mdg.no",
     "speechAllowed": true,
     "speechRoom": "https://nm.whereby.com/r10",
     "waitRoom": "https://nm.whereby.com/r11",
