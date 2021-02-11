@@ -146,11 +146,16 @@ const myself = {
   selectMyselfAnonymous: (state) => (state.myself.fetched ? !state.myself.data : null),
   selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
   selectMyselfErrors: (state) => state.myself.errors,
-  selectConfig: createSelector(
-    "selectSak",
-    "selectMeeting",
-    (sak, meeting) => ({ ...meeting?.config, ...sak?.config })
+  selectMyselfCanVote: createSelector(
+    "selectConfig",
+    "selectMyself",
+    (config, myself) => !!config.voteDisallowNum?.includes(myself?.num)
   ),
+  selectConfig: createSelector("selectSak", "selectMeeting", (sak, meeting) => ({
+    ...meeting?.config,
+    ...sak?.config,
+  })),
+
 };
 
 const people = {

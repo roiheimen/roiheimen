@@ -83,7 +83,7 @@ define("RoiVideo", {
     const {
       clientShowYoutube,
       clientYoutubeSize,
-      sakConfig,
+      config,
       speechFetching,
       speechInWhereby,
       speechScheduled,
@@ -91,7 +91,7 @@ define("RoiVideo", {
     } = useSel(
       "clientShowYoutube",
       "clientYoutubeSize",
-      "sakConfig",
+      "config",
       "speechFetching",
       "speechInWhereby",
       "speechScheduled",
@@ -101,10 +101,10 @@ define("RoiVideo", {
       if (["big", "small"].includes(clientYoutubeSize)) {
         //this.classList.toggle("bigyoutube", clientYoutubeSize === "big" && !wherebyActiveRoom);
       }
-      this.classList.toggle("novideo", sakConfig.video === false);
-    }, [clientYoutubeSize, wherebyActiveRoom, sakConfig.video]);
+      this.classList.toggle("novideo", config.video === false);
+    }, [clientYoutubeSize, wherebyActiveRoom, config.video]);
 
-    if (sakConfig.video === false) {
+    if (config.video === false) {
       this.html`${null}`;
     }
     else if (speechFetching) {

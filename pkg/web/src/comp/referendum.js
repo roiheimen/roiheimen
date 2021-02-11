@@ -36,7 +36,8 @@ export default define("RoiReferendum", {
   },
   render({ useSel, useStore, useMemo }) {
     this.store = useStore();
-    const { referendum, referendumVote, referendumPrevChoice: prev } = useSel(
+    const { myselfCanVote, referendum, referendumVote, referendumPrevChoice: prev } = useSel(
+      "myselfCanVote",
       "referendum",
       "referendumVote",
       "referendumPrevChoice"
@@ -65,7 +66,7 @@ export default define("RoiReferendum", {
             `
         )}
       </ul>
-      <p><input type="submit" name="vote" value="Send inn" /></p>
+      <p>${myselfCanVote ? html`<input type="submit" name="vote" value="Send inn" />` : `Du har ikkje røysterett`}</p>
     `;
     const didVote = () => html` Du har røysta. ${prev ? `Du valde «${prev}».` : null} `;
     this.html`
