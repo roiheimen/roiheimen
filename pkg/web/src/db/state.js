@@ -93,9 +93,8 @@ const meeting = {
   ),
 
   reactMeetingsFetch: createSelector("selectMeetingRaw", (raw) => {
+    if (!raw.started) return { actionCreator: "doMeetingInfoFetch" };
     if (raw.id && !raw.subTo) return { actionCreator: "doMeetingSubscribe", args: [raw.id] };
-    if (raw.started) return;
-    return { actionCreator: "doMeetingInfoFetch" };
   }),
 };
 
