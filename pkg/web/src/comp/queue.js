@@ -60,11 +60,11 @@ const RoiQueueDrawer = {
     const store = useStore();
     const {
       clientUseWaitRoom,
+      config,
       meeting,
       myself,
       referendum,
       sak,
-      sakConfig,
       speechFetching,
       speechInWhereby,
       speechesUpcomingByMe,
@@ -72,11 +72,11 @@ const RoiQueueDrawer = {
       test,
     } = useSel(
       "clientUseWaitRoom",
+      "config",
       "meeting",
       "myself",
       "referendum",
       "sak",
-      "sakConfig",
       "speechFetching",
       "speechInWhereby",
       "speechesUpcomingByMe",
@@ -94,16 +94,16 @@ const RoiQueueDrawer = {
 
     this.html`
       <div class=buttons>
-        ${meeting?.config.waitRoom || testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button>`}
+        ${config.waitRoom || testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button>`}
         ${
-          meeting?.config.waitRoom && myNewestSpeechRequest && !speechInWhereby
+          config.waitRoom && myNewestSpeechRequest && !speechInWhereby
             ? html`<button .onclick=${() => store.doClientUseWaitRoom(!clientUseWaitRoom)}>
                 ${clientUseWaitRoom ? "Gå ut av venterom" : "Gå inn i venterom"}
               </button>`
             : ""
         }
         ${
-          sakConfig.speechAllowed
+          config.speechAllowed
             ? html`
                 <button
                   tabindex="0"
@@ -143,7 +143,7 @@ const RoiQueueDrawer = {
           >Innstillingar</button>
       </div>
       <div class=queue>
-        ${sakConfig.emoji ? html`<button .onclick=${() => store.doEmojiSend("like")}>Like</button>` : null}
+        ${config.emoji ? html`<button .onclick=${() => store.doEmojiSend("like")}>Like</button>` : null}
         ${
           test
             ? html`<div class="info">

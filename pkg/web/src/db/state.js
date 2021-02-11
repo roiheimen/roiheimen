@@ -146,6 +146,11 @@ const myself = {
   selectMyselfAnonymous: (state) => (state.myself.fetched ? !state.myself.data : null),
   selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
   selectMyselfErrors: (state) => state.myself.errors,
+  selectConfig: createSelector(
+    "selectSak",
+    "selectMeeting",
+    (sak, meeting) => ({ ...meeting?.config, ...sak?.config })
+  ),
 };
 
 const people = {
@@ -309,11 +314,6 @@ const sak = {
     "selectSak",
     "selectMeeting",
     (sak, meeting) => sak?.config?.speechAllowed ?? meeting?.config.speechAllowed
-  ),
-  selectSakConfig: createSelector(
-    "selectSak",
-    "selectMeeting",
-    (sak, meeting) => ({ ...meeting?.config, ...sak?.config })
   ),
 
   reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectClientManage", "selectMyselfId", (raw, clientManage, myselfId) => {
