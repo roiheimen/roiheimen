@@ -23,7 +23,7 @@ define("RoiSettings", {
       flex-direction: column;
       padding: 20px;
       position: relative;
-      min-height: 400px;
+      min-height: 200px;
       max-width: 500px;
       width: 70vw;
     }
@@ -76,7 +76,7 @@ define("RoiSettings", {
   },
   render({ useSel, useStore }) {
     this.store = useStore();
-    const { testStatus } = useSel("testStatus");
+    const { config, meeting, myself, myselfCanVote, testStatus } = useSel("config", "meeting", "myself", "myselfCanVote", "testStatus");
     const testHtml = {
       active: html` <div class="info">Du er i eit test-møte.</div> `,
       waiting: html`
@@ -97,10 +97,23 @@ define("RoiSettings", {
       <div class=settings>
         <button name=close class=close>Lukk</button>
         <div>
+          <h2>Informasjon</h2>
+          <p>
+          Møte: <strong>${meeting?.title}</strong> (${meeting?.id})<br>
+          Namn: <strong>${myself?.name}</strong><br>
+          Nummer: <strong>${myself?.num}</strong><br>
+          Organisasjon: <strong>${myself?.org}</strong>
+          </p>
+          <p>${myselfCanVote ? "Du har løyve til å røysta." : "Du har ikkje løyve til å røysta."}</p>
+          <p>Problemer? Send SMS eller ring Odin på 93243725.</p>
+        </div>
+        ${config.backroom ? html`
+        <div>
           <h2>Prat med bakrommet</h2>
           <p>Det er lurt å gjera dette før du held eit innlegg, so du kan testa lyd og bilete.</p>
           ${testHtml}
         </div>
+        ` : null}
         <div class=buttons>
           <button name=close>Lukk</button>
           <button

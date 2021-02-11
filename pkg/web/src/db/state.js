@@ -47,6 +47,7 @@ const meeting = {
           name
           id
           num
+          org
           meetingId
           admin
           room
@@ -1060,7 +1061,7 @@ const whereby = {
 const emoji = {
   name: "emoji",
   doEmojiSend: (type = "like") => async ({ dispatch }) => {
-    const HOST = `http://localhost:3001`;
+    const HOST = /127.0.0.1/.test(location.hostname) ? `http://localhost:3001` : '';
     dispatch({ type: "EMOJI_SEND_STARTED" });
     try {
       const res = await fetch(`${HOST}/emoji/${type}`, { method: "POST" });
