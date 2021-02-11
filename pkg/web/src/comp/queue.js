@@ -54,6 +54,9 @@ const RoiQueueDrawer = {
     }
     ${self} roi-speeches-list {
     }
+    ${self} roi-referendum {
+      margin: 32px 0 128px;
+    }
     `;
   },
   render({ useStore, useSel }) {
