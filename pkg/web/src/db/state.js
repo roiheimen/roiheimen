@@ -92,9 +92,9 @@ const meeting = {
     meetings?.find((m) => m.id === meetingId)
   ),
 
-  reactMeetingsFetch: createSelector("selectMeetingRaw", (raw) => {
+  reactMeetingsFetch: createSelector("selectMeetingRaw", "selectMyselfAnonymous", (raw, myselfAnonymous) => {
     if (!raw.started) return { actionCreator: "doMeetingInfoFetch" };
-    if (raw.id && !raw.subTo) return { actionCreator: "doMeetingSubscribe", args: [raw.id] };
+    if (myselfAnonymous === false && raw.id && !raw.subTo) return { actionCreator: "doMeetingSubscribe", args: [raw.id] };
   }),
 };
 
