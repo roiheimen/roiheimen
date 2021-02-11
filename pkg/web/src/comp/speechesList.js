@@ -30,11 +30,9 @@ export default define("RoiSpeechesList", {
     const [showAll, setShowAll] = useState(false);
     const store = useStore();
     const { speeches } = sakObj || {};
-    if (!speeches?.length) {
-      this.html`${null}`;
-      return;
-    }
+    if (!speeches?.length) return this.html`${null}`;
     const interesting = speeches.filter((s) => !s.endedAt || s.id == speechState.prev?.id);
+    if (this.simple && interesting.length === 1 && interesting[0].endedAt) return this.html`${null}`;
     const speechClass = (speech) =>
       [
         `status-${speech.status}`,

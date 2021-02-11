@@ -88,9 +88,10 @@ const RoiQueueDrawer = {
       document.title = title;
     }
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
-    let workArea = "";
-    if (referendum) workArea = html` <roi-referendum simple /> `;
-    else if (sak?.id) workArea = html` <roi-speeches-list simple /> `;
+    let workArea = html`
+      ${referendum ? html`<roi-referendum simple /> ` : null}
+      ${sak?.id ? html`<roi-speeches-list simple /> ` : null}
+    `;
 
     this.html`
       <div class=buttons>
