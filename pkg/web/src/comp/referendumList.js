@@ -29,15 +29,22 @@ export default define("RoiReferendumList", {
   render({ useSel, useStore, useState, useEffect }) {
     this.store = useStore();
     const { referendum, referendums } = useSel("referendum", "referendums");
+    const [updateCount, setUpdateCount] = useState(0);
     const [showAll, setShowAll] = useState(false);
-    useEffect(() => {
-      this.store.doReferendumCount();
-    }, []);
+    useEffect(() => this.store.doReferendumCount(), []);
+    useEffect(() => setUpdateCount(0), [referendum?.id]);
     useEffect(() => {
       if (!referendum) return;
-      const timer = setInterval(() => this.store.doReferendumCount(), 500);
-      return () => clearInterval(timer);
-    }, [referendum]);
+      // first 10 sec: check every 400ms
+      // next 30 sec: check every sec
+      // after: check every 6 sec
+      const ms = updateCount < 25 ? 400 : (updateCount < 55 ? 1000 : 6000);
+      const timer = setTimeout(() => {
+        setUpdateCount(c => c + 1);
+        this.store.doReferendumCount()
+      }, ms);
+      return () => clearTimeout(timer);
+    }, [referendum?.id, updateCount]);
     if (!referendums.length) {
       return this.html`${null}`;
     }
