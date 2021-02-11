@@ -30,7 +30,7 @@ export default define("RoiPersonList", {
   render({ useSel, useState, useStore }) {
     this.store = useStore();
     const { config, people } = useSel("config", "people");
-    const [edit, setEdit] = useState(true);
+    const [edit, setEdit] = useState(false);
     this.setEdit = setEdit;
     this.config = config;
     if (!people) {
