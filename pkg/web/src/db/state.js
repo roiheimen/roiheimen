@@ -3,7 +3,7 @@ import { defineHook } from "/web_modules/heresy.js";
 import { composeBundles, createSelector } from "/web_modules/redux-bundler.js";
 
 import storage, { save } from "../lib/storage.js";
-import { gql, live } from "../lib/graphql.js";
+import { gql, live, setLiveErrorCb } from "../lib/graphql.js";
 
 const creds = storage("creds");
 const meeting_ = storage("meeting");
@@ -1015,11 +1015,16 @@ const emoji = {
 
 const errors = {
   name: "errors",
+  init(store) {
+    setLiveErrorCb(({ message }) => {
+      store.dispatch({ type: "@GRAPHQL_LIVE_ERROR", payload: message });
+    });
+  },
   getMiddleware: () => (store) => (next) => (action) => {
     const result = next(action);
     if (
-      (action.type.endsWith("_FAILED") && action.error?.extra?.body?.errors?.[0]?.message == "jwt expired") ||
-      ["MEETING_FETCH_FAILED", "MYSELF_LOGIN_FAILED"].includes(action.type)
+      (action.type.endsWith("_FAILED") && action.error?.extra?.body?.errors?.[0]?.message.startsWith("jwt ")) ||
+      ["MEETING_FETCH_FAILED", "MYSELF_LOGIN_FAILED", "@GRAPHQL_LIVE_ERROR"].includes(action.type)
     ) {
       store.doMyselfLogout();
     }

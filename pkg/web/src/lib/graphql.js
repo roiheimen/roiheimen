@@ -46,6 +46,11 @@ export async function gql(query, variables, { nocreds } = {}) {
   return data;
 }
 
+let liveErrorCb;
+export function setLiveErrorCb(cb) {
+  liveErrorCb = cb;
+}
+
 const liveCurrent = {};
 let curId = 0;
 let timeout;
@@ -117,6 +122,9 @@ async function openWs(reconnect) {
       else console.error("NO CALLBACK FOR DATA", d);
     } else if (d.type == "ka" || d.type == "complete") {
       // pass
+    } else if (d.type == "error") {
+      if (liveErrorCb) liveErrorCb(d.payload);
+      console.error("live graphql error", d);
     } else {
       console.log("????", d);
     }
