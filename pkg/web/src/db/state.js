@@ -148,7 +148,7 @@ const myself = {
   selectMyselfCanVote: createSelector(
     "selectConfig",
     "selectMyself",
-    (config, myself) => !!config.voteDisallowNum?.includes(myself?.num)
+    (config, myself) => !config.voteDisallowNum?.includes(myself?.num)
   ),
   selectConfig: createSelector("selectSak", "selectMeeting", (sak, meeting) => ({
     ...meeting?.config,
@@ -195,8 +195,15 @@ const people = {
   },
 
   selectPeopleRaw: (state) => state.people,
-  selectPeople: (state) => state.people.data || [],
-  selectPeopleDelegates: (state) => state.people.data?.filter(p => !p.admin) || [],
+  selectPeople: createSelector("selectPeopleRaw", "selectConfig", (raw, config) => {
+    return (raw.data || []).map(p => {
+      return {
+        ...p,
+        canVote: !config.voteDisallowNum?.includes(p.num),
+      };
+    });
+  }),
+  selectPeopleDelegates: createSelector("selectPeople", (people) => people.filter(p => p.canVote)),
   selectPeopleById: createSelector("selectPeople", (people) => people.reduce((o, v) => ({ ...o, [v.id]: v }), {})),
 
   reactFetchPeopleOnMyselfExisting: createSelector("selectPeopleRaw", "selectMyself", (raw, myself) => {

@@ -482,8 +482,8 @@ define("RoiManage", {
       }
 
       <div class=people>
-        <h2>Folk</h2>
-        <roi-person-list />
+        <h2>Folk </h2>
+        <roi-person-list editable />
       </div>
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
       <MoreDialog ref=${this.moreDialog} />
