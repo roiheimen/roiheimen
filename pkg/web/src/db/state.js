@@ -10,10 +10,13 @@ const meeting_ = storage("meeting");
 
 const meeting = {
   name: "meeting",
-  reducer: (state = { started: false, failed: false, data: null, id: meeting_.id || null }, { type, payload, error }) => {
+  reducer: (state = { started: false, failed: false, subTo: "", data: null, id: meeting_.id || null }, { type, payload, error }) => {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
     if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.meetings };
     if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
+    if (type == "MEETING_SUB_STARTED") return { ...state, subTo: payload };
+    if (type == "MEETING_SUB_FAILED") return { ...state, failed: error || true };
+    if (type == "MEETING_SUB_UPDATED") return { ...state, data: state.data.map(m => m.id === payload.id ? payload : m) };
     if (type == "MEETING_ID") return { ...state, id: payload };
     if (type == "MYSELF_LOGOUT") return { ...state, started: false };
     return state;
@@ -59,6 +62,28 @@ const meeting = {
       dispatch({ type: "MEETING_FETCH_FAILED", error });
     }
   },
+  doMeetingSubscribe: (meetingId) => async ({ dispatch, store }) => {
+    meetingId ??= store.selectMeetingId();
+    dispatch({ type: "MEETING_SUB_STARTED", payload: meetingId });
+    const query = `
+      subscription Meeting($meetingId: String!) {
+        meeting(id: $meetingId) {
+          id
+          createdAt
+          title
+          theme
+          config
+        }
+      }`;
+    try {
+      await live({ query, variables: { meetingId } }, ({ data }) => {
+        dispatch({ type: "MEETING_SUB_UPDATED", payload: data.meeting });
+      });
+      dispatch({ type: "MEETING_SUB_FINISHED" });
+    } catch (error) {
+      dispatch({ type: "MEETING_SUB_FAILED", error });
+    }
+  },
 
   selectMeetingRaw: (state) => state.meeting,
   selectMeetings: (state) => state.meeting.data,
@@ -68,6 +93,7 @@ const meeting = {
   ),
 
   reactMeetingsFetch: createSelector("selectMeetingRaw", (raw) => {
+    if (raw.id && !raw.subTo) return { actionCreator: "doMeetingSubscribe", args: [raw.id] };
     if (raw.started) return;
     return { actionCreator: "doMeetingInfoFetch" };
   }),

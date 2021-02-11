@@ -42,7 +42,7 @@ export default define("RoiReferendum", {
       "referendumPrevChoice"
     );
     if (!referendum) {
-      return this.html` `;
+      return this.html`${null}`;
     }
     const { id, title, type, finishedAt } = referendum;
     const choices = useMemo(
