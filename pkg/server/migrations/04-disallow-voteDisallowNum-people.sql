@@ -9,7 +9,7 @@ create policy insert_vote on roiheimen.vote for insert to roiheimen_person
       join roiheimen.meeting m on (m.id = s.meeting_id)
       where r.id = referendum_id
         and r.finished_at is null
-        and not (m.config->'voteDisallowNum') @> (
+        and not ((m.config || s.config)->'voteDisallowNum') @> (
             select num::text::jsonb from roiheimen.person
             where id = person_id
         )
