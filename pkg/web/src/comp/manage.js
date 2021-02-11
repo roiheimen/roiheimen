@@ -465,7 +465,7 @@ define("RoiManage", {
       ${
         sak?.id
           ? html`
-              <input class=title value=${sak?.title} placeholder="Ingenting">
+              <input class=title value=${sak?.title} title=${`sak-id: ${sak?.id}`} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
               <div class=config>
                 <label><input class=speechAllowed type=checkbox checked=${config.speechAllowed}> Taleliste open</label>

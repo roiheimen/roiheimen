@@ -22,3 +22,14 @@ Now you may try filling in the db and staring.
 
     yarn setup
     yarn start
+
+
+Handy updates
+-------------
+
+Copy standard vote disallows from a recent sak:
+
+    UPDATE roiheimen.meeting m
+    SET config = m.config || jsonb_build_object('voteDisallowNum', (s.config->>'voteDisallowNum')::jsonb)
+    FROM roiheimen.sak s
+    WHERE m.id = s.meeting_id AND s.id = 17;
