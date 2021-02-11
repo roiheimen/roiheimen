@@ -576,10 +576,13 @@ const referendum = {
     state = {
       count: [],
       data: [],
+      lastVote: null,
       fetching: false,
       prevChoice: null,
       subSak: 0,
       subStop: null,
+      subReferendum: 0,
+      subVoteStop: null,
       subscribing: false,
     },
     { type, payload }
@@ -590,6 +593,9 @@ const referendum = {
     if (type == "REFERENDUM_SUB_FINISHED") return { ...state, subStop: payload, subscribing: false };
     if (type == "REFERENDUM_SUB_FAILED") return { ...state, subscribing: false };
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
+    if (type == "REFERENDUM_VOTE_SUB_STARTED") return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
+    if (type == "REFERENDUM_VOTE_SUB_FINISHED") return { ...state, subVoteStop: payload };
+    if (type == "REFERENDUM_VOTE_SUB_UPDATED") return { ...state, lastVote: payload };
     if (type == "REFERENDUM_VOTE_STARTED")
       return {
         ...state,
@@ -663,7 +669,7 @@ const referendum = {
       dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
     }
   },
-  doReferendumSubscribe: (sakId) => async ({ dispatch }) => {
+  doReferendumSubscribe: (sakId, { withVotes = false } = {}) => async ({ dispatch }) => {
     sakId = sakId ?? store.selectSak().id;
     const { subStop } = store.selectReferendumRaw();
     dispatch({ type: "REFERENDUM_SUB_STARTED", payload: sakId });
@@ -679,13 +685,17 @@ const referendum = {
             createdAt
             startedAt
             finishedAt
-            votes {
-              nodes {
-                id
-                personId
-                vote
+            ${
+              withVotes
+              ? `votes {
+                  nodes {
+                    id
+                    personId
+                    vote
+                  }
+                }`
+                : ''
               }
-            }
           }
         }
       }
@@ -701,6 +711,37 @@ const referendum = {
       dispatch({ type: "REFERENDUM_SUB_FINISHED", payload: stop });
     } catch (error) {
       dispatch({ type: "REFERENDUM_SUB_FAILED", error });
+    }
+  },
+  doReferendumVoteSubscribe: ({ personId, referendumId } = {}) => async ({ dispatch }) => {
+    personId ??= store.selectMyself().id;
+    referendumId ??= store.selectReferendum().id;
+    const variables = { personId, referendumId };
+    const { subVoteStop } = store.selectReferendumRaw();
+    dispatch({ type: "REFERENDUM_VOTE_SUB_STARTED", payload: variables });
+    if (subVoteStop) subVoteStop();
+    const query = `
+      subscription MyVote($personId: Int!, $referendumId: Int!) {
+        votes(condition: { personId: $personId, referendumId: $referendumId }, first: 1) {
+          nodes {
+            id
+            personId
+            referendumId
+            vote
+          }
+        }
+      }
+      `;
+    try {
+      const stop = await live({ query, variables }, ({ data }) => {
+        const { votes: { nodes } } = data;
+        if (!nodes[0]) return;
+        dispatch({ type: "REFERENDUM_VOTE_SUB_UPDATED", payload: nodes[0] });
+        store.selectReferendumRaw().subVoteStop();
+      });
+      dispatch({ type: "REFERENDUM_VOTE_SUB_FINISHED", payload: stop });
+    } catch (error) {
+      dispatch({ type: "REFERENDUM_VOTE_SUB_FAILED", error });
     }
   },
   doReferendumVote: ({ referendumId, choice }) => async ({ dispatch, store }) => {
@@ -761,8 +802,8 @@ const referendum = {
     "selectReferendums",
     (referendums) => referendums.filter((r) => r.startedAt && !r.finishedAt)[0]
   ),
-  selectReferendumVote: createSelector("selectMyselfId", "selectReferendum", (myselfId, referendum) =>
-    referendum?.votes.nodes.find((v) => v.personId == myselfId)
+  selectReferendumVote: createSelector("selectReferendumRaw", "selectMyselfId", "selectReferendum", (raw, myselfId, referendum) =>
+    referendum?.votes?.nodes.find((v) => v.personId == myselfId) || raw.lastVote
   ),
   selectReferendums: createSelector(
     "selectReferendumsData",
@@ -784,9 +825,12 @@ const referendum = {
     }
   ),
 
-  reactReferendumUpdateOnSakChange: createSelector("selectReferendumRaw", "selectSakId", (raw, sakId) => {
+  reactReferendumSubscribes: createSelector("selectReferendumRaw", "selectClientManage", "selectReferendum", "selectSakId", (raw, clientManage, referendum, sakId) => {
     if (sakId && sakId != raw.subSak && !raw.subscribing) {
-      return { actionCreator: "doReferendumSubscribe", args: [sakId] };
+      return { actionCreator: "doReferendumSubscribe", args: [sakId, { withVotes: clientManage }] };
+    }
+    if (referendum && !clientManage && referendum.id !== raw.subReferendum) {
+      return { actionCreator: "doReferendumVoteSubscribe", args: [{ referendumId: referendum.id }] };
     }
   }),
 };
