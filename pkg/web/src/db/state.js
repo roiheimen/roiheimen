@@ -203,7 +203,7 @@ const people = {
       };
     });
   }),
-  selectPeopleDelegates: createSelector("selectPeople", (people) => people.filter(p => p.canVote)),
+  selectPeopleDelegates: createSelector("selectPeople", (people) => people.filter(p => p.canVote).sort((a, b) => a.num - b.num)),
   selectPeopleById: createSelector("selectPeople", (people) => people.reduce((o, v) => ({ ...o, [v.id]: v }), {})),
 
   reactFetchPeopleOnMyselfExisting: createSelector("selectPeopleRaw", "selectMyself", (raw, myself) => {
