@@ -29,7 +29,7 @@ export default define("RoiPersonList", {
   },
   render({ useSel, useState, useStore }) {
     this.store = useStore();
-    const { config, people } = useSel("config", "people");
+    const { config, people, sakId } = useSel("config", "people", "sakId");
     const [edit, setEdit] = useState(false);
     this.setEdit = setEdit;
     this.config = config;
@@ -40,11 +40,12 @@ export default define("RoiPersonList", {
     function personProps(p) {
       return [p.admin ? "Admin" : "", p.canVote ? "" : "Ingen røysterett"].filter(Boolean).join(", ");
     }
+    const canEdit = this.editable && sakId;
     this.html`
     <form>
       <table>
       <tr><th>Nummer <th>Namn <th>Lag <th>Anna ${
-        this.editable ? html`<button type="button" onclick=${() => setEdit(!edit)}>Endra</button>` : null
+        sakId ? html`<button type="button" onclick=${() => setEdit(!edit)}>Endra</button>` : null
       }</tr>
       ${people.map(
         (person) =>
@@ -54,7 +55,7 @@ export default define("RoiPersonList", {
               <td>${person.name}</td>
               <td>${person.org}</td>
               <td>
-                ${edit
+                ${canEdit && edit
                     ? html`<label><input
                       type="checkbox"
                       data-num=${person.num}
@@ -67,7 +68,7 @@ export default define("RoiPersonList", {
           `
       )}
       </table>
-      ${edit ? html`<input type="submit" value="Oppdater" />` : null}
+      ${canEdit && edit ? html`<input type="submit" value="Oppdater" />` : null}
     </form>
       `;
   },
