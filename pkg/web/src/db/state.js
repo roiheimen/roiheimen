@@ -802,13 +802,22 @@ const referendum = {
     "selectReferendums",
     (referendums) => referendums.filter((r) => r.startedAt && !r.finishedAt)[0]
   ),
+  selectReferendumLiveCount: createSelector(
+    "selectReferendumsData",
+    (referendumData) => {
+      const referendum = referendumData.filter((r) => r.startedAt && !r.finishedAt)[0];
+      return referendum?.votes?.nodes.reduce(
+          (o, v) => ({ ...o, [v.vote]: (o[v.vote] || 0) + 1 }), { referendumId: referendum.id })
+    }
+  ),
   selectReferendumVote: createSelector("selectReferendumRaw", "selectMyselfId", "selectReferendum", (raw, myselfId, referendum) =>
-    referendum?.votes?.nodes.find((v) => v.personId == myselfId) || raw.lastVote
+    referendum?.votes?.nodes.find((v) => v.personId == myselfId) || raw.lastVote?.referendumId === referendum?.id ? raw.lastVote : null
   ),
   selectReferendums: createSelector(
     "selectReferendumsData",
     "selectReferendumCountData",
-    (referendumsData, referendumCountData) => {
+    "selectReferendumLiveCount",
+    (referendumsData, referendumCountData, referendumLiveCount) => {
       const refCnt = {};
       for (const c of referendumCountData) {
         const id = c.referendumId;
@@ -816,9 +825,10 @@ const referendum = {
         refCnt[id].push(c);
       }
       return referendumsData.map((r) => {
+        const live = r.id === referendumLiveCount?.referendumId ? referendumLiveCount : {};
         const counts = [...r.choices, ""].map((choice) => ({
           choice,
-          count: +refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0,
+          count: live[choice] ?? (+refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0),
         }));
         return { ...r, counts };
       });

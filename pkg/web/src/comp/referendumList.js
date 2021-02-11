@@ -31,10 +31,12 @@ export default define("RoiReferendumList", {
     const { referendum, referendums } = useSel("referendum", "referendums");
     const [updateCount, setUpdateCount] = useState(0);
     const [showAll, setShowAll] = useState(false);
-    useEffect(() => this.store.doReferendumCount(), []);
-    useEffect(() => setUpdateCount(0), [referendum?.id]);
     useEffect(() => {
-      if (!referendum) return;
+      setUpdateCount(0)
+      this.store.doReferendumCount();
+    }, [referendum?.id]);
+    useEffect(() => {
+      if (!referendum || referendum.type === "OPEN") return;
       // first 10 sec: check every 400ms
       // next 30 sec: check every sec
       // after: check every 6 sec
