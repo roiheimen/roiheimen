@@ -36,24 +36,20 @@ export default define("RoiReferendum", {
   },
   render({ useSel, useStore, useMemo }) {
     this.store = useStore();
-    const { myselfCanVote, referendum, referendumVote, referendumPrevChoice: prev } = useSel(
+    const { myselfCanVote, referendum } = useSel(
       "myselfCanVote",
       "referendum",
-      "referendumVote",
-      "referendumPrevChoice"
     );
-    if (!referendum) {
-      return this.html`${null}`;
-    }
-    const { id, title, type, finishedAt } = referendum;
     const choices = useMemo(
       () =>
-        referendum.choices
+        referendum?.choices
           .map((a) => ({ sort: Math.random(), value: a }))
           .sort((a, b) => a.sort - b.sort)
           .map((a) => a.value),
-      [referendum.id]
+      [referendum?.id]
     );
+    if (!referendum) return this.html`${null}`;
+    const { id, title, type, finishedAt } = referendum;
     const humanType = { OPEN: "open avrøysting", CLOSED: "lukka votering" }[type] || type;
     const chooser = () => html`
       <ul style="list-style: none">
@@ -68,11 +64,11 @@ export default define("RoiReferendum", {
       </ul>
       <p>${myselfCanVote ? html`<input type="submit" name="vote" value="Send inn" />` : `Du har ikkje røysterett`}</p>
     `;
-    const didVote = () => html` Du har røysta. ${prev ? `Du valde «${prev}».` : null} `;
+    const didVote = () => html` Du har røysta. ${referendum.vote.vote ? `Du valde «${referendum.vote.vote}».` : null} `;
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>
-        ${referendumVote ? didVote() : chooser()}
+        ${referendum?.vote ? didVote() : chooser()}
       </form>
       `;
   },

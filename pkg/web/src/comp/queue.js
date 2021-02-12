@@ -4,6 +4,7 @@ import "../db/state.js";
 import storage from "../lib/storage.js";
 
 import "./referendum.js";
+import "./referendumResult.js";
 import "./settings.js";
 import "./speechesList.js";
 import "./video.js";
@@ -55,7 +56,10 @@ const RoiQueueDrawer = {
     ${self} roi-speeches-list {
     }
     ${self} roi-referendum {
-      margin: 32px 0 128px;
+      margin: 0 0 64px;
+    }
+    ${self} roi-referendum-result {
+      margin: 0 0 64px;
     }
     `;
   },
@@ -67,6 +71,7 @@ const RoiQueueDrawer = {
       meeting,
       myself,
       referendum,
+      referendumPrev,
       sak,
       speechFetching,
       speechInWhereby,
@@ -79,6 +84,7 @@ const RoiQueueDrawer = {
       "meeting",
       "myself",
       "referendum",
+      "referendumPrev",
       "sak",
       "speechFetching",
       "speechInWhereby",
@@ -93,6 +99,7 @@ const RoiQueueDrawer = {
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = html`
       ${referendum ? html`<roi-referendum simple /> ` : null}
+      ${referendumPrev ? html`<roi-referendum-result /> ` : null}
       ${sak?.id ? html`<roi-speeches-list simple /> ` : null}
     `;
 

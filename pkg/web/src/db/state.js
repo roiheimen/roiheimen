@@ -577,9 +577,9 @@ const referendum = {
     state = {
       count: [],
       data: [],
-      lastVote: null,
+      lastVote: [],
       fetching: false,
-      prevChoice: null,
+      prevVote: null,
       subSak: 0,
       subStop: null,
       subReferendum: 0,
@@ -596,20 +596,21 @@ const referendum = {
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
     if (type == "REFERENDUM_VOTE_SUB_STARTED") return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
     if (type == "REFERENDUM_VOTE_SUB_FINISHED") return { ...state, subVoteStop: payload };
-    if (type == "REFERENDUM_VOTE_SUB_UPDATED") return { ...state, lastVote: payload };
+    if (type == "REFERENDUM_VOTE_SUB_UPDATED") return { ...state, lastVote: [...state.lastVote, payload] };
     if (type == "REFERENDUM_VOTE_STARTED")
       return {
         ...state,
-        prevChoice: state.data.find((r) => r.id == payload.referendumId)?.type == "OPEN" ? payload.choice : null,
+        prevVote: state.data.find((r) => r.id == payload.referendumId)?.type == "OPEN" ? payload : null,
       };
     if (type == "REFERENDUM_COUNT_FINISHED") return { ...state, count: payload };
     return state;
   },
   getMiddleware: () => (store) => (next) => (action) => {
-    const oldSakId = store.selectSak()?.id;
+    const oldReferendumPrevId = store.selectReferendumPrev()?.id;
     const result = next(action);
-    const newSakId = store.selectSak()?.id;
-    if (oldSakId != newSakId) {
+    const newReferendumPrevId = store.selectReferendumPrev()?.id;
+    if (oldReferendumPrevId != newReferendumPrevId) {
+      setTimeout(() => store.doReferendumCount(), Math.round(Math.random() * 1000));
     }
     return result;
   },
@@ -798,10 +799,13 @@ const referendum = {
   selectReferendumRaw: (state) => state.referendum,
   selectReferendumsData: (state) => state.referendum.data,
   selectReferendumCountData: (state) => state.referendum.count,
-  selectReferendumPrevChoice: (state) => state.referendum.prevChoice,
   selectReferendum: createSelector(
     "selectReferendums",
     (referendums) => referendums.filter((r) => r.startedAt && !r.finishedAt)[0]
+  ),
+  selectReferendumPrev: createSelector(
+    "selectReferendums",
+    (referendums) => referendums.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0]
   ),
   selectReferendumLiveCount: createSelector(
     "selectReferendumsData",
@@ -811,14 +815,12 @@ const referendum = {
           (o, v) => ({ ...o, [v.vote]: (o[v.vote] || 0) + 1 }), { referendumId: referendum.id })
     }
   ),
-  selectReferendumVote: createSelector("selectReferendumRaw", "selectMyselfId", "selectReferendum", (raw, myselfId, referendum) =>
-    referendum?.votes?.nodes.find((v) => v.personId == myselfId) || raw.lastVote?.referendumId === referendum?.id ? raw.lastVote : null
-  ),
   selectReferendums: createSelector(
+    "selectReferendumRaw",
     "selectReferendumsData",
     "selectReferendumCountData",
     "selectReferendumLiveCount",
-    (referendumsData, referendumCountData, referendumLiveCount) => {
+    (raw, referendumsData, referendumCountData, referendumLiveCount) => {
       const refCnt = {};
       for (const c of referendumCountData) {
         const id = c.referendumId;
@@ -826,12 +828,13 @@ const referendum = {
         refCnt[id].push(c);
       }
       return referendumsData.map((r) => {
+        const vote = raw.lastVote.find(v => v?.referendumId == r.id);
         const live = r.id === referendumLiveCount?.referendumId ? referendumLiveCount : {};
         const counts = [...r.choices, ""].map((choice) => ({
           choice,
           count: live[choice] ?? (+refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0),
         }));
-        return { ...r, counts };
+        return { ...r, counts, vote };
       });
     }
   ),
