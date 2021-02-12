@@ -64,7 +64,7 @@ const meeting = {
     }
   },
   doMeetingSubscribe: (meetingId) => async ({ dispatch, store }) => {
-    meetingId ??= store.selectMeetingId();
+    meetingId = meetingId ?? store.selectMeetingId();
     dispatch({ type: "MEETING_SUB_STARTED", payload: meetingId });
     const query = `
       subscription Meeting($meetingId: String!) {
@@ -715,8 +715,8 @@ const referendum = {
     }
   },
   doReferendumVoteSubscribe: ({ personId, referendumId } = {}) => async ({ dispatch }) => {
-    personId ??= store.selectMyself().id;
-    referendumId ??= store.selectReferendum().id;
+    personId = personId ?? store.selectMyself().id;
+    referendumId = referendumId ?? store.selectReferendum().id;
     const variables = { personId, referendumId };
     const { subVoteStop } = store.selectReferendumRaw();
     dispatch({ type: "REFERENDUM_VOTE_SUB_STARTED", payload: variables });
