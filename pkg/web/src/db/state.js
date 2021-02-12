@@ -596,7 +596,11 @@ const referendum = {
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
     if (type == "REFERENDUM_VOTE_SUB_STARTED") return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
     if (type == "REFERENDUM_VOTE_SUB_FINISHED") return { ...state, subVoteStop: payload };
-    if (type == "REFERENDUM_VOTE_SUB_UPDATED") return { ...state, lastVote: [...state.lastVote, payload] };
+    if (type == "REFERENDUM_VOTE_SUB_UPDATED") {
+      const last = state.lastVote;
+      const changed = last[last.length - 1]?.id == payload.id;
+      return { ...state, lastVote: [...(changed ? last.slice(0, -1) : last), payload] }
+    };
     if (type == "REFERENDUM_VOTE_STARTED")
       return {
         ...state,
@@ -748,21 +752,30 @@ const referendum = {
   },
   doReferendumVote: ({ referendumId, choice }) => async ({ dispatch, store }) => {
     const personId = store.selectMyself().id;
+    const { vote } = store.selectReferendum() || {};
     dispatch({
       type: "REFERENDUM_VOTE_STARTED",
       payload: { personId, choice, referendumId },
     });
-    const query = `
+    const query = vote ? `
+    mutation ReferendumVoteUpd($id: Int!, $choice: String!) {
+      updateVote(input: {id: $id, patch: {vote: $choice}}) {
+        vote { id }
+      }
+    }` : `
     mutation ReferendumVote($referendumId: Int!, $personId: Int!, $choice: String!) {
       createVote(input: {vote: {vote: $choice, referendumId: $referendumId, personId: $personId}}) {
         vote { id }
       }
-    }
-    `;
+    }`;
     try {
-      const res = await gql(query, { referendumId, choice, personId });
-      const id = res.createVote.vote.id;
+      const res = await gql(query, { id: vote?.id, referendumId, choice, personId });
+      const id = vote ? res.updateVote.vote.id : res.createVote.vote.id;
       dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: id });
+      if (vote) {
+        // We changed our vote, re-listen for the update
+        store.doReferendumVoteSubscribe();
+      }
     } catch (error) {
       dispatch({
         type: "REFERENDUM_VOTE_FAILED",
@@ -805,7 +818,7 @@ const referendum = {
   ),
   selectReferendumPrev: createSelector(
     "selectReferendums",
-    (referendums) => referendums.sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0]
+    (referendums) => referendums.filter(r => r.finishedAt).sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0]
   ),
   selectReferendumLiveCount: createSelector(
     "selectReferendumsData",

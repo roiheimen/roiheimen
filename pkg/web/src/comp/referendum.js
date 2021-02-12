@@ -27,19 +27,11 @@ export default define("RoiReferendum", {
     const choice = target.choice.value;
     this.store.doReferendumVote({ referendumId, choice });
   },
-  onclick({ target }) {
-    console.log("click", target.name);
-    if (target.name == "end") {
-      const id = +target.closest("tr").dataset.id;
-      this.store.doReferendumEnd(id);
-    }
-  },
-  render({ useSel, useStore, useMemo }) {
+  render({ useEffect, useSel, useStore, useMemo, useState }) {
     this.store = useStore();
-    const { myselfCanVote, referendum } = useSel(
-      "myselfCanVote",
-      "referendum",
-    );
+    const { myselfCanVote, referendum } = useSel("myselfCanVote", "referendum");
+    const [choose, setChoose] = useState(!referendum?.vote);
+    useEffect(() => setChoose(!referendum?.vote), [referendum?.vote?.vote]);
     const choices = useMemo(
       () =>
         referendum?.choices
@@ -64,11 +56,16 @@ export default define("RoiReferendum", {
       </ul>
       <p>${myselfCanVote ? html`<input type="submit" name="vote" value="Send inn" />` : `Du har ikkje røysterett`}</p>
     `;
-    const didVote = () => html` Du har røysta. ${referendum.vote.vote ? `Du valde «${referendum.vote.vote}».` : null} `;
+    const didVote = () =>
+      html`<p>
+        Du har røysta. ${referendum.vote.vote ? `Du valde «${referendum.vote.vote}».` : null}
+        ${choose ? null : html`<button name="back" type="button" onclick=${() => setChoose(true)}>Endra</button>`}
+      </p>`;
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>
-        ${referendum?.vote ? didVote() : chooser()}
+        ${choose ? chooser() : null}
+        ${referendum?.vote ? didVote() : null}
       </form>
       `;
   },

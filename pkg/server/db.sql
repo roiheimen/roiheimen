@@ -399,7 +399,7 @@ grant usage on sequence roiheimen.test_id_seq to roiheimen_person;
 grant select on table roiheimen.referendum to roiheimen_anonymous, roiheimen_person;
 grant insert, update, delete on table roiheimen.referendum to roiheimen_person;
 grant usage on sequence roiheimen.referendum_id_seq to roiheimen_person;
-grant select, insert, delete on table roiheimen.vote to roiheimen_person;
+grant select, update, insert, delete on table roiheimen.vote to roiheimen_person;
 grant usage on sequence roiheimen.vote_id_seq to roiheimen_person;
 
 grant select on roiheimen.ordered_speech to roiheimen_anonymous, roiheimen_person;
@@ -513,6 +513,17 @@ create policy insert_vote on roiheimen.vote for insert to roiheimen_person
             select num::text::jsonb from roiheimen.person
             where id = person_id
         )
+    )
+  );
+create policy update_vote on roiheimen.vote for update to roiheimen_person
+  using (
+    person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+    and
+    exists (
+      -- No need to check voteDisallow on update, since insert was allowed
+      select from roiheimen.referendum r
+      where r.id = referendum_id
+        and r.finished_at is null
     )
   );
 
