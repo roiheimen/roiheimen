@@ -118,6 +118,10 @@ define("RoiGfxSpeaker", {
 });
 
 define("RoiGfxVote", {
+  oninit() {
+    this.div = ref();
+    this.noheader = this.getAttribute("noheader") != null;
+  },
   style(self) {
     return `
       ${self} .refbox {
@@ -158,9 +162,6 @@ define("RoiGfxVote", {
       }
     `;
   },
-  oninit() {
-    this.div = ref();
-  },
   render({ useEffect, useSel, usePrevious }) {
     const { referendum, peopleDelegates } = useSel("referendum", "peopleDelegates");
     const title = referendum?.title;
@@ -180,7 +181,7 @@ define("RoiGfxVote", {
     if (!title) return this.html`<div></div>`;
     this.html`
       <div class=refbox ref=${this.div}>
-        <h2>${title}</h2>
+        ${this.noheader ? null : html`<h2>${title}</h2>`}
         <div class=ppl>${peopleDelegates?.map((p) => {
           let cn = "not_voted";
           const v = votesByPerson[p.id];

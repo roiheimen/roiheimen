@@ -61,6 +61,12 @@ const RoiQueueDrawer = {
     ${self} roi-referendum-result {
       margin: 0 0 64px;
     }
+    ${self} .gfx-vote-iframe {
+      border: none;
+      width: 100%;
+      min-height: 280px;
+      overflow: hidden;
+    }
     `;
   },
   render({ useStore, useSel }) {
@@ -99,6 +105,7 @@ const RoiQueueDrawer = {
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = html`
       ${referendum ? html`<roi-referendum simple /> ` : null}
+      ${referendum && config.gfxIframeOnQueue ? html`<iframe class=gfx-vote-iframe src="/gfx-vote.html"></iframe>` : null}
       ${referendumPrev ? html`<roi-referendum-result /> ` : null}
       ${sak?.id ? html`<roi-speeches-list simple /> ` : null}
     `;

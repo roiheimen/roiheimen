@@ -6,6 +6,9 @@
 <script type=module src=/lib/boot.js></script>
 <script type=module src=/comp/gfx.js></script>
 <style>
+  body {
+    overflow: hidden;
+  }
   roi-gfx-vote {
     position: absolute;
     bottom: 10px;
@@ -16,5 +19,5 @@
   }
 </style>
 <body data-externals data-manage>
-  <roi-gfx-vote></roi-gfx-vote>
+  <roi-gfx-vote noheader></roi-gfx-vote>
 </body>
