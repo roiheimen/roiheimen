@@ -29,12 +29,12 @@ export default define("RoiReferendum", {
   },
   render({ useEffect, useSel, useStore, useMemo, useState }) {
     this.store = useStore();
-    const { myselfCanVote, referendum } = useSel("myselfCanVote", "referendum");
+    const { config, myselfCanVote, referendum } = useSel("config", "myselfCanVote", "referendum");
     const [choose, setChoose] = useState(!referendum?.vote);
     useEffect(() => setChoose(!referendum?.vote), [referendum?.vote?.vote]);
     const choices = useMemo(
       () =>
-        referendum?.choices
+        config?.stableChoices ? referendum.choices : referendum?.choices
           .map((a) => ({ sort: Math.random(), value: a }))
           .sort((a, b) => a.sort - b.sort)
           .map((a) => a.value),
