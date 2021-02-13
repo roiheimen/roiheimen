@@ -114,7 +114,7 @@ const RoiQueueDrawer = {
             : ""
         }
         ${
-          config.speechAllowed
+          config.speechAllowed && !config.speechInnleggDisabled
             ? html`
                 <button
                   tabindex="0"
@@ -125,6 +125,11 @@ const RoiQueueDrawer = {
                 >
                   Innlegg
                 </button>
+                ` : null
+        }
+        ${
+          config.speechAllowed
+            ? html`
                 <button
                   tabindex="0"
                   disabled=${speechFetching}
@@ -134,7 +139,7 @@ const RoiQueueDrawer = {
                   Replikk
                 </button>
               `
-            : ""
+            : null
         }
         ${
           myNewestSpeechRequest
