@@ -1011,6 +1011,7 @@ const client = {
       ui: "",
       useWaitRoom: null,
       userFacing: 'externals' in document.body.dataset,
+      reloadable: 'reloadable' in document.body.dataset,
       youtubeSize: "",
     };
     return (state = initialState, { type, payload }) => {
@@ -1022,6 +1023,20 @@ const client = {
       if (type == "CLIENT_USE_WAIT_ROOM") return { ...state, useWaitRoom: payload };
       return state;
     };
+  },
+  getMiddleware: () => (store) => (next) => (action) => {
+    const oldReload = store.selectConfig()?.reload;
+    const result = next(action);
+    if (oldReload && store.selectClientRaw().reloadable) {
+      // This is so you need to set reload to 1 and then 2
+      // and it will only reload on an edge
+      const reload = store.selectConfig()?.reload;
+      if (reload && oldReload != reload) {
+        setTimeout(() => {
+          location.href = location.href;
+        }, Math.round(Math.random() * 1000));
+      }
+    }
   },
 
   doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
