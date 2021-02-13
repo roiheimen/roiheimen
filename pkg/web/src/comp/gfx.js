@@ -122,10 +122,6 @@ define("RoiGfxVote", {
     return `
       ${self} .refbox {
         display: block;
-        position: absolute;
-        right: 5vw;
-        bottom: 0;
-        left: 60vw;
 
         transform: translateY(0);
         opacity: 1;
