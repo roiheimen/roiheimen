@@ -22,10 +22,10 @@ export default define("RoiReferendumResult", {
   render({ useSel, useStore, useMemo }) {
     this.store = useStore();
     const { referendumPrev } = useSel("referendumPrev");
-    const { id, title, type, finishedAt } = referendumPrev;
     if (!referendumPrev) {
       return this.html`${null}`;
     }
+    const { id, title } = referendumPrev;
     this.html`
       <div data-id=${id}>
         <h3><span class="prev">Førre avrøysting:</span> ${title}</h3>

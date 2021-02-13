@@ -34,7 +34,7 @@ export default define("RoiReferendum", {
     useEffect(() => setChoose(!referendum?.vote), [referendum?.vote?.vote]);
     const choices = useMemo(
       () =>
-        config?.stableChoices ? referendum.choices : referendum?.choices
+        config?.stableChoices ? referendum?.choices : referendum?.choices
           .map((a) => ({ sort: Math.random(), value: a }))
           .sort((a, b) => a.sort - b.sort)
           .map((a) => a.value),
