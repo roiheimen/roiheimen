@@ -42,6 +42,7 @@ export default define("RoiReferendum", {
     );
     if (!referendum) return this.html`${null}`;
     const { id, title, type, finishedAt } = referendum;
+    const vote = referendum.vote?.vote;
     const humanType = { OPEN: "open avrøysting", CLOSED: "lukka votering" }[type] || type;
     const chooser = () => html`
       <ul style="list-style: none">
@@ -49,7 +50,7 @@ export default define("RoiReferendum", {
           (c) =>
             html`
               <li>
-                <label><input type="radio" name="choice" value=${c} /> ${c}</label>
+                <label><input type="radio" name="choice" value=${c} checked=${vote && vote == c} /> ${c}</label>
               </li>
             `
         )}
@@ -58,14 +59,14 @@ export default define("RoiReferendum", {
     `;
     const didVote = () =>
       html`<p>
-        Du har røysta. ${referendum.vote.vote ? `Du valde «${referendum.vote.vote}».` : null}
+        Du har røysta. ${vote ? `Du valde «${vote}».` : null}
         ${choose ? null : html`<button name="back" type="button" onclick=${() => setChoose(true)}>Endra</button>`}
       </p>`;
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>
         ${choose ? chooser() : null}
-        ${referendum?.vote ? didVote() : null}
+        ${referendum.vote ? didVote() : null}
       </form>
       `;
   },
