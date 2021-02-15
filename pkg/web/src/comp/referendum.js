@@ -31,7 +31,7 @@ export default define("RoiReferendum", {
     this.store = useStore();
     const { config, myselfCanVote, referendum } = useSel("config", "myselfCanVote", "referendum");
     const [choose, setChoose] = useState(!referendum?.vote);
-    useEffect(() => setChoose(!referendum?.vote), [referendum?.vote?.vote]);
+    useEffect(() => setChoose(!referendum?.vote?.id), [referendum?.vote?.vote]);
     const choices = useMemo(
       () =>
         config?.stableChoices ? referendum?.choices : referendum?.choices
@@ -65,8 +65,8 @@ export default define("RoiReferendum", {
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>
-        ${choose ? chooser() : null}
-        ${referendum.vote ? didVote() : null}
+        ${choose && referendum.vote ? chooser() : null}
+        ${referendum.vote?.id ? didVote() : null}
       </form>
       `;
   },

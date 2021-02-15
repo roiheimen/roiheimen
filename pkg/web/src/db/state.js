@@ -577,7 +577,7 @@ const referendum = {
     state = {
       count: [],
       data: [],
-      lastVote: [],
+      lastVote: null,
       fetching: false,
       prevVote: null,
       subSak: 0,
@@ -597,7 +597,8 @@ const referendum = {
     if (type == "REFERENDUM_VOTE_SUB_STARTED") return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
     if (type == "REFERENDUM_VOTE_SUB_FINISHED") return { ...state, subVoteStop: payload };
     if (type == "REFERENDUM_VOTE_SUB_UPDATED") {
-      const last = state.lastVote;
+      const last = state.lastVote || [];
+      if (!payload) return { ...state, lastVote: last };
       const changed = last[last.length - 1]?.id == payload.id;
       return { ...state, lastVote: [...(changed ? last.slice(0, -1) : last), payload] }
     };
@@ -741,8 +742,8 @@ const referendum = {
     try {
       const stop = await live({ query, variables }, ({ data }) => {
         const { votes: { nodes } } = data;
-        if (!nodes[0]) return;
         dispatch({ type: "REFERENDUM_VOTE_SUB_UPDATED", payload: nodes[0] });
+        if (!nodes[0]) return;
         store.selectReferendumRaw().subVoteStop();
       });
       dispatch({ type: "REFERENDUM_VOTE_SUB_FINISHED", payload: stop });
@@ -757,7 +758,7 @@ const referendum = {
       type: "REFERENDUM_VOTE_STARTED",
       payload: { personId, choice, referendumId },
     });
-    const query = vote ? `
+    const query = vote?.id ? `
     mutation ReferendumVoteUpd($id: Int!, $choice: String!) {
       updateVote(input: {id: $id, patch: {vote: $choice}}) {
         vote { id }
@@ -841,7 +842,8 @@ const referendum = {
         refCnt[id].push(c);
       }
       return referendumsData.map((r) => {
-        const vote = raw.lastVote.find(v => v?.referendumId == r.id);
+        // Vote is null when loading, {} when "known not voted"
+        const vote = raw.lastVote ? raw.lastVote.find(v => v?.referendumId == r.id) || {} : null;
         const live = r.id === referendumLiveCount?.referendumId ? referendumLiveCount : {};
         const counts = [...r.choices, ""].map((choice) => ({
           choice,
