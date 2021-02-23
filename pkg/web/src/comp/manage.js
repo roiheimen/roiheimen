@@ -374,7 +374,8 @@ const NewSakDialog = {
   onsubmit(e) {
     const title = e.target.title.value;
     const config = {
-      speechAllowed: e.target.speechAllowed.checked,
+      speechDisabled: e.target.speechDisabled.checked,
+      speechInnleggDisabled: e.target.speechInnleggDisabled.checked,
     };
     this.store.doSakReq(title, { config });
     this.close();
@@ -387,7 +388,8 @@ const NewSakDialog = {
       <form>
         <label>Tittel <input name=title placeholder="" required></label>
         <div class=config>
-          <label><input name=speechAllowed type=checkbox checked> Innlegg ope</label>
+          <label><input name=speechDisabled type=checkbox> Taleliste stengt</label>
+          <label><input name=speechInnleggDisabled type=checkbox> Innlegg stengt</label>
         </div>
         <input type=submit value="Legg til og bytt">
       </form>
@@ -452,8 +454,9 @@ define("RoiManage", {
       this.moreDialog.current.showModal();
     } else if (target.name == "update") {
       const title = this.querySelector(".title").value;
-      const speechAllowed = this.querySelector(".speechAllowed").checked;
-      this.store.doSakUpd({ title, config: { speechAllowed } });
+      const speechDisabled = this.querySelector(".speechDisabled").checked;
+      const speechInnleggDisabled = this.querySelector(".speechInnleggDisabled").checked;
+      this.store.doSakUpd({ title, config: { speechDisabled, speechInnleggDisabled } });
     } else {
       this.store.doSakFinish();
     }
@@ -468,7 +471,8 @@ define("RoiManage", {
               <input class=title value=${sak?.title} title=${`sak-id: ${sak?.id}`} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
               <div class=config>
-                <label><input class=speechAllowed type=checkbox checked=${config.speechAllowed}> Taleliste open</label>
+                <label><input class=speechDisabled type=checkbox checked=${config.speechDisabled}> Taleliste stengt</label>
+                <label><input class=speechInnleggDisabled type=checkbox checked=${config.speechInnleggDisabled}> Innlegg stengt</label>
               </div>
               <button class=update name=update onclick=${this}>Oppdater</button>
               <SakSpeakerAdderInput />

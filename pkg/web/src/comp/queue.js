@@ -121,7 +121,7 @@ const RoiQueueDrawer = {
             : ""
         }
         ${
-          config.speechAllowed && !config.speechInnleggDisabled
+          sak?.id && !config.speechDisabled && !config.speechInnleggDisabled
             ? html`
                 <button
                   tabindex="0"
@@ -135,7 +135,7 @@ const RoiQueueDrawer = {
                 ` : null
         }
         ${
-          config.speechAllowed
+          sak?.id && !config.speechDisabled
             ? html`
                 <button
                   tabindex="0"

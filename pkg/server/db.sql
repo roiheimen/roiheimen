@@ -567,7 +567,8 @@ insert into roiheimen.meeting (id, title, theme, config) values (
   }',
   '{
     "hostname": "landsmote.mdg.no",
-    "speechAllowed": true,
+    "speechDisabled": false,
+    "speechInnleggDisabled": false,
     "speechRoom": "https://nm.whereby.com/r10",
     "waitRoom": "https://nm.whereby.com/r11",
     "externalCss": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"

@@ -322,11 +322,6 @@ const sak = {
     };
     return nsak;
   }),
-  selectSakSpeechAllowed: createSelector(
-    "selectSak",
-    "selectMeeting",
-    (sak, meeting) => sak?.config?.speechAllowed ?? meeting?.config.speechAllowed
-  ),
 
   reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectClientManage", "selectMyselfId", (raw, clientManage, myselfId) => {
     if (!raw.started && !raw.failed && myselfId) {
