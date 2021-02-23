@@ -7,11 +7,22 @@ import "./speechesList.js";
 import "./personList.js";
 import "./referendumList.js";
 
-const gqlLatestSak = `
-  query LatestSak {
-    latestSak {
-      id
-      title
+const gqlAllOpenSaks = `
+  query AllOpenSaks {
+    saks(condition: {finishedAt: null}, orderBy: CREATED_AT_ASC, first: 100) {
+      nodes {
+        id
+        title
+        createdAt
+        referendums(condition: {finishedAt: null}, orderBy: CREATED_AT_ASC) {
+          nodes {
+            id
+            type
+            title
+            choices
+          }
+        }
+      }
     }
   }`;
 const gqlCreateSpeech = `
@@ -202,9 +213,7 @@ const SakSpeakerAdderInput = {
     this.html`
     ${this.err && html` <p ref=${onErrRef} class="err">${this.err}</p> `}
     <form>
-      <input onkeydown=${this} name=adder placeholder="" autocomplete=off ref=${
-      this.adder
-    }>
+      <input onkeydown=${this} name=adder placeholder="" autocomplete=off ref=${this.adder}>
       <input type=submit value="Legg til">
     </form>
     <p><small>Trykk Enter inni boks for neste. Skriv <code>12</code> for innlegg, <code>r12</code> replikk, <code>vDyr? :Katt :Andre</code> avrøysting, <code>fGlad?</code> for/mot/avh-avrøysting</small></p>
@@ -212,8 +221,50 @@ const SakSpeakerAdderInput = {
   },
 };
 
+const ShowSaker = {
+  style(self) {
+    return `
+    ${self} h3 {
+      margin-bottom: 0;
+    }
+    ${self} .choice {
+      font-size: 80%;
+      display: inline-block;
+      background-color: #ddd;
+      padding: 2px 4px;
+      margin: 2px;
+      border-radius: 2px;
+    }
+    `;
+  },
+  render({ useStore, useEffect, useState, useSel }) {
+    this.store = useStore();
+    const [saks, setSaks] = useState([]);
+    useEffect(async () => {
+      const res = await gql(gqlAllOpenSaks);
+      const saks = res.saks.nodes;
+      setSaks(saks);
+    }, []);
+    this.html`
+    ${saks.map(
+      (s) => html`<div title=${"sak-id: " + s.id}>
+        <h3>${s.title}</h3>
+        ${s.referendums.nodes.map(
+          (r) => html`<div title=${"ref-id: " + r.id}>
+            ${r.title} ${r.choices.map((c) => html` <span class="choice">${c}</span> `)}
+          </div>`
+        )}
+      </div> `
+    )}
+    `;
+  },
+};
+
 const MoreDialog = {
   extends: "dialog",
+  includes: {
+    ShowSaker,
+  },
   mappedAttributes: ["err"],
   oninit() {
     this.addEventListener("submit", this);
@@ -290,6 +341,7 @@ const MoreDialog = {
       <ul class=tabs>
         <li><button onclick=${this} name=sak class=${this.tab === "sak" && "active"}>Lag nye saker</button>
         <li><button onclick=${this} name=vot class=${this.tab === "vot" && "active"}>Lag avrøystinger</button>
+        <li><button onclick=${this} name=showsak class=${this.tab === "showsak" && "active"}>Saker</button>
       </ul>
       <form name=${this.tab}>
         ${
@@ -297,7 +349,7 @@ const MoreDialog = {
             vot: html`
               <label
                 >Sak<br />
-                <select name=sakId>
+                <select name="sakId">
                   ${saks.map((s) => html` <option value=${s.id} selected=${sakId === s.id}>${s.title}</option> `)}
                 </select>
               </label>
@@ -327,6 +379,7 @@ Som dette :)"
               </label>
               <input type="submit" name="sak" value="Legg til" />
             `,
+            showsak: html`<ShowSaker />`,
           }[this.tab]
         }
       </form>
@@ -471,8 +524,12 @@ define("RoiManage", {
               <input class=title value=${sak?.title} title=${`sak-id: ${sak?.id}`} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
               <div class=config>
-                <label><input class=speechDisabled type=checkbox checked=${config.speechDisabled}> Taleliste stengt</label>
-                <label><input class=speechInnleggDisabled type=checkbox checked=${config.speechInnleggDisabled}> Innlegg stengt</label>
+                <label><input class=speechDisabled type=checkbox checked=${
+                  config.speechDisabled
+                }> Taleliste stengt</label>
+                <label><input class=speechInnleggDisabled type=checkbox checked=${
+                  config.speechInnleggDisabled
+                }> Innlegg stengt</label>
               </div>
               <button class=update name=update onclick=${this}>Oppdater</button>
               <SakSpeakerAdderInput />
