@@ -58,7 +58,7 @@ export function parseAdderLine(line) {
   if (["v", "l", "f"].includes(line[0])) {
     const [title, ...choices] = line
       .slice(1)
-      .split(":")
+      .split("@")
       .map((p) => p.trim());
     if (line[0] === "f") {
       choices.push("For", "Mot", "Avhaldane");
@@ -216,7 +216,7 @@ const SakSpeakerAdderInput = {
       <input onkeydown=${this} name=adder placeholder="" autocomplete=off ref=${this.adder}>
       <input type=submit value="Legg til">
     </form>
-    <p><small>Trykk Enter inni boks for neste. Skriv <code>12</code> for innlegg, <code>r12</code> replikk, <code>vDyr? :Katt :Andre</code> avrøysting, <code>fGlad?</code> for/mot/avh-avrøysting</small></p>
+    <p><small>Trykk Enter inni boks for neste. Skriv <code>12</code> for innlegg, <code>r12</code> replikk, <code>vDyr? @Katt @Andre</code> avrøysting, <code>fGlad?</code> for/mot/avh-avrøysting</small></p>
     `;
   },
 };
