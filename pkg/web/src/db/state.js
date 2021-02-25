@@ -240,6 +240,22 @@ const sak = {
       dispatch({ type: "SAK_FINISH_FAILED", error, payload: sakId });
     }
   },
+  doSakDelete: (sakId) => async ({ dispatch, store }) => {
+    dispatch({ type: "SAK_DELETE_STARTED", payload: sakId });
+    const query = `
+    mutation SakDelete($sakId: Int!) {
+      deleteSak(input: {id: $sakId}) {
+        clientMutationId
+      }
+    }
+    `;
+    try {
+      const res = await gql(query, { sakId });
+      dispatch({ type: "SAK_DELETE_FINISHED", payload: sakId });
+    } catch (error) {
+      dispatch({ type: "SAK_DELETE_FAILED", error, payload: sakId });
+    }
+  },
   doSakUpd: ({ sakId, config, title } = {}) => async ({ dispatch, store }) => {
     const sak = store.selectSak();
     sakId = sakId || sak.id;

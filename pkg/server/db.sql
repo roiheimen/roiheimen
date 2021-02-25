@@ -383,7 +383,7 @@ grant select on table roiheimen.meeting to roiheimen_anonymous, roiheimen_person
 grant insert, update on table roiheimen.meeting to roiheimen_person;
 
 grant select on table roiheimen.sak to roiheimen_anonymous, roiheimen_person;
-grant insert, update on table roiheimen.sak to roiheimen_person;
+grant insert, update, delete on table roiheimen.sak to roiheimen_person;
 grant usage on sequence roiheimen.sak_id_seq to roiheimen_person;
 
 grant select on table roiheimen.person to roiheimen_anonymous, roiheimen_person;

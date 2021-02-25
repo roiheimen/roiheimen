@@ -226,6 +226,10 @@ const ShowSaker = {
     return `
     ${self} h3 {
       margin-bottom: 0;
+      display: flex;
+    }
+    ${self} h3 button {
+      margin-left: auto;
     }
     ${self} .choice {
       font-size: 80%;
@@ -235,9 +239,30 @@ const ShowSaker = {
       margin: 2px;
       border-radius: 2px;
     }
+    ${self} .deleted {
+      text-decoration: line-through;
+      color: #ccc;
+    }
+    ${self} ol {
+      margin: 0;
+      padding: 0 0 0 20px;
+      list-style-type: "– ";
+    }
     `;
   },
-  render({ useStore, useEffect, useState, useSel }) {
+  onclick({
+    target: {
+      name,
+      dataset: { id },
+    },
+  }) {
+    if (name == "delete-sak") {
+      console.log("delsak", id);
+      this.store.doSakDelete(+id);
+    }
+    this.render();
+  },
+  render({ useCallback, useStore, useEffect, useState, useSel }) {
     this.store = useStore();
     const [saks, setSaks] = useState([]);
     useEffect(async () => {
@@ -245,15 +270,40 @@ const ShowSaker = {
       const saks = res.saks.nodes;
       setSaks(saks);
     }, []);
+    const delSak = useCallback(
+      ({
+        target: {
+          name,
+          dataset: { id },
+        },
+      }) => {
+        if (name == "delete-sak") {
+          console.log("delsak", id);
+          id = +id;
+          const sak = saks.find((s) => s.id == id);
+          this.store.doSakDelete(sak.id);
+          sak.deleted = true;
+          setSaks(saks);
+        }
+        this.render();
+      }
+    );
     this.html`
     ${saks.map(
-      (s) => html`<div title=${"sak-id: " + s.id}>
-        <h3>${s.title}</h3>
+      (s) => html`<div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
+        <h3>
+          ${s.title}${s.deleted
+            ? ""
+            : html`<button type="button" onclick=${delSak} name="delete-sak" data-id=${s.id}>Slett</button>`}
+        </h3>
+
+        <ol>
         ${s.referendums.nodes.map(
-          (r) => html`<div title=${"ref-id: " + r.id}>
+          (r) => html`<li title=${"ref-id: " + r.id}>
             ${r.title} ${r.choices.map((c) => html` <span class="choice">${c}</span> `)}
           </div>`
         )}
+        </ol>
       </div> `
     )}
     `;
