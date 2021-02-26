@@ -1,6 +1,7 @@
 import { define, html, ref } from "/web_modules/heresy.js";
 
 import storage from "../lib/storage.js";
+import { dedent } from "../lib/stringutil.js";
 import { gql } from "../lib/graphql.js";
 
 import "./speechesList.js";
@@ -64,6 +65,23 @@ export function parseAdderLine(line) {
       choices.push("For", "Mot", "Avhaldane");
     }
     return { vote: { v: "OPEN", f: "OPEN", l: "CLOSED" }[line[0]], title, choices };
+  }
+}
+function handleAdderAction(action, store) {
+  if (action.speech) {
+    const { speech: type, num } = action;
+    const person = store.selectPeople().find((p) => p.num == +num);
+    if (!person) {
+      console.log("XXX people", type, num);
+      throw new Error(`Fann ingen person med nummer ${+num}`);
+    }
+    if (type == "REPLIKK" && !store.selectSpeechState().current) {
+      throw new Error(`Ingen replikk utan aktiv tale`);
+    }
+    return store.doSpeechReq(type, { speakerId: person.id, sakId: action.sakId });
+  }
+  if (action.vote) {
+    return store.doReferendumReq({ type: action.vote, ...action });
   }
 }
 
@@ -143,28 +161,10 @@ const SakSpeakerAdderInput = {
       return;
     }
     const action = parseAdderLine(adder);
-    if (action.speech) {
-      const { speech: type, num } = action;
-      if (!this.people.length) {
-        console.log("XXX people is no WTF");
-        this.people = this.store.selectPeople();
-      }
-      const person = this.people.find((p) => p.num == +num);
-      if (!person) {
-        console.log("XXX people", this.people, type, num);
-        this.err = `Fann ingen person med nummer ${+num}`;
-        return;
-      }
-      if (type == "REPLIKK" && !this.store.selectSpeechState().current) {
-        this.err = `Ingen replikk utan aktiv tale`;
-        return;
-      }
-      this.store.doSpeechReq(type, { speakerId: person.id });
-      return;
-    }
-    if (action.vote) {
-      this.store.doReferendumReq({ type: action.vote, ...action });
-      return;
+    try {
+      handleAdderAction(action, this.store);
+    } catch (e) {
+      this.err = e.message;
     }
   },
   onkeydown(e) {
@@ -298,11 +298,11 @@ const ShowSaker = {
         </h3>
 
         <ol>
-        ${s.referendums.nodes.map(
-          (r) => html`<li title=${"ref-id: " + r.id}>
+          ${s.referendums.nodes.map(
+            (r) => html`<li title=${"ref-id: " + r.id}>
             ${r.title} ${r.choices.map((c) => html` <span class="choice">${c}</span> `)}
           </div>`
-        )}
+          )}
         </ol>
       </div> `
     )}
@@ -369,14 +369,29 @@ const MoreDialog = {
         const st = s.trim();
         if (s) await this.store.doSakReq(s);
       }
-    } else if (name === "vot") {
+    } else if (name === "action") {
       const sakId = +e.target.sakId.value;
-      for (const v of e.target.avroystinger.value.split("\n")) {
+      const errors = [];
+      for (const v of e.target.adderlines.value.split("\n")) {
+        if (!v) continue;
         const action = parseAdderLine(v);
-        if (!action?.vote) continue;
-        await this.store.doReferendumReq({ sakId, type: action.vote, ...action });
+        try {
+          if (action.speech === "REPLIKK") throw new Error("Replikk gjev ikkje meining å leggja til her");
+          await handleAdderAction({ ...action, sakId }, this.store);
+        } catch (e) {
+          errors.push(`'${v}': ${e.message}`);
+        }
+      }
+      if (errors.length) {
+        alert(dedent`
+          Klarte ikkje fullføra alle kommandoane. Her er dei som feila:
+
+          ${errors.join("\n")}
+          `);
+        return;
       }
     }
+    e.target.querySelector("textarea").value = "";
     this.close();
   },
   onclick(e) {
@@ -387,16 +402,20 @@ const MoreDialog = {
     this.store = useStore();
     const { saks, sakId } = useSel("saks", "sakId");
     this.html`
-      <h1>Legg til ting-og-tang</h1>
+      <h1>Administrer saker</h1>
       <ul class=tabs>
         <li><button onclick=${this} name=sak class=${this.tab === "sak" && "active"}>Lag nye saker</button>
-        <li><button onclick=${this} name=vot class=${this.tab === "vot" && "active"}>Lag avrøystinger</button>
-        <li><button onclick=${this} name=showsak class=${this.tab === "showsak" && "active"}>Saker</button>
+        <li><button onclick=${this} name=action class=${
+      this.tab === "action" && "active"
+    }>Legg inn kommandoer på sak</button>
+        <li><button onclick=${this} name=showsak class=${
+      this.tab === "showsak" && "active"
+    }>Sjå eller slett saker</button>
       </ul>
       <form name=${this.tab}>
         ${
           {
-            vot: html`
+            action: html`
               <label
                 >Sak<br />
                 <select name="sakId">
@@ -404,16 +423,19 @@ const MoreDialog = {
                 </select>
               </label>
               <label
-                >Avrøystinger<br />
+                >Kommandoer (t.d. avrøystinger og innlegg)<br />
                 <textarea
                   cols="64"
                   rows="8"
-                  name="avroystinger"
-                  placeholder="vEi avrøysting per line? :Ja :Det er korrekt :Må vera slik
-fDu kan bruka ei for/mot avrøysting òg"
+                  name="adderlines"
+                  placeholder="vEi avrøysting per line? @Ja @Det er korrekt @Må vera slik
+fDu kan bruka ei for/mot avrøysting òg
+
+20
+53   <-- du kan òg leggja folk til på talelista!"
                 ></textarea>
               </label>
-              <input type="submit" name="vot" value="Legg til" />
+              <input type="submit" name="sak" value="Legg til" />
             `,
             sak: html`
               <label
@@ -427,7 +449,7 @@ fDu kan bruka ei for/mot avrøysting òg"
 Som dette :)"
                 ></textarea>
               </label>
-              <input type="submit" name="sak" value="Legg til" />
+              <input type="submit" name="action" value="Legg til" />
             `,
             showsak: html`<ShowSaker />`,
           }[this.tab]
