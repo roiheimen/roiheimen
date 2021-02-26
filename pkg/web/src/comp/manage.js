@@ -23,6 +23,12 @@ const gqlAllOpenSaks = `
             choices
           }
         }
+        speeches(condition: {endedAt: null}, orderBy: CREATED_AT_ASC) {
+          nodes {
+            id
+            speakerId
+          }
+        }
       }
     }
   }`;
@@ -225,8 +231,16 @@ const ShowSaker = {
   style(self) {
     return `
     ${self} h3 {
-      margin-bottom: 0;
       display: flex;
+      background-color: #ffa;
+      padding: 6px 20px;
+      margin: 20px -20px 0;
+      border: 1px solid #ddd;
+      border-right: none;
+      border-left: none;
+    }
+    ${self} h3.current {
+      background-color: #cea;
     }
     ${self} h3 button {
       margin-left: auto;
@@ -242,6 +256,20 @@ const ShowSaker = {
     ${self} .deleted {
       text-decoration: line-through;
       color: #ccc;
+    }
+    ${self} .speeches {
+      background-color: #eee;
+      padding: 0px 20px;
+      margin: 0px -20px 6px;
+    }
+    ${self} .speech {
+      font-size: 80%;
+      display: inline-block;
+      background-color: white;
+      padding: 2px 4px;
+      margin: 2px;
+      border-radius: 2px;
+      border: 1px solid #ccc;
     }
     ${self} ol {
       margin: 0;
@@ -264,6 +292,7 @@ const ShowSaker = {
   },
   render({ useCallback, useStore, useEffect, useState, useSel }) {
     this.store = useStore();
+    const { peopleById } = useSel("peopleById");
     const [saks, setSaks] = useState([]);
     useEffect(async () => {
       const res = await gql(gqlAllOpenSaks);
@@ -290,13 +319,24 @@ const ShowSaker = {
     );
     this.html`
     ${saks.map(
-      (s) => html`<div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
-        <h3>
+      (s, i) => html`<div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
+        <h3 class=${i == 0 ? "current" : ""}>
           ${s.title}${s.deleted
             ? ""
             : html`<button type="button" onclick=${delSak} name="delete-sak" data-id=${s.id}>Slett</button>`}
         </h3>
 
+        ${!s.speeches.nodes.length
+          ? ""
+          : html`<div class="speeches">
+              Taleliste:
+              ${s.speeches.nodes.map((speech) => {
+                const speaker = peopleById?.[speech.speakerId];
+                return html`<span class="speech" title=${speaker.name + "\nspeech-id:" + speech.id}
+                  >${speaker?.num || "?"}</span
+                >`;
+              })}
+            </div>`}
         <ol>
           ${s.referendums.nodes.map(
             (r) => html`<li title=${"ref-id: " + r.id}>

@@ -1,7 +1,6 @@
 {
   "name": "roiheimen-web",
   "license": "GPL-3.0-or-later",
-  "type": "module",
   "scripts": {
     "build": "snowpack build",
     "lint": "prettier --check \"src/**/*.js\"",
