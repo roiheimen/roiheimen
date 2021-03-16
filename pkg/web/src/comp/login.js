@@ -37,8 +37,8 @@ define("RoiLogin", {
   },
   onsubmit(event) {
     const form = new FormData(event.currentTarget);
-    const num = +form.get("num");
-    const code = form.get("code");
+    const num = +form.get("num").trim();
+    const code = form.get("code").trim();
     if (num && code) {
       this.creds.num = num;
       this.store.doMyselfLogin(num, code);
