@@ -227,7 +227,8 @@ const SakSpeakerAdderInput = {
   },
 };
 
-const ShowSaker = {
+const SakList = {
+  mappedAttributes: ["saks", "ondelsak", "peoplebyid"],
   style(self) {
     return `
     ${self} h3 {
@@ -278,6 +279,15 @@ const ShowSaker = {
     }
     `;
   },
+  ondelsak() {
+    this.render();
+  },
+  onpeoplebyid() {
+    this.render();
+  },
+  onsaks() {
+    this.render();
+  },
   onclick({
     target: {
       name,
@@ -285,45 +295,18 @@ const ShowSaker = {
     },
   }) {
     if (name == "delete-sak") {
-      console.log("delsak", id);
-      this.store.doSakDelete(+id);
+      this.dispatchEvent(new CustomEvent("deletesak", { detail: +id }));
     }
-    this.render();
   },
   render({ useCallback, useStore, useEffect, useState, useSel }) {
-    this.store = useStore();
-    const { peopleById } = useSel("peopleById");
-    const [saks, setSaks] = useState([]);
-    useEffect(async () => {
-      const res = await gql(gqlAllOpenSaks);
-      const saks = res.saks.nodes;
-      setSaks(saks);
-    }, []);
-    const delSak = useCallback(
-      ({
-        target: {
-          name,
-          dataset: { id },
-        },
-      }) => {
-        if (name == "delete-sak") {
-          console.log("delsak", id);
-          id = +id;
-          const sak = saks.find((s) => s.id == id);
-          this.store.doSakDelete(sak.id);
-          sak.deleted = true;
-          setSaks(saks);
-        }
-        this.render();
-      }
-    );
+    const saks = this.saks;
     this.html`
     ${saks.map(
       (s, i) => html`<div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
         <h3 class=${i == 0 ? "current" : ""}>
           ${s.title}${s.deleted
             ? ""
-            : html`<button type="button" onclick=${delSak} name="delete-sak" data-id=${s.id}>Slett</button>`}
+            : html`<button type="button" onclick=${this} name="delete-sak" data-id=${s.id}>Slett</button>`}
         </h3>
 
         ${!s.speeches.nodes.length
@@ -331,8 +314,8 @@ const ShowSaker = {
           : html`<div class="speeches">
               Taleliste:
               ${s.speeches.nodes.map((speech) => {
-                const speaker = peopleById?.[speech.speakerId];
-                return html`<span class="speech" title=${speaker.name + "\nspeech-id:" + speech.id}
+                const speaker = this.peoplebyid?.[speech.speakerId];
+                return html`<span class="speech" title=${speaker?.name + "\nspeech-id:" + speech.id}
                   >${speaker?.num || "?"}</span
                 >`;
               })}
@@ -347,6 +330,30 @@ const ShowSaker = {
       </div> `
     )}
     `;
+  },
+};
+
+const ShowSaker = {
+  includes: {
+    SakList,
+  },
+  render({ useCallback, useStore, useEffect, useState, useSel }) {
+    this.store = useStore();
+    const { peopleById } = useSel("peopleById");
+    const [saks, setSaks] = useState([]);
+    useEffect(async () => {
+      const res = await gql(gqlAllOpenSaks);
+      const saks = res.saks.nodes;
+      setSaks(saks);
+    }, []);
+    const delSak = useCallback(({ detail: id }) => {
+      const sak = saks.find((s) => s.id == id);
+      this.store.doSakDelete(sak.id);
+      sak.deleted = true;
+      setSaks(saks);
+      this.render();
+    });
+    this.html`<SakList saks=${saks} peoplebyid=${peopleById} ondeletesak=${delSak} />`;
   },
 };
 
