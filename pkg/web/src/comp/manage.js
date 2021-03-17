@@ -32,6 +32,31 @@ const gqlAllOpenSaks = `
       }
     }
   }`;
+const gqlAllSaks = `
+  query AllSaks {
+    saks(orderBy: CREATED_AT_ASC, first: 100) {
+      nodes {
+        id
+        title
+        createdAt
+        finishedAt
+        referendums(orderBy: CREATED_AT_ASC) {
+          nodes {
+            id
+            type
+            title
+            choices
+          }
+        }
+        speeches(orderBy: CREATED_AT_ASC) {
+          nodes {
+            id
+            speakerId
+          }
+        }
+      }
+    }
+  }`;
 const gqlCreateSpeech = `
   mutation CreateSpeech($speakerId: Int!, $type: SpeechType!) {
     createSpeech(input: {speech: {speakerId: $speakerId, type: $type}}) {
@@ -297,6 +322,10 @@ const SakList = {
     if (name == "delete-sak") {
       this.dispatchEvent(new CustomEvent("deletesak", { detail: +id }));
     }
+    if (name == "unfinish-sak") {
+      this.dispatchEvent(new CustomEvent("unfinishsak", { detail: +id }));
+    }
+    this.render();
   },
   render({ useCallback, useStore, useEffect, useState, useSel }) {
     const saks = this.saks;
@@ -304,9 +333,13 @@ const SakList = {
     ${saks.map(
       (s, i) => html`<div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
         <h3 class=${i == 0 ? "current" : ""}>
-          ${s.title}${s.deleted
+          ${s.title}
+      ${s.deleted || s.finishedAt
             ? ""
             : html`<button type="button" onclick=${this} name="delete-sak" data-id=${s.id}>Slett</button>`}
+          ${s.opened || !s.finishedAt
+            ? ""
+            : html`<button type="button" onclick=${this} name="unfinish-sak" data-id=${s.id}>Opne att</button>`}
         </h3>
 
         ${!s.speeches.nodes.length
@@ -357,10 +390,35 @@ const ShowSaker = {
   },
 };
 
+const FinishedSaker = {
+  includes: {
+    SakList,
+  },
+  render({ useCallback, useStore, useEffect, useState, useSel }) {
+    this.store = useStore();
+    const { peopleById } = useSel("peopleById");
+    const [saks, setSaks] = useState([]);
+    useEffect(async () => {
+      const res = await gql(gqlAllSaks);
+      const saks = res.saks.nodes;
+      setSaks(saks);
+    }, []);
+    const unfinishSak = useCallback(({ detail: id }) => {
+      const sak = saks.find((s) => s.id == id);
+      this.store.doSakUpd({ sak, finishedAt: null });
+      sak.opened = true;
+      setSaks(saks);
+      this.render();
+    });
+    this.html`<SakList saks=${saks} peoplebyid=${peopleById} onunfinishsak=${unfinishSak} />`;
+  },
+};
+
 const MoreDialog = {
   extends: "dialog",
   includes: {
     ShowSaker,
+    FinishedSaker,
   },
   mappedAttributes: ["err"],
   oninit() {
@@ -458,6 +516,9 @@ const MoreDialog = {
         <li><button onclick=${this} name=showsak class=${
       this.tab === "showsak" && "active"
     }>Sjå eller slett saker</button>
+        <li><button onclick=${this} name=finished class=${
+      this.tab === "finished" && "active"
+    }>Ferdige saker</button>
       </ul>
       <form name=${this.tab}>
         ${
@@ -499,6 +560,7 @@ Som dette :)"
               <input type="submit" name="action" value="Legg til" />
             `,
             showsak: html`<ShowSaker />`,
+            finished: html`<FinishedSaker />`,
           }[this.tab]
         }
       </form>

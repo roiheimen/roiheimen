@@ -256,24 +256,24 @@ const sak = {
       dispatch({ type: "SAK_DELETE_FAILED", error, payload: sakId });
     }
   },
-  doSakUpd: ({ sakId, config, title } = {}) => async ({ dispatch, store }) => {
-    const sak = store.selectSak();
-    sakId = sakId || sak.id;
+  doSakUpd: ({ sak, config, title, finishedAt } = {}) => async ({ dispatch, store }) => {
+    sak = sak || store.selectSak();
     title = title || sak.title;
+    finishedAt = finishedAt === undefined && sak.finishedAt || null;
     config = { ...sak.config, ...config };
-    dispatch({ type: "SAK_UPDATE_STARTED", payload: sakId });
+    dispatch({ type: "SAK_UPDATE_STARTED", payload: sak.id });
     const query = `
-    mutation SakUpd($sakId: Int!, $config: JSON!, $title: String!) {
-      updateSak(input: {id: $sakId, patch: { config: $config, title: $title }}) {
+    mutation SakUpd($sakId: Int!, $config: JSON!, $title: String!, $finishedAt: Datetime) {
+      updateSak(input: {id: $sakId, patch: { config: $config, title: $title, finishedAt: $finishedAt }}) {
         clientMutationId
       }
     }
     `;
     try {
-      const res = await gql(query, { sakId, title, config });
-      dispatch({ type: "SAK_UPDATE_FINISHED", payload: sakId });
+      const res = await gql(query, { sakId: sak.id, title, config, finishedAt });
+      dispatch({ type: "SAK_UPDATE_FINISHED", payload: sak.id });
     } catch (error) {
-      dispatch({ type: "SAK_UPDATE_FAILED", error, payload: sakId });
+      dispatch({ type: "SAK_UPDATE_FAILED", error, payload: sak.id });
     }
   },
   doSakReq: (title, { meetingId, config = {} } = {}) => async ({ dispatch }) => {
