@@ -547,17 +547,10 @@ create trigger speech_updated_at before update
   execute procedure roiheimen_private.set_updated_at();
 
 -- Test data
-insert into roiheimen.meeting (id, title, theme) values (
-  'test20',
-  'Test Meeting 2020',
-  '{
-    "main-color": "#5359ab",
-    "video-bg": "url(''/assets/bgpattern.webp'') center / cover no-repeat"
-   }');
 -- XXX speechRoom actually has to be hidden from anon!
 insert into roiheimen.meeting (id, title, theme, config) values (
   'meet20',
-  'MDG Landsmøte 2021',
+  'Test',
   '{
     "font": "Avenir",
     "head-font": "MDG",
@@ -566,11 +559,13 @@ insert into roiheimen.meeting (id, title, theme, config) values (
     "video-bg": "#daf3f4"
   }',
   '{
-    "hostname": "landsmote.mdg.no",
+    "hostname": "roiheimen.s0.no",
     "speechDisabled": false,
     "speechInnleggDisabled": false,
-    "speechRoom": "https://nm.whereby.com/r10",
-    "waitRoom": "https://nm.whereby.com/r11",
+    "gfxIframeOnQueue": true,
+    "voteDisallowNum": [],
+    "video": false,
+    "tests": false,
     "externalCss": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"
    }');
 
@@ -595,14 +590,6 @@ select roiheimen.register_people(
   ]::roiheimen.people_input[]
 );
 update roiheimen.person set admin = true where num >= 1000 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r1000' where num = 1000 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r10' where num = 10 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r11' where num = 11 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r12' where num = 12 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r13' where num = 13 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r14' where num = 14 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r15' where num = 15 and meeting_id = 'meet20';
-update roiheimen.person set room = 'https://nm.whereby.com/r16' where num = 16 and meeting_id = 'meet20';
 
 
 COPY roiheimen.sak (id, title, meeting_id, created_at, updated_at, finished_at) FROM stdin;
