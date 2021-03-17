@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Load test</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/lib/boot.js></script>
+<script type=module src=/comp/queue.js></script>
+<script type=module src=/comp/footer.js></script>
+<style>
+iframe {
+  width: 100%;
+  height: 900px;
+  border: 0;
+}
+</style>
+
+<body data-externals data-reloadable>
+  <p>
+    Use `?12` to test from 10 accounts from 12 and up.<br>
+    Use `?12_4` to test 4 accounts from 12 and up.
+  <p><label>Start at account <input name=start_at type=number>
+  <p><label>Accounts <input name=num type=number>
+  <p><label>Iframes <input name=iframes type=number>
+  <p>See console for results.
+  <iframe class=gfx-vote-iframe src="/gfx-vote.html"></iframe>
+</body>
+
+<script type=module>
+import store from "../db/state.js";
+import { gql, live, setLiveErrorCb } from "../lib/graphql.js";
+
+async function login(num) {
+  const gqlLogin = `
+    mutation Login($num: Int!, $mId: String!, $password: String!) {
+      authenticate(input: {num: $num, meetingId: $mId, password: $password}) {
+        jwtToken
+      }
+    }`;
+  try {
+    const password = 'test';
+    const mId = 'meet20';
+    const res = await gql(gqlLogin, { num, mId, password }, { jwt: false });
+    const { authenticate: { jwtToken } } = res;
+    return jwtToken;
+  } catch (error) {
+    console.error(`auth num:${num}`, error);
+  }
+}
+
+async function getMyself(jwt) {
+  const query = `
+    query StartInfo {
+      currentPerson {
+        name
+        id
+        num
+        org
+        meetingId
+        admin
+        room
+      }
+    }`;
+    const res = await gql(query, null, { jwt });
+    const { currentPerson } = res;
+    return currentPerson;
+}
+
+async function doVote({ choice, myself: { id: personId }, referendum: { id: referendumId },
+voteId, jwt }) {
+    if (!voteId) {
+      const res = await gql(`
+      query VoteCheck {
+        voteByReferendumIdAndPersonId(personId: ${personId}, referendumId: ${referendumId}) {
+          id
+        }
+      }
+      `, null, { jwt });
+      voteId = res.voteByReferendumIdAndPersonId?.id
+      console.log("XX set voteid to ", voteId);
+    }
+    const query = voteId ? `
+    mutation ReferendumVoteUpd($id: Int!, $choice: String!) {
+      updateVote(input: {id: $id, patch: {vote: $choice}}) {
+        vote { id }
+      }
+    }` : `
+    mutation ReferendumVote($referendumId: Int!, $personId: Int!, $choice: String!) {
+      createVote(input: {vote: {vote: $choice, referendumId: $referendumId, personId: $personId}}) {
+        vote { id }
+      }
+    }`;
+    try {
+      const res = await gql(query, { id: voteId, referendumId, choice, personId }, { jwt });
+      const id = voteId ? res.updateVote.vote.id : res.createVote.vote.id;
+      return id;
+    } catch (error) {
+      console.error("vote err", {personId, choice, vote, referendumId}, error);
+    }
+}
+
+function getNumLoginObj(s) {
+  const [startAt, num] = s.split("_")
+  return new Array(+num || 10).fill().reduce((o, _, i) => ({ ...o, [(+startAt || 10) + i]: {} }), {})
+}
+const logins = getNumLoginObj(location.search.slice(1));
+
+store.subscribeToSelectors(["selectMyself"], async ({ myself }) => {
+  console.log("I am myself", myself);
+
+  const p = [];
+  for (const num of Object.keys(logins)) {
+    p.push((async () => {
+      console.log("XXX logging in", num);
+      logins[num].jwt = await login(+num);
+      logins[num].myself = await getMyself(logins[num].jwt);
+      console.log("XXX logging in", num, "got mysel", logins[num].myself);
+    })());
+    if (+num % 10 === 0) {
+      await Promise.all(p);
+    }
+  }
+  await Promise.all(p);
+  setTimeout(doit, 100);
+});
+let _referendum;
+store.subscribeToSelectors(["selectReferendum"], async ({ referendum }) => {
+  _referendum = referendum;
+});
+
+let doit_times = 0;
+let total_ms = 0;
+async function doit() {
+  const r = _referendum;
+  if (!r?.choices) {
+    setTimeout(doit, 1000);
+    return;
+  }
+  doit_times += 1;
+  const ops = [];
+  for (const num of Object.keys(logins)) {
+    const login = logins[num];
+    const { myself, jwt } = login;
+    const i = Math.floor(Math.random() * r.choices.length);
+    const choice = r.choices[i];
+    ops.push(doVote({ choice, myself, referendum: r, voteId: login[r.id], jwt }).then(id =>
+    {
+      login[r.id] = id;
+    }));
+  }
+  const bef = performance.now();
+  await Promise.all(ops);
+  const took_ms = performance.now() - bef;
+  total_ms += took_ms;
+  console.log(doit_times, Math.floor(took_ms), Math.round(took_ms / Object.keys(logins).length), Math.floor(total_ms));
+
+  if (doit_times < 100 && (total_ms / 1000) < 100) {
+    setTimeout(doit, 0);
+  } else {
+    console.log("\nFinished\n");
+    const n = doit_times * Object.keys(logins).length;
+    console.log("each req took: ", total_ms / n);
+    console.log("req/s: ", n / (total_ms / 1000));
+  }
+}
+
+</script>

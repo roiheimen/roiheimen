@@ -124,7 +124,7 @@ const myself = {
         }
       }`;
     try {
-      const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { nocreds: true });
+      const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { jwt: false });
       const {
         authenticate: { jwtToken },
       } = res;

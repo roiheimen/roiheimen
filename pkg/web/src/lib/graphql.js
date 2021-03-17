@@ -12,12 +12,13 @@ function getName(query) {
   return /[^{(]+/.exec(query)?.[0].trim();
 }
 
-export async function gql(query, variables, { nocreds } = {}) {
+export async function gql(query, variables, { jwt } = {}) {
+  jwt = jwt === undefined ? creds.jwt : jwt;
   const res = await fetch("/graphql", {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      ...(!nocreds && creds.jwt && { Authorization: `Bearer ${creds.jwt}` }),
+      ...(jwt && { Authorization: `Bearer ${jwt}` }),
     },
     body: JSON.stringify({ query, variables }),
     method: "POST",
