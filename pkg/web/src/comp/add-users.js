@@ -4,8 +4,8 @@ import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
 
 function genPass() {
-  const pass = Math.random().toString(36).slice(2, 7);
-  if (pass.length < 5) return genPass();
+  const pass = Math.random().toString(36).slice(2, 12);
+  if (pass.length < 10) return genPass();
   return pass;
 }
 
