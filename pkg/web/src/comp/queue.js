@@ -112,7 +112,7 @@ const RoiQueueDrawer = {
 
     this.html`
       <div class=buttons>
-        ${config.waitRoom || testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button>`}
+        ${!config.tests || config.waitRoom || testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button>`}
         ${
           config.waitRoom && myNewestSpeechRequest && !speechInWhereby
             ? html`<button .onclick=${() => store.doClientUseWaitRoom(!clientUseWaitRoom)}>
