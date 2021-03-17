@@ -68,7 +68,7 @@ export function parseAdderLine(line) {
       .split("@")
       .map((p) => p.trim());
     if (line[0] === "f") {
-      choices.push("For", "Mot", "Avhaldane");
+      choices.push("For", "Mot", "Avhaldande");
     }
     return { vote: { v: "OPEN", f: "OPEN", l: "CLOSED" }[line[0]], title, choices };
   }
