@@ -133,9 +133,13 @@ define("RoiGfxVote", {
 
         color: white;
         /* border: 2px solid #d94b8e; */
-        padding: 20px 20px 5vh;
+        padding: 10px 10px 5vh;
         border-radius: 2px;
         background: white;
+
+        font-size: 10pt;
+        font-weight: 600;
+        line-height: 1;
       }
       ${self} h2 {
         background: #d94b8e;
@@ -145,8 +149,9 @@ define("RoiGfxVote", {
       }
       ${self} .vote {
         display: inline-block;
-        margin: 3px;
-        padding: 2px 6px;
+        margin: 2px;
+        padding: 2px 3px;
+        font-weight: 400;
       }
       ${self} .voted {
         background-color: #333;
