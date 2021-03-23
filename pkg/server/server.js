@@ -8,7 +8,8 @@ const cCPUs = require("os").cpus().length;
 const { DEV, DATABASE_URL, OWNER_DATABASE_URL } = require("./config.js");
 
 if (cluster.isMaster) {
-  for (let i = 0; i < cCPUs; i++) {
+  const numForks = DEV ? 1 : cCPUs;
+  for (let i = 0; i < numForks; i++) {
     cluster.fork();
   }
 
