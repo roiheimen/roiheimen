@@ -260,17 +260,16 @@ const sak = {
     sak = sak || store.selectSak();
     title = title || sak.title;
     finishedAt = finishedAt === undefined && sak.finishedAt || null;
-    config = { ...sak.config, ...config };
     dispatch({ type: "SAK_UPDATE_STARTED", payload: sak.id });
     const query = `
-    mutation SakUpd($sakId: Int!, $config: JSON!, $title: String!, $finishedAt: Datetime) {
-      updateSak(input: {id: $sakId, patch: { config: $config, title: $title, finishedAt: $finishedAt }}) {
+    mutation SakUpd($sakId: Int!, ${config ? '$config: JSON!,' : ''} $title: String!, $finishedAt: Datetime) {
+      updateSak(input: {id: $sakId, patch: { ${config ? 'config: $config,' : ''} title: $title, finishedAt: $finishedAt }}) {
         clientMutationId
       }
     }
     `;
     try {
-      const res = await gql(query, { sakId: sak.id, title, config, finishedAt });
+      const res = await gql(query, { sakId: sak.id, title, config: { ...sak.config, ...config }, finishedAt });
       dispatch({ type: "SAK_UPDATE_FINISHED", payload: sak.id });
     } catch (error) {
       dispatch({ type: "SAK_UPDATE_FAILED", error, payload: sak.id });

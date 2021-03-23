@@ -527,8 +527,11 @@ create policy update_vote on roiheimen.vote for update to roiheimen_person
     )
   );
 
+--
 -- Triggers
+--
 
+-- updated_at
 create function roiheimen_private.set_updated_at() returns trigger as $$
 begin
   new.updated_at := current_timestamp;
@@ -545,6 +548,23 @@ create trigger speech_updated_at before update
   on roiheimen.speech
   for each row
   execute procedure roiheimen_private.set_updated_at();
+
+-- update meeting disallow when sak is
+create function roiheimen_private.update_disallowed_voters_on_sak() returns trigger as $$
+begin
+  if old.finished_at is null then
+    update roiheimen.meeting m
+      set config = m.config || jsonb_build_object('voteDisallowNum', (new.config->>'voteDisallowNum')::jsonb)
+      where m.id = new.meeting_id;
+  end if;
+  return new;
+end;
+$$ language plpgsql strict security definer;
+
+create trigger sak_config_update_disallowed_voters
+    before update on roiheimen.sak
+    for each row
+    execute procedure roiheimen_private.update_disallowed_voters_on_sak();
 
 -- Test data
 -- XXX speechRoom actually has to be hidden from anon!
