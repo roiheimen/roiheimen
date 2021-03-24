@@ -340,7 +340,7 @@ const sak = {
 
   reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectClientManage", "selectMyselfId", (raw, clientManage, myselfId) => {
     if (!raw.started && !raw.failed && myselfId) {
-      return { actionCreator: "doSakSubscribe", args: [clientManage ? 20 : 1] };
+      return { actionCreator: "doSakSubscribe", args: [clientManage ? 50 : 1] };
     }
   }),
 };
