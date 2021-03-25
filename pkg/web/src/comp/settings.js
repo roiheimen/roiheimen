@@ -76,20 +76,25 @@ define("RoiSettings", {
   },
   render({ useSel, useStore }) {
     this.store = useStore();
-    const { config, meeting, myself, myselfCanVote, testStatus } = useSel("config", "meeting", "myself", "myselfCanVote", "testStatus");
+    const { config, clientGfxIframe, meeting, myself, myselfCanVote, testStatus } = useSel(
+      "config",
+      "clientGfxIframe",
+      "meeting",
+      "myself",
+      "myselfCanVote",
+      "testStatus"
+    );
     const testHtml = {
       active: html` <div class="info">Du er i eit test-møte.</div> `,
       waiting: html`
         <div class="info">
-          Du har spurt om test, du er no i ein kø. Du vert teken inn når det er din tur. Dette vil berre skje når
-          dei bakrommet er tilstades. Du kan lukka dette vindauga.
+          Du har spurt om test, du er no i ein kø. Du vert teken inn når det er din tur. Dette vil berre skje når dei
+          bakrommet er tilstades. Du kan lukka dette vindauga.
         </div>
       `,
       requesting: html` <div>Spør om test.</div> `,
       listening: html`
-        <button tabindex="0" .onclick=${() => this.store.doTestReq()}>
-          Be om prat med bakrommet (t.d. for test)
-        </button>
+        <button tabindex="0" .onclick=${() => this.store.doTestReq()}>Be om prat med bakrommet (t.d. for test)</button>
       `,
       "": "",
     }[testStatus];
@@ -105,15 +110,33 @@ define("RoiSettings", {
           Organisasjon: <strong>${myself?.org}</strong>
           </p>
           <p>${myselfCanVote ? "Du har løyve til å røysta." : "Du har ikkje løyve til å røysta."}</p>
-          <p>Problemer? Send SMS eller ring Odin på 93243725.</p>
+          ${
+            config.gfxIframeOnQueue !== false
+              ? html`<p>
+                  <label
+                    ><input
+                      type="checkbox"
+                      name="gfxIframe"
+                      onchange=${() => store.doClientConfig({ userGfxIframeOnQueue: !clientGfxIframe })}
+                      checked=${clientGfxIframe}
+                    />
+                    Vis direkte-oppdateringer (fungerer dårleg på nokre nettverk)</label
+                  >
+                </p>`
+              : null
+          }
         </div>
-        ${config.backroom ? html`
-        <div>
-          <h2>Prat med bakrommet</h2>
-          <p>Det er lurt å gjera dette før du held eit innlegg, so du kan testa lyd og bilete.</p>
-          ${testHtml}
-        </div>
-        ` : null}
+        ${
+          config.backroom
+            ? html`
+                <div>
+                  <h2>Prat med bakrommet</h2>
+                  <p>Det er lurt å gjera dette før du held eit innlegg, so du kan testa lyd og bilete.</p>
+                  ${testHtml}
+                </div>
+              `
+            : null
+        }
         <div class=buttons>
           <button name=close>Lukk</button>
           <button

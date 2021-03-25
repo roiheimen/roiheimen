@@ -72,6 +72,7 @@ const RoiQueueDrawer = {
   render({ useStore, useSel }) {
     const store = useStore();
     const {
+      clientGfxIframe,
       clientUseWaitRoom,
       config,
       meeting,
@@ -85,6 +86,7 @@ const RoiQueueDrawer = {
       testHasHad,
       test,
     } = useSel(
+      "clientGfxIframe",
       "clientUseWaitRoom",
       "config",
       "meeting",
@@ -105,7 +107,7 @@ const RoiQueueDrawer = {
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = html`
       ${referendum ? html`<roi-referendum simple /> ` : null}
-      ${referendum && config.gfxIframeOnQueue ? html`<iframe class=gfx-vote-iframe src="/gfx-vote.html"></iframe>` : null}
+      ${referendum && clientGfxIframe ? html`<iframe class=gfx-vote-iframe src="/gfx-vote.html"></iframe>` : null}
       ${referendumPrev ? html`<roi-referendum-result /> ` : null}
       ${sak?.id ? html`<roi-speeches-list simple /> ` : null}
     `;

@@ -151,10 +151,6 @@ const myself = {
     "selectMyself",
     (config, myself) => !config.voteDisallowNum?.includes(myself?.num)
   ),
-  selectConfig: createSelector("selectSak", "selectMeeting", (sak, meeting) => ({
-    ...meeting?.config,
-    ...sak?.config,
-  })),
 
 };
 
@@ -606,17 +602,17 @@ const referendum = {
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
     if (type == "REFERENDUM_VOTE_SUB_STARTED") return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
     if (type == "REFERENDUM_VOTE_SUB_FINISHED") return { ...state, subVoteStop: payload };
-    if (type == "REFERENDUM_VOTE_SUB_UPDATED") {
-      const last = state.lastVote || [];
-      if (!payload) return { ...state, lastVote: last };
-      const changed = last[last.length - 1]?.id == payload.id;
-      return { ...state, lastVote: [...(changed ? last.slice(0, -1) : last), payload] }
-    };
     if (type == "REFERENDUM_VOTE_STARTED")
       return {
         ...state,
         prevVote: state.data.find((r) => r.id == payload.referendumId)?.type == "OPEN" ? payload : null,
       };
+    if (type == "REFERENDUM_VOTE_SUB_UPDATED" || type == "REFERENDUM_VOTE_FINISHED") {
+      const last = state.lastVote || [];
+      if (!payload) return { ...state, lastVote: last };
+      const changed = last[last.length - 1]?.id == payload.id;
+      return { ...state, lastVote: [...(changed ? last.slice(0, -1) : last), payload] }
+    };
     if (type == "REFERENDUM_COUNT_FINISHED") return { ...state, count: payload };
     return state;
   },
@@ -782,7 +778,7 @@ const referendum = {
     try {
       const res = await gql(query, { id: vote?.id, referendumId, choice, personId });
       const id = vote ? res.updateVote.vote.id : res.createVote.vote.id;
-      dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: id });
+      dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: { id, referendumId, vote: choice, personId } });
       if (vote) {
         // We changed our vote, re-listen for the update
         store.doReferendumVoteSubscribe();
@@ -1018,6 +1014,10 @@ const test = {
 const client = {
   name: "client",
   getReducer() {
+    let config = {};
+    try {
+      config = JSON.parse(localStorage.config);
+    } catch {}
     const initialState = {
       manage: 'manage' in document.body.dataset,
       ui: "",
@@ -1025,12 +1025,14 @@ const client = {
       userFacing: 'externals' in document.body.dataset,
       reloadable: 'reloadable' in document.body.dataset,
       youtubeSize: "",
+      config,
     };
     return (state = initialState, { type, payload }) => {
       if (type == "CLIENT_UI") {
         if (!["", "settings"].includes(payload)) throw new Error(`Unexpecetd ui ${payload}`);
         return { ...state, ui: payload };
       }
+      if (type == "CLIENT_CONFIG") return { ...state, config: { ...state.config, ...payload } };
       if (type == "CLIENT_YOUTUBE_SIZE") return { ...state, youtubeSize: payload };
       if (type == "CLIENT_USE_WAIT_ROOM") return { ...state, useWaitRoom: payload };
       return state;
@@ -1054,6 +1056,10 @@ const client = {
   doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
   doClientYoutubeSize: (big) => ({ type: "CLIENT_YOUTUBE_SIZE", payload: big }),
   doClientUseWaitRoom: (use) => ({ type: "CLIENT_USE_WAIT_ROOM", payload: use }),
+  doClientConfig: (cfg) => ({ store, dispatch }) => {
+    localStorage.config = JSON.stringify({ ...store.selectClientRaw().config, ...cfg });
+    dispatch({ type: "CLIENT_CONFIG", payload: cfg });
+  },
 
   selectClientRaw: (state) => state.client,
   selectClientUi: (state) => state.client.ui,
@@ -1069,6 +1075,15 @@ const client = {
       return wherebyParticipants < 2;
     }
   ),
+  selectClientGfxIframe: createSelector("selectConfig", (config) => {
+    if (config.gfxIframeOnQueue === false) return false;
+    return config.userGfxIframeOnQueue ?? config.gfxIframeOnQueue;
+  }),
+  selectConfig: createSelector("selectClientRaw", "selectSak", "selectMeeting", (raw, sak, meeting) => ({
+    ...meeting?.config,
+    ...sak?.config,
+    ...raw.config,
+  })),
 };
 
 const whereby = {
