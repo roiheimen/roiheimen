@@ -78,8 +78,6 @@ define("RoiVideo", {
     `;
   },
   render({ useSel, useStore, useEffect }) {
-    const youtubeId = "UDSAUmxZGjE";
-
     const {
       clientShowYoutube,
       clientYoutubeSize,
@@ -104,14 +102,13 @@ define("RoiVideo", {
       this.classList.toggle("novideo", config.video === false);
     }, [clientYoutubeSize, wherebyActiveRoom, config.video]);
 
-    if (config.video === false) {
+    if (!config.video) {
       this.html`${null}`;
-    }
-    else if (speechFetching) {
+    } else if (speechFetching) {
       this.html`Waiting...`;
     } else {
       this.html`
-        ${clientShowYoutube ? html`<roi-youtube .id=${youtubeId} />` : null}
+        ${clientShowYoutube ? html`<roi-youtube .id=${config.video} />` : null}
         ${wherebyActiveRoom ? html`<WherebyEmbed .creds=${this.creds} />` : null}
       `;
     }
