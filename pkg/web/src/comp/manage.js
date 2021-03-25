@@ -671,6 +671,9 @@ define("RoiManage", {
       color: #666;
       grid-column: 1/4;
     }
+    ${self} .people p {
+      text-align: center;
+    }
     roi-referendum-list, roi-speeches-list {
       margin-bottom: 20px;
     }
@@ -696,7 +699,7 @@ define("RoiManage", {
     }
   },
   render({ useSel, useStore }) {
-    const { sak, config } = useSel("sak", "config");
+    const { sak, config, peopleDelegates } = useSel("sak", "config", "peopleDelegates");
     this.store = useStore();
     this.html`
       ${
@@ -725,6 +728,7 @@ define("RoiManage", {
 
       <div class=people>
         <h2>Folk </h2>
+        <p>${peopleDelegates.length} røysteføre</p>
         <roi-person-list editable />
       </div>
       <NewSakDialog ref=${this.newSakDialog} onnewsak=${this} />
