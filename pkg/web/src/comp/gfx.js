@@ -91,7 +91,7 @@ define("RoiGfxSpeaker", {
     //if (prevTitle && prevTitle == title) return;
     useEffect(() => {
       if (!this.div.current) return;
-      const DURATION = 20000;
+      const DURATION = 30000;
       this.div.current.animate(
         [
           { opacity: 0, transform: "translateX(-100px)" },
