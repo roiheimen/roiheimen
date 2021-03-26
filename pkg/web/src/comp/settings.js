@@ -120,7 +120,7 @@ define("RoiSettings", {
                       onchange=${() => store.doClientConfig({ userGfxIframeOnQueue: !clientGfxIframe })}
                       checked=${clientGfxIframe}
                     />
-                    Vis direkte-oppdateringer (fungerer dårleg på nokre nettverk)</label
+                    Vis direkte avrøystingsgrafikk (fungerer dårleg på nokre nettverk)</label
                   >
                 </p>`
               : null
