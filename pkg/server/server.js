@@ -30,7 +30,7 @@ if (cluster.isMaster) {
       //  return { role: "roiheimen_anonymous", };
       //},
       pgDefaultRole: "roiheimen_anonymous",
-      jwtSecret: "secret_kitten",
+      jwtSecret: "oodeeToKeeFoh6hu",
       jwtPgTypeIdentifier: "roiheimen.jwt_token",
       ownerConnectionString: OWNER_DATABASE_URL,
 

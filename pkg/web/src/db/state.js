@@ -493,7 +493,7 @@ const speech = {
     if (subStop) subStop();
     const query = `
       subscription Speeches($sakId: Int!) {
-        speeches(condition: {sakId: $sakId}) {
+        speeches(condition: {sakId: $sakId}, orderBy: CREATED_AT_ASC) {
           nodes {
             id
             speakerId
@@ -689,7 +689,7 @@ const referendum = {
     if (subStop) subStop();
     const query = `
       subscription Referendums($sakId: Int!) {
-        referendums(condition: {sakId: $sakId}) {
+        referendums(condition: {sakId: $sakId}, orderBy: CREATED_AT_ASC) {
           nodes {
             choices
             id

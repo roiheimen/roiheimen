@@ -496,10 +496,10 @@ create policy select_vote on roiheimen.vote for select to roiheimen_person
   );
 -- Actually not a good idea, since admins will have access to users pws,
 -- and can therefore read their votes
--- create policy select_vote_yourself on roiheimen.vote for select to roiheimen_person
---   using (
---     person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
---   );
+create policy select_vote_yourself on roiheimen.vote for select to roiheimen_person
+  using (
+    person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+  );
 create policy insert_vote on roiheimen.vote for insert to roiheimen_person
   with check (
     person_id = nullif(current_setting('jwt.claims.person_id', true), '')::integer

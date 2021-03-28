@@ -33,3 +33,10 @@ Copy standard vote disallows from a recent sak:
     SET config = m.config || jsonb_build_object('voteDisallowNum', (s.config->>'voteDisallowNum')::jsonb)
     FROM roiheimen.sak s
     WHERE m.id = s.meeting_id AND s.id = 17;
+
+Copy standard vote disallows sak to sak:
+
+    UPDATE roiheimen.sak s
+    SET config = s.config || jsonb_build_object('voteDisallowNum', (s.config->>'voteDisallowNum')::jsonb)
+    FROM roiheimen.sak s2
+    WHERE s.id = 132 AND s2.id = 129;
