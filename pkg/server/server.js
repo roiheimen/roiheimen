@@ -5,7 +5,7 @@ const { postgraphile } = require("postgraphile");
 const pg_simplify_inflector = require("@graphile-contrib/pg-simplify-inflector");
 const cCPUs = require("os").cpus().length;
 
-const { DEV, DATABASE_URL, OWNER_DATABASE_URL } = require("./config.js");
+const { DEV, DATABASE_URL, OWNER_DATABASE_URL, JWT_SECRET } = require("./config.js");
 
 if (cluster.isMaster) {
   const numForks = DEV ? 1 : cCPUs;
@@ -30,7 +30,7 @@ if (cluster.isMaster) {
       //  return { role: "roiheimen_anonymous", };
       //},
       pgDefaultRole: "roiheimen_anonymous",
-      jwtSecret: "oodeeToKeeFoh6hu",
+      jwtSecret: JWT_SECRET,
       jwtPgTypeIdentifier: "roiheimen.jwt_token",
       ownerConnectionString: OWNER_DATABASE_URL,
 
