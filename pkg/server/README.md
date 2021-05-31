@@ -2,6 +2,12 @@ PostGraphile server
 ===================
 This is our GraphQL API.
 
+It is basically just
+[postgraphile](https://www.graphile.org/postgraphile/) which makes a
+GraphQL API out of a postgresql database. It also has some basic
+graphile worker and a simple emoji server set up (which at time of
+writing hasn't gotten any UI).
+
 Setup
 -----
 

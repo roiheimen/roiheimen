@@ -13,18 +13,6 @@ async function main() {
     taskDirectory: `${__dirname}/tasks`,
   });
 
-  // Or add a job to be executed:
-  await quickAddJob(
-    // makeWorkerUtils options
-    { connectionString: OWNER_DATABASE_URL },
-
-    // Task identifier
-    "hello",
-
-    // Payload
-    { name: "Bobby Tables" },
-  );
-
   // If the worker exits (whether through fatal error or otherwise), this
   // promise will resolve/reject:
   await runner.promise;
