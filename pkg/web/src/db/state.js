@@ -12,7 +12,7 @@ const meeting = {
   name: "meeting",
   reducer: (state = { started: false, failed: false, subTo: "", data: null, id: meeting_.id || null }, { type, payload, error }) => {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
-    if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.meetings };
+    if (type == MEETING_FETCH_FINISHED) return { ...state, data: payload.meetings };
     if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
     if (type == "MEETING_SUB_STARTED") return { ...state, subTo: payload };
     if (type == "MEETING_SUB_FAILED") return { ...state, failed: error || true };
@@ -58,7 +58,7 @@ const meeting = {
         currentPerson,
         meetings: { nodes: meetings },
       } = await gql(query);
-      dispatch({ type: "MEETING_FETCH_FINISHED", payload: { currentPerson, meetings } });
+      dispatch({ type: MEETING_FETCH_FINISHED, payload: { currentPerson, meetings } });
     } catch (error) {
       dispatch({ type: "MEETING_FETCH_FAILED", error });
     }
@@ -99,10 +99,12 @@ const meeting = {
   }),
 };
 
+export const MEETING_FETCH_FINISHED = "MEETING_FETCH_FINISHED";
+
 const myself = {
   name: "myself",
   reducer: (state = { started: false, data: null, errors: null, fetched: false }, { type, payload, error }) => {
-    if (type == "MEETING_FETCH_FINISHED") return { ...state, data: payload.currentPerson, errors: null, fetched: true };
+    if (type == MEETING_FETCH_FINISHED) return { ...state, data: payload.currentPerson, fetched: true };
     if (type == "MYSELF_LOGIN_FAILED") return { ...state, errors: payload, fetched: true };
     return state;
   },
