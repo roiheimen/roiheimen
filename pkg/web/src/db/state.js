@@ -856,6 +856,7 @@ const referendum = {
         const counts = [...r.choices, ""].map((choice) => ({
           choice,
           count: live[choice] ?? (+refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0),
+          privateCount: +refCnt[r.id]?.find((rf) => rf.choice == choice)?.cnt || 0,
         }));
         return { ...r, counts, vote };
       });

@@ -2,6 +2,13 @@ import { define, html, ref } from "/web_modules/heresy.js";
 
 import "../db/state.js";
 
+function voteToClass(vote) {
+  const v = vote?.toLowerCase();
+  if (["ja", "jo", "yes", "for", "godta"].includes(v)) return "yes";
+  if (["nei", "no", "mot", "avslå"].includes(v)) return "no";
+  return "";
+}
+
 define("RoiGfxTitle", {
   style(self) {
     return `
@@ -167,10 +174,17 @@ define("RoiGfxVote", {
       }
     `;
   },
-  render({ useEffect, useSel, usePrevious }) {
+  render({ useEffect, useStore, useSel, usePrevious }) {
     const { referendum, peopleDelegates } = useSel("referendum", "peopleDelegates");
+    const store = useStore();
     const title = referendum?.title;
     const votesByPerson = referendum?.votes.nodes.reduce((o, v) => ({ ...o, [v.personId]: v }), {}) || {};
+    useEffect(() => {
+      if (referendum?.type !== "CLOSED") return;
+      store.doReferendumCount();
+      const i = setInterval(() => store.doReferendumCount(), 5000);
+      return () => clearInterval(i);
+    }, [referendum?.type]);
     useEffect(() => {
       if (!this.div.current) return;
       const DURATION = 500;
@@ -187,17 +201,25 @@ define("RoiGfxVote", {
     this.html`
       <div class=refbox ref=${this.div}>
         ${this.noheader ? null : html`<h2>${title}</h2>`}
-        <div class=ppl>${peopleDelegates?.map((p) => {
+        <div class=ppl>${peopleDelegates?.map((p, i) => {
+          let name = p.num;
           let cn = "not_voted";
-          const v = votesByPerson[p.id];
-          if (v) {
-            cn = "voted";
-            const vote = v.vote?.toLowerCase();
-            if (["ja", "jo", "yes", "for", "godta"].includes(vote)) cn = cn + " yes";
-            if (["nei", "no", "mot", "avslå"].includes(vote)) cn = cn + " no";
+          if (referendum.type === "CLOSED") {
+            name = '  '; // nbsp :shrug:
+            let doneVotes = 0;
+            for (const c of referendum.counts) {
+              doneVotes += c.privateCount;
+              if (doneVotes > i) {
+                cn = `voted ${voteToClass(c.choice)}`.trim();
+                break;
+              }
+            }
+          } else {
+            const v = votesByPerson[p.id];
+            if (v) cn = `voted ${voteToClass(v.vote)}`.trim();
           }
           cn = `vote ${cn}`;
-          return html`<div class=${cn}>${p.num}</div>`;
+          return html`<div class=${cn}>${name}</div>`;
         })}</div>
       </div>
     `;
