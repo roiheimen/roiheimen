@@ -688,6 +688,12 @@ define("RoiManage", {
     roi-person-list table { width: 100% }
     `;
   },
+  oninput({ target }) {
+    this.querySelector(".update").disabled = false;
+  },
+  onchange({ target }) {
+    this.querySelector(".update").disabled = false;
+  },
   onclick({ target }) {
     if (target.classList.contains("new")) {
       this.newSakDialog.current.showModal();
@@ -697,8 +703,10 @@ define("RoiManage", {
       const title = this.querySelector(".title").value;
       const speechDisabled = this.querySelector(".speechDisabled").checked;
       const speechInnleggDisabled = this.querySelector(".speechInnleggDisabled").checked;
-      this.store.doSakUpd({ title, config: { speechDisabled, speechInnleggDisabled } });
-    } else {
+      const hideClosedReferendumResults = this.querySelector(".hideClosedResults").checked;
+      this.store.doSakUpd({ title, config: { speechDisabled, speechInnleggDisabled, hideClosedReferendumResults } });
+      this.querySelector(".update").disabled = true;
+    } else if (target.classList.contains("finish")) {
       this.store.doSakFinish();
     }
   },
@@ -709,17 +717,21 @@ define("RoiManage", {
       ${
         sak?.id
           ? html`
-              <input class=title value=${sak?.title} title=${`sak-id: ${sak?.id}`} placeholder="Ingenting">
+              <input class=title value=${sak?.title} title=${`sak-id: ${sak?.id}`} oninput=${this} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
-              <div class=config>
+              <div class=config onchange=${this}>
                 <label><input class=speechDisabled type=checkbox checked=${
                   config.speechDisabled
                 }> Taleliste stengt</label>
                 <label><input class=speechInnleggDisabled type=checkbox checked=${
                   config.speechInnleggDisabled
                 }> Innlegg stengt</label>
+                <label title="Skjuler resultat av *lukka* avrøystinger. Det er viktig å få med seg at resultatet framleis er *tilgjengeleg* for sluttbrukar, men ikkje enkelt (må 'hacka' for å sjå det). Kven som har røysta kva er utilgjengeleg for alle."
+                ><input class=hideClosedResults type=checkbox checked=${
+                  config.hideClosedReferendumResults
+                }> Skjul resultat</label>
               </div>
-              <button class=update name=update onclick=${this}>Oppdater</button>
+              <button class=update name=update onclick=${this} disabled>Oppdater</button>
               <SakSpeakerAdderInput />
               <button name=more onclick=${this}>Meir</button>
               <div class=list>
