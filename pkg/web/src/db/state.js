@@ -57,7 +57,7 @@ const meeting = {
       const {
         currentPerson,
         meetings: { nodes: meetings },
-      } = await gql(query);
+      } = await gql(query, { timeout: 10000, retry: true });
       dispatch({ type: MEETING_FETCH_FINISHED, payload: { currentPerson, meetings } });
     } catch (error) {
       dispatch({ type: "MEETING_FETCH_FAILED", error });

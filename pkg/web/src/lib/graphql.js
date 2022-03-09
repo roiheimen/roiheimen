@@ -12,20 +12,38 @@ function getName(query) {
   return /[^{(]+/.exec(query)?.[0].trim();
 }
 
-export async function gql(query, variables, { jwt } = {}) {
+export async function gql(query, variables, { jwt, retry, timeout } = {}) {
   jwt = jwt === undefined ? creds.jwt : jwt;
-  const res = await fetch("/graphql", {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(jwt && { Authorization: `Bearer ${jwt}` }),
-    },
-    body: JSON.stringify({ query, variables }),
-    method: "POST",
-    mode: "cors",
-  });
+  retry = retry === undefined ? false : retry;
+  timeout = timeout === undefined ? 30000 : timeout;
 
   const name = getName(query);
+  const aborter = new AbortController()
+  const timeoutId = setTimeout(() => aborter.abort(), timeout)
+  let res;
+  try {
+    res = await fetch("/graphql", {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(jwt && { Authorization: `Bearer ${jwt}` }),
+      },
+      signal: aborter.signal,
+      body: JSON.stringify({ query, variables }),
+      method: "POST",
+      mode: "cors",
+    });
+  } catch(e) {
+    if (aborter.signal.aborted && retry) {
+      console.warn(`GraphQL query ${name} timed out (${timeout/1000}s), retrying.`);
+      return await gql(query, variables, { jwt, timeout, retry: false });
+    }
+    throw e;
+  }
+  finally {
+    clearTimeout(timeoutId);
+  }
+
   if (!res.ok) {
     const e = new Error(`${res.status}: ${res.statusText}`);
     e.extra = {
