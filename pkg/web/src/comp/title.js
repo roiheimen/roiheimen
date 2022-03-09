@@ -4,6 +4,6 @@ define("RoiTitle", {
   extends: "h1",
   render({ useSel }) {
     const { meeting } = useSel("meeting");
-    this.html`${this.children} ${meeting?.title || '–'}`;
+    this.html`${this.children} ${meeting?.title || "–"}`;
   },
 });

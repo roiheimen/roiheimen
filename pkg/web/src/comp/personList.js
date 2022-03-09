@@ -45,7 +45,7 @@ export default define("RoiPersonList", {
     <form>
       <table>
       <tr><th>Nummer <th>Namn <th>Lag <th>Anna ${
-        sakId ? html`<button type="button" onclick=${() => setEdit(!edit)}>Endra</button>` : null
+        sakId ? html` <button type="button" onclick=${() => setEdit(!edit)}>Endra</button> ` : null
       }</tr>
       ${people.map(
         (person) =>
@@ -56,19 +56,19 @@ export default define("RoiPersonList", {
               <td>${person.org}</td>
               <td>
                 ${canEdit && edit
-                    ? html`<label><input
-                      type="checkbox"
-                      data-num=${person.num}
-                      name="disallowvote"
-                      checked=${!person.canVote}
-                    /> Ingen røysterett</label>`
+                  ? html`
+                      <label
+                        ><input type="checkbox" data-num=${person.num} name="disallowvote" checked=${!person.canVote} />
+                        Ingen røysterett</label
+                      >
+                    `
                   : personProps(person)}
               </td>
             </tr>
           `
       )}
       </table>
-      ${canEdit && edit ? html`<input type="submit" value="Oppdater" />` : null}
+      ${canEdit && edit ? html` <input type="submit" value="Oppdater" /> ` : null}
     </form>
       `;
   },

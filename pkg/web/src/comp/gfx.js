@@ -200,12 +200,12 @@ define("RoiGfxVote", {
     if (!title) return this.html`<div></div>`;
     this.html`
       <div class=refbox ref=${this.div}>
-        ${this.noheader ? null : html`<h2>${title}</h2>`}
+        ${this.noheader ? null : html` <h2>${title}</h2> `}
         <div class=ppl>${peopleDelegates?.map((p, i) => {
           let name = p.num;
           let cn = "not_voted";
           if (referendum.type === "CLOSED") {
-            name = '  '; // nbsp :shrug:
+            name = "  "; // nbsp :shrug:
             let doneVotes = 0;
             for (const c of referendum.counts) {
               doneVotes += c.privateCount;
@@ -219,7 +219,7 @@ define("RoiGfxVote", {
             if (v) cn = `voted ${voteToClass(v.vote)}`.trim();
           }
           cn = `vote ${cn}`;
-          return html`<div class=${cn}>${name}</div>`;
+          return html` <div class=${cn}>${name}</div> `;
         })}</div>
       </div>
     `;

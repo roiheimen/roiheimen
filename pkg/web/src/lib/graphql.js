@@ -18,8 +18,8 @@ export async function gql(query, variables, { jwt, retry, timeout } = {}) {
   timeout = timeout === undefined ? 30000 : timeout;
 
   const name = getName(query);
-  const aborter = new AbortController()
-  const timeoutId = setTimeout(() => aborter.abort(), timeout)
+  const aborter = new AbortController();
+  const timeoutId = setTimeout(() => aborter.abort(), timeout);
   let res;
   try {
     res = await fetch("/graphql", {
@@ -33,14 +33,13 @@ export async function gql(query, variables, { jwt, retry, timeout } = {}) {
       method: "POST",
       mode: "cors",
     });
-  } catch(e) {
+  } catch (e) {
     if (aborter.signal.aborted && retry) {
-      console.warn(`GraphQL query ${name} timed out (${timeout/1000}s), retrying.`);
+      console.warn(`GraphQL query ${name} timed out (${timeout / 1000}s), retrying.`);
       return await gql(query, variables, { jwt, timeout, retry: false });
     }
     throw e;
-  }
-  finally {
+  } finally {
     clearTimeout(timeoutId);
   }
 
@@ -59,7 +58,7 @@ export async function gql(query, variables, { jwt, retry, timeout } = {}) {
   printErrors(name, errors);
   if (!data && errors) {
     const e = new Error(`Error returned for ${name}`);
-    e.extra = { body: { errors } };
+    e.extra = { body: { errors } };
     throw e;
   }
   return data;

@@ -72,8 +72,8 @@ define("RoiBackroom", {
     const testButtons = (t) => {
       if (!peopleById[t.requesterId]?.room) return null;
       if (!t.startedAt && t.finishedAt) return "Avbrutt";
-      if (!t.startedAt) return html`<button name="test_start">Test</button> <button name="test_end">Avbryt</button>`;
-      if (!t.finishedAt) return html`<button name="test_end">Avslutt</button>`;
+      if (!t.startedAt) return html` <button name="test_start">Test</button> <button name="test_end">Avbryt</button> `;
+      if (!t.finishedAt) return html` <button name="test_end">Avslutt</button> `;
       if (t.finishedAt) return "Ferdig";
       return "?";
     };
@@ -98,7 +98,7 @@ define("RoiBackroom", {
         </tr>
       `;
     this.html`
-      ${testActive ? html`<WherebyEmbed />` : null}
+      ${testActive ? html` <WherebyEmbed /> ` : null}
       <table onclick=${this}>
       <tr><th>Nummer <th>Namn </tr>
       ${starta.map(row)}

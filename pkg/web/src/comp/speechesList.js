@@ -45,16 +45,20 @@ export default define("RoiSpeechesList", {
         .join(" ");
     const toggle = () => {
       if (this.simple || speeches.length == interesting.length) return null;
-      return html`<button style="margin-left: auto" .onclick=${() => setShowAll((s) => !s)}>
-        ${showAll ? "Skjul ferdige" : "Vis alle"}
-      </button>`;
+      return html`
+        <button style="margin-left: auto" .onclick=${() => setShowAll((s) => !s)}>
+          ${showAll ? "Skjul ferdige" : "Vis alle"}
+        </button>
+      `;
     };
     const rm = (speech) => {
       if (speech.endedAt) return null;
       if (speech.speakerId == myself.id || (myself.admin && !this.simple))
-        return html`<button style="margin-left: auto" .onclick=${() => store.doSpeechEnd(speech.id)}>
-          ${speech.startedAt ? "Avslutt" : "Stryk"}
-        </button>`;
+        return html`
+          <button style="margin-left: auto" .onclick=${() => store.doSpeechEnd(speech.id)}>
+            ${speech.startedAt ? "Avslutt" : "Stryk"}
+          </button>
+        `;
     };
     this.html`
       <table class=${[this.simple && "simple", this.color && "color"].filter(Boolean).join(" ")}>

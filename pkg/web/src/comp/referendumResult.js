@@ -30,11 +30,11 @@ export default define("RoiReferendumResult", {
       <div data-id=${id}>
         <h3><span class="prev">Førre avrøysting:</span> ${title}</h3>
         ${referendumPrev.counts?.map((c) =>
-                  !c.choice && !c.count
-                    ? html`${[]}`
-                    : html` <span class="choice">${c.choice || "<blank>"} (${c.count})</span> `
+          !c.choice && !c.count
+            ? html` ${[]} `
+            : html` <span class="choice">${c.choice || "<blank>"} (${c.count})</span> `
         )}
-        ${referendumPrev.vote ? html`<p>Du valde «${referendumPrev.vote.vote}».</p>` : null}
+        ${referendumPrev.vote ? html` <p>Du valde «${referendumPrev.vote.vote}».</p> ` : null}
       </div>
       `;
   },

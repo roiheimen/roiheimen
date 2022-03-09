@@ -331,36 +331,42 @@ const SakList = {
     const saks = this.saks;
     this.html`
     ${saks.map(
-      (s, i) => html`<div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
-        <h3 class=${i == 0 ? "current" : ""}>
-          ${s.title}
-      ${s.deleted || s.finishedAt
-            ? ""
-            : html`<button type="button" onclick=${this} name="delete-sak" data-id=${s.id}>Slett</button>`}
-          ${s.opened || !s.finishedAt
-            ? ""
-            : html`<button type="button" onclick=${this} name="unfinish-sak" data-id=${s.id}>Opne att</button>`}
-        </h3>
+      (s, i) => html`
+        <div title=${"sak-id: " + s.id} class=${s.deleted ? "deleted" : ""}>
+          <h3 class=${i == 0 ? "current" : ""}>
+            ${s.title}
+            ${s.deleted || s.finishedAt
+              ? ""
+              : html` <button type="button" onclick=${this} name="delete-sak" data-id=${s.id}>Slett</button> `}
+            ${s.opened || !s.finishedAt
+              ? ""
+              : html` <button type="button" onclick=${this} name="unfinish-sak" data-id=${s.id}>Opne att</button> `}
+          </h3>
 
-        ${!s.speeches.nodes.length
-          ? ""
-          : html`<div class="speeches">
-              Taleliste:
-              ${s.speeches.nodes.map((speech) => {
-                const speaker = this.peoplebyid?.[speech.speakerId];
-                return html`<span class="speech" title=${speaker?.name + "\nspeech-id:" + speech.id}
-                  >${speaker?.num || "?"}</span
-                >`;
-              })}
-            </div>`}
-        <ol>
-          ${s.referendums.nodes.map(
-            (r) => html`<li title=${"ref-id: " + r.id}>
+          ${!s.speeches.nodes.length
+            ? ""
+            : html`
+                <div class="speeches">
+                  Taleliste:
+                  ${s.speeches.nodes.map((speech) => {
+                    const speaker = this.peoplebyid?.[speech.speakerId];
+                    return html`
+                      <span class="speech" title=${speaker?.name + "\nspeech-id:" + speech.id}
+                        >${speaker?.num || "?"}</span
+                      >
+                    `;
+                  })}
+                </div>
+              `}
+          <ol>
+            ${s.referendums.nodes.map(
+              (r) => html`<li title=${"ref-id: " + r.id}>
             ${r.title} ${r.choices.map((c) => html` <span class="choice">${c}</span> `)}
           </div>`
-          )}
-        </ol>
-      </div> `
+            )}
+          </ol>
+        </div>
+      `
     )}
     `;
   },
@@ -516,9 +522,7 @@ const MoreDialog = {
         <li><button onclick=${this} name=showsak class=${
       this.tab === "showsak" && "active"
     }>Sjå eller slett saker</button>
-        <li><button onclick=${this} name=finished class=${
-      this.tab === "finished" && "active"
-    }>Ferdige saker</button>
+        <li><button onclick=${this} name=finished class=${this.tab === "finished" && "active"}>Ferdige saker</button>
       </ul>
       <form name=${this.tab}>
         ${
@@ -559,8 +563,8 @@ Som dette :)"
               </label>
               <input type="submit" name="action" value="Legg til" />
             `,
-            showsak: html`<ShowSaker />`,
-            finished: html`<FinishedSaker />`,
+            showsak: html` <ShowSaker /> `,
+            finished: html` <FinishedSaker /> `,
           }[this.tab]
         }
       </form>
@@ -723,7 +727,7 @@ define("RoiManage", {
                 <roi-referendum-list />
               </list>
             `
-          : html`<button class="new" name="new" onclick=${this}>Ny sak</button>`
+          : html` <button class="new" name="new" onclick=${this}>Ny sak</button> `
       }
 
       <div class=people>

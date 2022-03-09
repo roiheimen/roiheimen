@@ -66,7 +66,7 @@ define("RoiLogin", {
       <input name=num inputmode=numeric pattern="[1-9][0-9]*" value=${this.creds.num} />
       <label>Kode</label>
       <input name=code value=${this.creds.code} />
-      ${myselfErrors && myselfErrors.map((e) => html`<p class="err">${e}</p>`)}
+      ${myselfErrors && myselfErrors.map((e) => html` <p class="err">${e}</p> `)}
       <span />
       <input type=submit value="Logg inn" />
     </form>

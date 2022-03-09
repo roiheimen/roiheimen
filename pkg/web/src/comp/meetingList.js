@@ -55,11 +55,13 @@ define("RoiMeetingList", {
     Vel eit møte:
     <ul onclick=${this}>
       ${meetings.map(
-        (m) => html` <li style=${toCss(m.theme)}>
-          <a data-id=${m.id} href=${`/?m=${m.id}`}>
-            <span>${m.title || m.id}</span>
-          </a>
-        </li>`
+        (m) => html`
+          <li style=${toCss(m.theme)}>
+            <a data-id=${m.id} href=${`/?m=${m.id}`}>
+              <span>${m.title || m.id}</span>
+            </a>
+          </li>
+        `
       )}
     </ul>
     `;

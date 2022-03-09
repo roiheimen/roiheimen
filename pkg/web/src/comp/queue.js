@@ -106,20 +106,26 @@ const RoiQueueDrawer = {
     }
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
     let workArea = html`
-      ${referendum ? html`<roi-referendum simple /> ` : null}
-      ${referendum && clientGfxIframe ? html`<iframe class=gfx-vote-iframe src="/gfx-vote.html"></iframe>` : null}
-      ${referendumPrev ? html`<roi-referendum-result /> ` : null}
-      ${sak?.id ? html`<roi-speeches-list simple /> ` : null}
+      ${referendum ? html` <roi-referendum simple /> ` : null}
+      ${referendum && clientGfxIframe ? html` <iframe class="gfx-vote-iframe" src="/gfx-vote.html"></iframe> ` : null}
+      ${referendumPrev ? html` <roi-referendum-result /> ` : null}
+      ${sak?.id ? html` <roi-speeches-list simple /> ` : null}
     `;
 
     this.html`
       <div class=buttons>
-        ${!config.tests || config.waitRoom || testHasHad ? "" : html`<button .onclick=${() => store.doTestReq()}>Test</button>`}
+        ${
+          !config.tests || config.waitRoom || testHasHad
+            ? ""
+            : html` <button .onclick=${() => store.doTestReq()}>Test</button> `
+        }
         ${
           config.waitRoom && myNewestSpeechRequest && !speechInWhereby
-            ? html`<button .onclick=${() => store.doClientUseWaitRoom(!clientUseWaitRoom)}>
-                ${clientUseWaitRoom ? "Gå ut av venterom" : "Gå inn i venterom"}
-              </button>`
+            ? html`
+                <button .onclick=${() => store.doClientUseWaitRoom(!clientUseWaitRoom)}>
+                  ${clientUseWaitRoom ? "Gå ut av venterom" : "Gå inn i venterom"}
+                </button>
+              `
             : ""
         }
         ${
@@ -134,7 +140,8 @@ const RoiQueueDrawer = {
                 >
                   Innlegg
                 </button>
-                ` : null
+              `
+            : null
         }
         ${
           sak?.id && !config.speechDisabled
@@ -168,13 +175,15 @@ const RoiQueueDrawer = {
           >Innstillingar</button>
       </div>
       <div class=queue>
-        ${config.emoji ? html`<button .onclick=${() => store.doEmojiSend("like")}>Like</button>` : null}
+        ${config.emoji ? html` <button .onclick=${() => store.doEmojiSend("like")}>Like</button> ` : null}
         ${
           test
-            ? html`<div class="info">
-                Du er i ${!test.startedAt ? "kø for" : ""} ein prat på bakrommet.
-                <button .onclick=${() => store.doTestUpdateStatus(test?.id, "stop")}>Avbryt</button>
-              </div> `
+            ? html`
+                <div class="info">
+                  Du er i ${!test.startedAt ? "kø for" : ""} ein prat på bakrommet.
+                  <button .onclick=${() => store.doTestUpdateStatus(test?.id, "stop")}>Avbryt</button>
+                </div>
+              `
             : null
         }
         <h2 class=title>${sak?.title || "Inga sak"}</h2>

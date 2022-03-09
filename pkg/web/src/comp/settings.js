@@ -112,17 +112,19 @@ define("RoiSettings", {
           <p>${myselfCanVote ? "Du har løyve til å røysta." : "Du har ikkje løyve til å røysta."}</p>
           ${
             config.gfxIframeOnQueue !== false
-              ? html`<p>
-                  <label
-                    ><input
-                      type="checkbox"
-                      name="gfxIframe"
-                      onchange=${() => store.doClientConfig({ userGfxIframeOnQueue: !clientGfxIframe })}
-                      checked=${clientGfxIframe}
-                    />
-                    Vis direkte avrøystingsgrafikk (fungerer dårleg på nokre nettverk)</label
-                  >
-                </p>`
+              ? html`
+                  <p>
+                    <label
+                      ><input
+                        type="checkbox"
+                        name="gfxIframe"
+                        onchange=${() => store.doClientConfig({ userGfxIframeOnQueue: !clientGfxIframe })}
+                        checked=${clientGfxIframe}
+                      />
+                      Vis direkte avrøystingsgrafikk (fungerer dårleg på nokre nettverk)</label
+                    >
+                  </p>
+                `
               : null
           }
         </div>

@@ -23,11 +23,7 @@ const UserTextArea = {
     const lines = value.split("\n");
     const userList = lines
       .filter((l) => l?.trim())
-      .map((l) =>
-        l
-          .split(/,\s*/g)
-          .map((f) => f.trim())
-      )
+      .map((l) => l.split(/,\s*/g).map((f) => f.trim()))
       .filter((l) => l.length)
       .map((l) => ({
         num: Number(l[0]),

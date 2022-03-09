@@ -34,10 +34,12 @@ export default define("RoiReferendum", {
     useEffect(() => setChoose(!referendum?.vote?.id), [referendum?.vote?.vote]);
     const choices = useMemo(
       () =>
-        config?.stableChoices ? referendum?.choices : referendum?.choices
-          .map((a) => ({ sort: Math.random(), value: a }))
-          .sort((a, b) => a.sort - b.sort)
-          .map((a) => a.value),
+        config?.stableChoices
+          ? referendum?.choices
+          : referendum?.choices
+              .map((a) => ({ sort: Math.random(), value: a }))
+              .sort((a, b) => a.sort - b.sort)
+              .map((a) => a.value),
       [referendum?.id]
     );
     if (!referendum) return this.html`${null}`;
@@ -55,13 +57,15 @@ export default define("RoiReferendum", {
             `
         )}
       </ul>
-      <p>${myselfCanVote ? html`<input type="submit" name="vote" value="Send inn" />` : `Du har ikkje røysterett`}</p>
+      <p>${myselfCanVote ? html` <input type="submit" name="vote" value="Send inn" /> ` : `Du har ikkje røysterett`}</p>
     `;
     const didVote = () =>
-      html`<p>
-        Du har røysta. ${vote ? `Du valde «${vote}».` : null}
-        ${choose ? null : html`<button name="back" type="button" onclick=${() => setChoose(true)}>Endra</button>`}
-      </p>`;
+      html`
+        <p>
+          Du har røysta. ${vote ? `Du valde «${vote}».` : null}
+          ${choose ? null : html` <button name="back" type="button" onclick=${() => setChoose(true)}>Endra</button> `}
+        </p>
+      `;
     this.html`
       <form data-id=${id}>
         <h3>${title} (${humanType})</h3>

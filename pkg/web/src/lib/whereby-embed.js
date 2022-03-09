@@ -12,7 +12,7 @@ const boolAttrs = [
   "precallReview",
   "recording",
   "screenshare",
-  "video"
+  "video",
 ];
 
 define("WherebyEmbed", {
@@ -22,13 +22,7 @@ define("WherebyEmbed", {
   ondisconnected() {
     window.removeEventListener("message", this);
   },
-  observedAttributes: [
-    "displayName",
-    "minimal",
-    "room",
-    "subdomain",
-    ...boolAttrs
-  ].map(a => a.toLowerCase()),
+  observedAttributes: ["displayName", "minimal", "room", "subdomain", ...boolAttrs].map((a) => a.toLowerCase()),
   onattributechanged({ attributeName, oldValue }) {
     if (["room", "subdomain"].includes(attributeName) && oldValue == null) return;
     this.render();
@@ -68,7 +62,7 @@ define("WherebyEmbed", {
         // add to URL if set in any way
         (o, v) => (this[v.toLowerCase()] != null ? { ...o, [v]: this[v.toLowerCase()] } : o),
         {}
-      )
+      ),
     }).forEach(([k, v]) => {
       if (!url.searchParams.has(k)) {
         url.searchParams.set(k, v);
@@ -79,5 +73,5 @@ define("WherebyEmbed", {
         src=${url}
         allow="camera; microphone; fullscreen; speaker; display-capture" />
       `;
-  }
+  },
 });

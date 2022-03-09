@@ -25,7 +25,7 @@ const WherebyEmbed = {
   async onparticipantupdate({ detail: { count } }) {
     if (this.store.selectClientShowYoutube() && count >= 2) {
       console.log("Delaying removing youtube by 4s (expected lag)");
-      await new Promise(r => setTimeout(r, 4000));
+      await new Promise((r) => setTimeout(r, 4000));
     }
     store.doWherebyParticipants(count);
   },
@@ -108,8 +108,8 @@ define("RoiVideo", {
       this.html`Waiting...`;
     } else {
       this.html`
-        ${clientShowYoutube ? html`<roi-youtube .id=${config.video} />` : null}
-        ${wherebyActiveRoom ? html`<WherebyEmbed .creds=${this.creds} />` : null}
+        ${clientShowYoutube ? html` <roi-youtube .id=${config.video} /> ` : null}
+        ${wherebyActiveRoom ? html` <WherebyEmbed .creds=${this.creds} /> ` : null}
       `;
     }
   },

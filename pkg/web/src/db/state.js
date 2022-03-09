@@ -10,13 +10,17 @@ const meeting_ = storage("meeting");
 
 const meeting = {
   name: "meeting",
-  reducer: (state = { started: false, failed: false, subTo: "", data: null, id: meeting_.id || null }, { type, payload, error }) => {
+  reducer: (
+    state = { started: false, failed: false, subTo: "", data: null, id: meeting_.id || null },
+    { type, payload, error }
+  ) => {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
     if (type == MEETING_FETCH_FINISHED) return { ...state, data: payload.meetings };
     if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
     if (type == "MEETING_SUB_STARTED") return { ...state, subTo: payload };
     if (type == "MEETING_SUB_FAILED") return { ...state, failed: error || true };
-    if (type == "MEETING_SUB_UPDATED") return { ...state, data: state.data.map(m => m.id === payload.id ? payload : m) };
+    if (type == "MEETING_SUB_UPDATED")
+      return { ...state, data: state.data.map((m) => (m.id === payload.id ? payload : m)) };
     if (type == "MEETING_ID") return { ...state, id: payload };
     if (type == "MYSELF_LOGOUT") return { ...state, started: false };
     return state;
@@ -30,9 +34,11 @@ const meeting = {
       payload: meetingId,
     };
   },
-  doMeetingInfoFetch: () => async ({ dispatch }) => {
-    dispatch({ type: "MEETING_FETCH_STARTED" });
-    const query = `
+  doMeetingInfoFetch:
+    () =>
+    async ({ dispatch }) => {
+      dispatch({ type: "MEETING_FETCH_STARTED" });
+      const query = `
       query StartInfo {
         meetings {
           nodes {
@@ -53,20 +59,22 @@ const meeting = {
           room
         }
       }`;
-    try {
-      const {
-        currentPerson,
-        meetings: { nodes: meetings },
-      } = await gql(query, { timeout: 10000, retry: true });
-      dispatch({ type: MEETING_FETCH_FINISHED, payload: { currentPerson, meetings } });
-    } catch (error) {
-      dispatch({ type: "MEETING_FETCH_FAILED", error });
-    }
-  },
-  doMeetingSubscribe: (meetingId) => async ({ dispatch, store }) => {
-    meetingId = meetingId ?? store.selectMeetingId();
-    dispatch({ type: "MEETING_SUB_STARTED", payload: meetingId });
-    const query = `
+      try {
+        const {
+          currentPerson,
+          meetings: { nodes: meetings },
+        } = await gql(query, { timeout: 10000, retry: true });
+        dispatch({ type: MEETING_FETCH_FINISHED, payload: { currentPerson, meetings } });
+      } catch (error) {
+        dispatch({ type: "MEETING_FETCH_FAILED", error });
+      }
+    },
+  doMeetingSubscribe:
+    (meetingId) =>
+    async ({ dispatch, store }) => {
+      meetingId = meetingId ?? store.selectMeetingId();
+      dispatch({ type: "MEETING_SUB_STARTED", payload: meetingId });
+      const query = `
       subscription Meeting($meetingId: String!) {
         meeting(id: $meetingId) {
           id
@@ -76,26 +84,31 @@ const meeting = {
           config
         }
       }`;
-    try {
-      await live({ query, variables: { meetingId } }, ({ data }) => {
-        dispatch({ type: "MEETING_SUB_UPDATED", payload: data.meeting });
-      });
-      dispatch({ type: "MEETING_SUB_FINISHED" });
-    } catch (error) {
-      dispatch({ type: "MEETING_SUB_FAILED", error });
-    }
-  },
+      try {
+        await live({ query, variables: { meetingId } }, ({ data }) => {
+          dispatch({ type: "MEETING_SUB_UPDATED", payload: data.meeting });
+        });
+        dispatch({ type: "MEETING_SUB_FINISHED" });
+      } catch (error) {
+        dispatch({ type: "MEETING_SUB_FAILED", error });
+      }
+    },
 
   selectMeetingRaw: (state) => state.meeting,
   selectMeetings: (state) => state.meeting.data,
-  selectMeetingId: createSelector("selectMeetingRaw", "selectQueryObject", (raw, queryObject) => queryObject.m || raw.id),
+  selectMeetingId: createSelector(
+    "selectMeetingRaw",
+    "selectQueryObject",
+    (raw, queryObject) => queryObject.m || raw.id
+  ),
   selectMeeting: createSelector("selectMeetingId", "selectMeetings", (meetingId, meetings) =>
     meetings?.find((m) => m.id === meetingId)
   ),
 
   reactMeetingsFetch: createSelector("selectMeetingRaw", "selectMyselfAnonymous", (raw, myselfAnonymous) => {
     if (!raw.started) return { actionCreator: "doMeetingInfoFetch" };
-    if (myselfAnonymous === false && raw.id && !raw.subTo) return { actionCreator: "doMeetingSubscribe", args: [raw.id] };
+    if (myselfAnonymous === false && raw.id && !raw.subTo)
+      return { actionCreator: "doMeetingSubscribe", args: [raw.id] };
   }),
 };
 
@@ -109,39 +122,43 @@ const myself = {
     return state;
   },
 
-  doMyselfLogout: () => ({ dispatch }) => {
-    if (Object.keys(creds).length) {
-      dispatch({ type: "MYSELF_LOGOUT" });
-      Object.keys(creds).forEach((k) => delete creds[k]);
-      save("creds");
-    }
-    if (!["/", "/login.html"].includes(location.pathname)) location.assign("/");
-  },
-  doMyselfLogin: (num, password) => async ({ dispatch, store }) => {
-    dispatch({ type: "MYSELF_LOGIN_STARTED" });
-    const gqlLogin = `
+  doMyselfLogout:
+    () =>
+    ({ dispatch }) => {
+      if (Object.keys(creds).length) {
+        dispatch({ type: "MYSELF_LOGOUT" });
+        Object.keys(creds).forEach((k) => delete creds[k]);
+        save("creds");
+      }
+      if (!["/", "/login.html"].includes(location.pathname)) location.assign("/");
+    },
+  doMyselfLogin:
+    (num, password) =>
+    async ({ dispatch, store }) => {
+      dispatch({ type: "MYSELF_LOGIN_STARTED" });
+      const gqlLogin = `
       mutation Login($num: Int!, $mId: String!, $password: String!) {
         authenticate(input: {num: $num, meetingId: $mId, password: $password}) {
           jwtToken
         }
       }`;
-    try {
-      const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { jwt: false });
-      const {
-        authenticate: { jwtToken },
-      } = res;
-      if (!jwtToken) {
-        throw new Error("Feil nummer/passord");
+      try {
+        const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { jwt: false });
+        const {
+          authenticate: { jwtToken },
+        } = res;
+        if (!jwtToken) {
+          throw new Error("Feil nummer/passord");
+        }
+        creds.jwt = jwtToken;
+        save("creds");
+        dispatch({ type: "MYSELF_LOGIN_FINISHED" });
+        location.assign("/queue.html");
+      } catch (error) {
+        const payload = error.extra?.body?.errors?.map((e) => e.message) || ["" + error];
+        dispatch({ type: "MYSELF_LOGIN_FAILED", payload, error });
       }
-      creds.jwt = jwtToken;
-      save("creds");
-      dispatch({ type: "MYSELF_LOGIN_FINISHED" });
-      location.assign("/queue.html");
-    } catch (error) {
-      const payload = error.extra?.body?.errors?.map((e) => e.message) || ["" + error];
-      dispatch({ type: "MYSELF_LOGIN_FAILED", payload, error });
-    }
-  },
+    },
 
   selectMyself: (state) => state.myself.data,
   selectMyselfId: (state) => state.myself.data?.id,
@@ -153,7 +170,6 @@ const myself = {
     "selectMyself",
     (config, myself) => !config.voteDisallowNum?.includes(myself?.num)
   ),
-
 };
 
 const people = {
@@ -165,9 +181,11 @@ const people = {
     return state;
   },
 
-  doPeopleFetch: () => async ({ dispatch }) => {
-    dispatch({ type: "PEOPLE_FETCH_STARTED" });
-    const query = `
+  doPeopleFetch:
+    () =>
+    async ({ dispatch }) => {
+      dispatch({ type: "PEOPLE_FETCH_STARTED" });
+      const query = `
       subscription People($meetingId: String!) {
         people(condition: {meetingId: $meetingId}) {
           nodes {
@@ -181,28 +199,30 @@ const people = {
         }
       }
       `;
-    const variables = { meetingId: store.selectMyselfMeetingId() };
-    try {
-      await live({ query, variables }, ({ data }) => {
-        const { people } = data;
-        dispatch({ type: "PEOPLE_FETCH_UPDATED", payload: people.nodes });
-      });
-      dispatch({ type: "PEOPLE_FETCH_FINISHED" });
-    } catch (error) {
-      dispatch({ type: "PEOPLE_FETCH_FAILED", error });
-    }
-  },
+      const variables = { meetingId: store.selectMyselfMeetingId() };
+      try {
+        await live({ query, variables }, ({ data }) => {
+          const { people } = data;
+          dispatch({ type: "PEOPLE_FETCH_UPDATED", payload: people.nodes });
+        });
+        dispatch({ type: "PEOPLE_FETCH_FINISHED" });
+      } catch (error) {
+        dispatch({ type: "PEOPLE_FETCH_FAILED", error });
+      }
+    },
 
   selectPeopleRaw: (state) => state.people,
   selectPeople: createSelector("selectPeopleRaw", "selectConfig", (raw, config) => {
-    return (raw.data || []).map(p => {
+    return (raw.data || []).map((p) => {
       return {
         ...p,
         canVote: !config.voteDisallowNum?.includes(p.num),
       };
     });
   }),
-  selectPeopleDelegates: createSelector("selectPeople", (people) => people.filter(p => p.canVote).sort((a, b) => a.num - b.num)),
+  selectPeopleDelegates: createSelector("selectPeople", (people) =>
+    people.filter((p) => p.canVote).sort((a, b) => a.num - b.num)
+  ),
   selectPeopleById: createSelector("selectPeople", (people) => people.reduce((o, v) => ({ ...o, [v.id]: v }), {})),
 
   reactFetchPeopleOnMyselfExisting: createSelector("selectPeopleRaw", "selectMyself", (raw, myself) => {
@@ -221,62 +241,72 @@ const sak = {
     return state;
   },
 
-  doSakFinish: (sakId) => async ({ dispatch, store }) => {
-    sakId = sakId ?? store.selectSakId();
-    dispatch({ type: "SAK_FINISH_STARTED", payload: sakId });
-    const query = `
+  doSakFinish:
+    (sakId) =>
+    async ({ dispatch, store }) => {
+      sakId = sakId ?? store.selectSakId();
+      dispatch({ type: "SAK_FINISH_STARTED", payload: sakId });
+      const query = `
     mutation SakEnd($sakId: Int!) {
       updateSak(input: {id: $sakId, patch: { finishedAt: "now()" }}) {
         clientMutationId
       }
     }
     `;
-    try {
-      const res = await gql(query, { sakId });
-      dispatch({ type: "SAK_FINISH_FINISHED", payload: sakId });
-    } catch (error) {
-      dispatch({ type: "SAK_FINISH_FAILED", error, payload: sakId });
-    }
-  },
-  doSakDelete: (sakId) => async ({ dispatch, store }) => {
-    dispatch({ type: "SAK_DELETE_STARTED", payload: sakId });
-    const query = `
+      try {
+        const res = await gql(query, { sakId });
+        dispatch({ type: "SAK_FINISH_FINISHED", payload: sakId });
+      } catch (error) {
+        dispatch({ type: "SAK_FINISH_FAILED", error, payload: sakId });
+      }
+    },
+  doSakDelete:
+    (sakId) =>
+    async ({ dispatch, store }) => {
+      dispatch({ type: "SAK_DELETE_STARTED", payload: sakId });
+      const query = `
     mutation SakDelete($sakId: Int!) {
       deleteSak(input: {id: $sakId}) {
         clientMutationId
       }
     }
     `;
-    try {
-      const res = await gql(query, { sakId });
-      dispatch({ type: "SAK_DELETE_FINISHED", payload: sakId });
-    } catch (error) {
-      dispatch({ type: "SAK_DELETE_FAILED", error, payload: sakId });
-    }
-  },
-  doSakUpd: ({ sak, config, title, finishedAt } = {}) => async ({ dispatch, store }) => {
-    sak = sak || store.selectSak();
-    title = title || sak.title;
-    finishedAt = finishedAt === undefined && sak.finishedAt || null;
-    dispatch({ type: "SAK_UPDATE_STARTED", payload: sak.id });
-    const query = `
-    mutation SakUpd($sakId: Int!, ${config ? '$config: JSON!,' : ''} $title: String!, $finishedAt: Datetime) {
-      updateSak(input: {id: $sakId, patch: { ${config ? 'config: $config,' : ''} title: $title, finishedAt: $finishedAt }}) {
+      try {
+        const res = await gql(query, { sakId });
+        dispatch({ type: "SAK_DELETE_FINISHED", payload: sakId });
+      } catch (error) {
+        dispatch({ type: "SAK_DELETE_FAILED", error, payload: sakId });
+      }
+    },
+  doSakUpd:
+    ({ sak, config, title, finishedAt } = {}) =>
+    async ({ dispatch, store }) => {
+      sak = sak || store.selectSak();
+      title = title || sak.title;
+      finishedAt = (finishedAt === undefined && sak.finishedAt) || null;
+      dispatch({ type: "SAK_UPDATE_STARTED", payload: sak.id });
+      const query = `
+    mutation SakUpd($sakId: Int!, ${config ? "$config: JSON!," : ""} $title: String!, $finishedAt: Datetime) {
+      updateSak(input: {id: $sakId, patch: { ${
+        config ? "config: $config," : ""
+      } title: $title, finishedAt: $finishedAt }}) {
         clientMutationId
       }
     }
     `;
-    try {
-      const res = await gql(query, { sakId: sak.id, title, config: { ...sak.config, ...config }, finishedAt });
-      dispatch({ type: "SAK_UPDATE_FINISHED", payload: sak.id });
-    } catch (error) {
-      dispatch({ type: "SAK_UPDATE_FAILED", error, payload: sak.id });
-    }
-  },
-  doSakReq: (title, { meetingId, config = {} } = {}) => async ({ dispatch }) => {
-    dispatch({ type: "SAK_REQ_STARTED" });
-    meetingId = meetingId ?? store.selectMyself().meetingId;
-    const gqlNewSak = `
+      try {
+        const res = await gql(query, { sakId: sak.id, title, config: { ...sak.config, ...config }, finishedAt });
+        dispatch({ type: "SAK_UPDATE_FINISHED", payload: sak.id });
+      } catch (error) {
+        dispatch({ type: "SAK_UPDATE_FAILED", error, payload: sak.id });
+      }
+    },
+  doSakReq:
+    (title, { meetingId, config = {} } = {}) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "SAK_REQ_STARTED" });
+      meetingId = meetingId ?? store.selectMyself().meetingId;
+      const gqlNewSak = `
       mutation NewSak($meetingId: String!, $title: String!, $config: JSON!) {
         createSak(input: {sak: {title: $title, config: $config, meetingId: $meetingId}}) {
           sak {
@@ -285,19 +315,21 @@ const sak = {
           }
         }
       }`;
-    try {
-      const res = await gql(gqlNewSak, { title, meetingId, config });
-      const {
-        createSak: { sak },
-      } = res;
-      dispatch({ type: "SAK_REQ_FINISHED", payload: sak });
-    } catch (error) {
-      dispatch({ type: "SAK_REQ_FAILED", error });
-    }
-  },
-  doSakSubscribe: (num = 1) => async ({ dispatch }) => {
-    dispatch({ type: "SAK_SUB_STARTED" });
-    const query = `
+      try {
+        const res = await gql(gqlNewSak, { title, meetingId, config });
+        const {
+          createSak: { sak },
+        } = res;
+        dispatch({ type: "SAK_REQ_FINISHED", payload: sak });
+      } catch (error) {
+        dispatch({ type: "SAK_REQ_FAILED", error });
+      }
+    },
+  doSakSubscribe:
+    (num = 1) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "SAK_SUB_STARTED" });
+      const query = `
       subscription Sak {
         saks(condition: {finishedAt: null}, orderBy: CREATED_AT_ASC, first: ${num}) {
           nodes {
@@ -308,18 +340,18 @@ const sak = {
           }
         }
       }`;
-    try {
-      await live({ query }, ({ data }) => {
-        const {
-          saks: { nodes },
-        } = data;
-        dispatch({ type: "SAK_SUB_UPDATED", payload: nodes });
-      });
-      dispatch({ type: "SAK_SUB_FINISHED" });
-    } catch (error) {
-      dispatch({ type: "SAK_SUB_FAILED", error });
-    }
-  },
+      try {
+        await live({ query }, ({ data }) => {
+          const {
+            saks: { nodes },
+          } = data;
+          dispatch({ type: "SAK_SUB_UPDATED", payload: nodes });
+        });
+        dispatch({ type: "SAK_SUB_FINISHED" });
+      } catch (error) {
+        dispatch({ type: "SAK_SUB_FAILED", error });
+      }
+    },
 
   selectSakRaw: (state) => state.sak,
   selectSak: (state) => state.sak.data[0],
@@ -336,11 +368,16 @@ const sak = {
     return nsak;
   }),
 
-  reactSakSubscribeOnMyselfExisting: createSelector("selectSakRaw", "selectClientManage", "selectMyselfId", (raw, clientManage, myselfId) => {
-    if (!raw.started && !raw.failed && myselfId) {
-      return { actionCreator: "doSakSubscribe", args: [clientManage ? 50 : 1] };
+  reactSakSubscribeOnMyselfExisting: createSelector(
+    "selectSakRaw",
+    "selectClientManage",
+    "selectMyselfId",
+    (raw, clientManage, myselfId) => {
+      if (!raw.started && !raw.failed && myselfId) {
+        return { actionCreator: "doSakSubscribe", args: [clientManage ? 50 : 1] };
+      }
     }
-  }),
+  ),
 };
 
 const speech = {
@@ -367,16 +404,18 @@ const speech = {
     return result;
   },
 
-  doSpeechReq: (type = "INNLEGG", { speakerId, sakId, parentId } = {}) => async ({ dispatch, store }) => {
-    speakerId = speakerId ?? store.selectMyself().id;
-    sakId = sakId ?? store.selectSak().id;
-    const { current } = store.selectSpeechState();
-    parentId = parentId ?? (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
-    dispatch({
-      type: "SPEECH_REQ_STARTED",
-      payload: { type, speakerId, sakId, parentId },
-    });
-    const gqlCreateSpeech = `
+  doSpeechReq:
+    (type = "INNLEGG", { speakerId, sakId, parentId } = {}) =>
+    async ({ dispatch, store }) => {
+      speakerId = speakerId ?? store.selectMyself().id;
+      sakId = sakId ?? store.selectSak().id;
+      const { current } = store.selectSpeechState();
+      parentId = parentId ?? (type == "REPLIKK" ? current?.parentId || current?.id : undefined);
+      dispatch({
+        type: "SPEECH_REQ_STARTED",
+        payload: { type, speakerId, sakId, parentId },
+      });
+      const gqlCreateSpeech = `
       mutation CreateSpeech($speakerId: Int!, $type: SpeechType!, $sakId: Int!, $parentId: Int) {
         createSpeech(input: {speech: {speakerId: $speakerId, type: $type, sakId: $sakId, parentId: $parentId}}) {
           speech {
@@ -388,47 +427,51 @@ const speech = {
           }
         }
       }`;
-    try {
-      const res = await gql(gqlCreateSpeech, {
-        sakId,
-        speakerId,
-        type,
-        parentId,
-      });
-      const {
-        createSpeech: { speech },
-      } = res;
-      dispatch({ type: "SPEECH_REQ_FINISHED", payload: speech });
-    } catch (error) {
-      dispatch({ type: "SPEECH_REQ_FAILED", error });
-    }
-  },
-  doSpeechEnd: (speechId) => async ({ dispatch, store }) => {
-    dispatch({ type: "SPEECH_END_STARTED", payload: speechId });
-    const query = `
+      try {
+        const res = await gql(gqlCreateSpeech, {
+          sakId,
+          speakerId,
+          type,
+          parentId,
+        });
+        const {
+          createSpeech: { speech },
+        } = res;
+        dispatch({ type: "SPEECH_REQ_FINISHED", payload: speech });
+      } catch (error) {
+        dispatch({ type: "SPEECH_REQ_FAILED", error });
+      }
+    },
+  doSpeechEnd:
+    (speechId) =>
+    async ({ dispatch, store }) => {
+      dispatch({ type: "SPEECH_END_STARTED", payload: speechId });
+      const query = `
     mutation SpeechNext($id: Int!) {
       updateSpeech(input: {id: $id, patch: { endedAt: "now()" }}) {
         clientMutationId
       }
     }
     `;
-    try {
-      const res = await gql(query, { id: speechId });
-      dispatch({ type: "SPEECH_END_FINISHED", payload: speechId });
-    } catch (error) {
-      dispatch({ type: "SPEECH_END_FAILED", error, payload: speechId });
-    }
-  },
-  doSpeechPrev: () => async ({ dispatch, store }) => {
-    const { current, prev } = store.selectSpeechState();
-    const currentId = current?.id;
-    const prevId = prev?.id;
-    if (!current && !prev) {
-      console.warn("No speech to start or end");
-      return;
-    }
-    dispatch({ type: "SPEECH_NEXT_STARTED", payload: { prevId, currentId } });
-    const query = `
+      try {
+        const res = await gql(query, { id: speechId });
+        dispatch({ type: "SPEECH_END_FINISHED", payload: speechId });
+      } catch (error) {
+        dispatch({ type: "SPEECH_END_FAILED", error, payload: speechId });
+      }
+    },
+  doSpeechPrev:
+    () =>
+    async ({ dispatch, store }) => {
+      const { current, prev } = store.selectSpeechState();
+      const currentId = current?.id;
+      const prevId = prev?.id;
+      if (!current && !prev) {
+        console.warn("No speech to start or end");
+        return;
+      }
+      dispatch({ type: "SPEECH_NEXT_STARTED", payload: { prevId, currentId } });
+      const query = `
     mutation SpeechNext(${[current && `$currentId: Int!`, prev && `$prevId: Int!`].filter(Boolean).join(",")}) {
       ${
         currentId
@@ -437,26 +480,28 @@ const speech = {
       }
       ${prevId ? `prev: updateSpeech(input: {id: $prevId, patch: { endedAt: null }}) { clientMutationId }` : ""}
     }`;
-    try {
-      const res = await gql(query, { currentId, prevId });
-      dispatch({
-        type: "SPEECH_NEXT_FINISHED",
-        payload: { currentId, prevId },
-      });
-    } catch (error) {
-      dispatch({ type: "SPEECH_NEXT_FAILED", error });
-    }
-  },
-  doSpeechNext: () => async ({ dispatch, store }) => {
-    const { current, next } = store.selectSpeechState();
-    const currentId = current?.id;
-    const nextId = next?.id;
-    if (!currentId && !nextId) {
-      console.warn("No speech to start or end");
-      return;
-    }
-    dispatch({ type: "SPEECH_NEXT_STARTED", payload: { nextId, currentId } });
-    const query = `
+      try {
+        const res = await gql(query, { currentId, prevId });
+        dispatch({
+          type: "SPEECH_NEXT_FINISHED",
+          payload: { currentId, prevId },
+        });
+      } catch (error) {
+        dispatch({ type: "SPEECH_NEXT_FAILED", error });
+      }
+    },
+  doSpeechNext:
+    () =>
+    async ({ dispatch, store }) => {
+      const { current, next } = store.selectSpeechState();
+      const currentId = current?.id;
+      const nextId = next?.id;
+      if (!currentId && !nextId) {
+        console.warn("No speech to start or end");
+        return;
+      }
+      dispatch({ type: "SPEECH_NEXT_STARTED", payload: { nextId, currentId } });
+      const query = `
     mutation SpeechNext(${[currentId && `$currentId: Int!`, nextId && `$nextId: Int!`].filter(Boolean).join(",")}) {
       ${
         currentId
@@ -465,35 +510,39 @@ const speech = {
       }
       ${nextId ? `next: updateSpeech(input: {id: $nextId, patch: { startedAt: "now()" }}) { clientMutationId }` : ""}
     }`;
-    try {
-      const res = await gql(query, { currentId, nextId });
-      dispatch({
-        type: "SPEECH_NEXT_FINISHED",
-        payload: { currentId, nextId },
-      });
-    } catch (error) {
-      dispatch({ type: "SPEECH_NEXT_FAILED", error });
-    }
-  },
-  doSpeechUpdate: (id, updates) => async ({ dispatch, store }) => {
-    dispatch({ type: "SPEECH_UPDATE_STARTED", payload: id });
-    try {
-      const query = `
+      try {
+        const res = await gql(query, { currentId, nextId });
+        dispatch({
+          type: "SPEECH_NEXT_FINISHED",
+          payload: { currentId, nextId },
+        });
+      } catch (error) {
+        dispatch({ type: "SPEECH_NEXT_FAILED", error });
+      }
+    },
+  doSpeechUpdate:
+    (id, updates) =>
+    async ({ dispatch, store }) => {
+      dispatch({ type: "SPEECH_UPDATE_STARTED", payload: id });
+      try {
+        const query = `
       mutation UpdateSpeech($updates: SpeechPatch!) {
         updateSpeech(input: {id: $id, patch: $updates})
       }`;
-      const res = await gql(query, { id, updates });
-      dispatch({ type: "SPEECH_UPDATE_FINISHED", payload: { id, updates } });
-    } catch (error) {
-      dispatch({ type: "SPEECH_UPDATE_FAILED", error });
-    }
-  },
-  doSpeechSubscribe: (sakId) => async ({ dispatch }) => {
-    sakId = sakId ?? store.selectSak().id;
-    const { subStop } = store.selectSpeechRaw();
-    dispatch({ type: "SPEECH_SUB_STARTED", payload: sakId });
-    if (subStop) subStop();
-    const query = `
+        const res = await gql(query, { id, updates });
+        dispatch({ type: "SPEECH_UPDATE_FINISHED", payload: { id, updates } });
+      } catch (error) {
+        dispatch({ type: "SPEECH_UPDATE_FAILED", error });
+      }
+    },
+  doSpeechSubscribe:
+    (sakId) =>
+    async ({ dispatch }) => {
+      sakId = sakId ?? store.selectSak().id;
+      const { subStop } = store.selectSpeechRaw();
+      dispatch({ type: "SPEECH_SUB_STARTED", payload: sakId });
+      if (subStop) subStop();
+      const query = `
       subscription Speeches($sakId: Int!) {
         speeches(condition: {sakId: $sakId}, orderBy: CREATED_AT_ASC) {
           nodes {
@@ -509,19 +558,19 @@ const speech = {
         }
       }
       `;
-    const variables = { sakId };
-    try {
-      const stop = await live({ query, variables }, ({ data }) => {
-        const {
-          speeches: { nodes },
-        } = data;
-        dispatch({ type: "SPEECH_SUB_UPDATED", payload: nodes });
-      });
-      dispatch({ type: "SPEECH_SUB_FINISHED", payload: stop });
-    } catch (error) {
-      dispatch({ type: "SPEECH_SUB_FAILED", error });
-    }
-  },
+      const variables = { sakId };
+      try {
+        const stop = await live({ query, variables }, ({ data }) => {
+          const {
+            speeches: { nodes },
+          } = data;
+          dispatch({ type: "SPEECH_SUB_UPDATED", payload: nodes });
+        });
+        dispatch({ type: "SPEECH_SUB_FINISHED", payload: stop });
+      } catch (error) {
+        dispatch({ type: "SPEECH_SUB_FAILED", error });
+      }
+    },
 
   selectSpeechRaw: (state) => state.speech,
   selectSpeech: (state) => state.speech.current,
@@ -602,7 +651,8 @@ const referendum = {
     if (type == "REFERENDUM_SUB_FINISHED") return { ...state, subStop: payload, subscribing: false };
     if (type == "REFERENDUM_SUB_FAILED") return { ...state, subscribing: false };
     if (type == "REFERENDUM_SUB_UPDATED") return { ...state, data: payload };
-    if (type == "REFERENDUM_VOTE_SUB_STARTED") return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
+    if (type == "REFERENDUM_VOTE_SUB_STARTED")
+      return { ...state, subReferendum: payload.referendumId, subVoteStop: null };
     if (type == "REFERENDUM_VOTE_SUB_FINISHED") return { ...state, subVoteStop: payload };
     if (type == "REFERENDUM_VOTE_STARTED")
       return {
@@ -613,8 +663,8 @@ const referendum = {
       const last = state.lastVote || [];
       if (!payload) return { ...state, lastVote: last };
       const changed = last[last.length - 1]?.id == payload.id;
-      return { ...state, lastVote: [...(changed ? last.slice(0, -1) : last), payload] }
-    };
+      return { ...state, lastVote: [...(changed ? last.slice(0, -1) : last), payload] };
+    }
     if (type == "REFERENDUM_COUNT_FINISHED") return { ...state, count: payload };
     return state;
   },
@@ -628,68 +678,76 @@ const referendum = {
     return result;
   },
 
-  doReferendumReq: ({ type, title, choices, sakId }) => async ({ dispatch, store }) => {
-    sakId = sakId ?? store.selectSak().id;
-    dispatch({
-      type: "REFERENDUM_REQ_STARTED",
-      payload: { type, title, choices, sakId },
-    });
-    const query = `
+  doReferendumReq:
+    ({ type, title, choices, sakId }) =>
+    async ({ dispatch, store }) => {
+      sakId = sakId ?? store.selectSak().id;
+      dispatch({
+        type: "REFERENDUM_REQ_STARTED",
+        payload: { type, title, choices, sakId },
+      });
+      const query = `
       mutation CreateReferendum($title: String!, $sakId: Int!, $choices: JSON!, $type: ReferendumType!) {
         createReferendum(input: {referendum: {title: $title, sakId: $sakId, choices: $choices, type: $type}}) {
           clientMutationId
         }
       }`;
-    try {
-      const res = await gql(query, {
-        sakId,
-        type,
-        title,
-        choices,
-      });
-      dispatch({ type: "REFERENDUM_REQ_FINISHED", payload: res });
-    } catch (error) {
-      dispatch({ type: "REFERENDUM_REQ_FAILED", error });
-    }
-  },
-  doReferendumStart: (referendumId) => async ({ dispatch, store }) => {
-    dispatch({ type: "REFERENDUM_START_STARTED", payload: referendumId });
-    const query = `
+      try {
+        const res = await gql(query, {
+          sakId,
+          type,
+          title,
+          choices,
+        });
+        dispatch({ type: "REFERENDUM_REQ_FINISHED", payload: res });
+      } catch (error) {
+        dispatch({ type: "REFERENDUM_REQ_FAILED", error });
+      }
+    },
+  doReferendumStart:
+    (referendumId) =>
+    async ({ dispatch, store }) => {
+      dispatch({ type: "REFERENDUM_START_STARTED", payload: referendumId });
+      const query = `
     mutation ReferendumEnd($id: Int!) {
       updateReferendum(input: {id: $id, patch: { startedAt: "now()" }}) {
         clientMutationId
       }
     }
     `;
-    try {
-      const res = await gql(query, { id: referendumId });
-      dispatch({ type: "REFERENDUM_START_FINISHED", payload: referendumId });
-    } catch (error) {
-      dispatch({ type: "REFERENDUM_START_FAILED", error, payload: referendumId });
-    }
-  },
-  doReferendumEnd: (referendumId) => async ({ dispatch, store }) => {
-    dispatch({ type: "REFERENDUM_END_STARTED", payload: referendumId });
-    const query = `
+      try {
+        const res = await gql(query, { id: referendumId });
+        dispatch({ type: "REFERENDUM_START_FINISHED", payload: referendumId });
+      } catch (error) {
+        dispatch({ type: "REFERENDUM_START_FAILED", error, payload: referendumId });
+      }
+    },
+  doReferendumEnd:
+    (referendumId) =>
+    async ({ dispatch, store }) => {
+      dispatch({ type: "REFERENDUM_END_STARTED", payload: referendumId });
+      const query = `
     mutation ReferendumEnd($id: Int!) {
       updateReferendum(input: {id: $id, patch: { finishedAt: "now()" }}) {
         clientMutationId
       }
     }
     `;
-    try {
-      const res = await gql(query, { id: referendumId });
-      dispatch({ type: "REFERENDUM_END_FINISHED", payload: referendumId });
-    } catch (error) {
-      dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
-    }
-  },
-  doReferendumSubscribe: (sakId, { withVotes = false } = {}) => async ({ dispatch }) => {
-    sakId = sakId ?? store.selectSak().id;
-    const { subStop } = store.selectReferendumRaw();
-    dispatch({ type: "REFERENDUM_SUB_STARTED", payload: sakId });
-    if (subStop) subStop();
-    const query = `
+      try {
+        const res = await gql(query, { id: referendumId });
+        dispatch({ type: "REFERENDUM_END_FINISHED", payload: referendumId });
+      } catch (error) {
+        dispatch({ type: "REFERENDUM_END_FAILED", error, payload: referendumId });
+      }
+    },
+  doReferendumSubscribe:
+    (sakId, { withVotes = false } = {}) =>
+    async ({ dispatch }) => {
+      sakId = sakId ?? store.selectSak().id;
+      const { subStop } = store.selectReferendumRaw();
+      dispatch({ type: "REFERENDUM_SUB_STARTED", payload: sakId });
+      if (subStop) subStop();
+      const query = `
       subscription Referendums($sakId: Int!) {
         referendums(condition: {sakId: $sakId}, orderBy: CREATED_AT_ASC) {
           nodes {
@@ -702,40 +760,42 @@ const referendum = {
             finishedAt
             ${
               withVotes
-              ? `votes {
+                ? `votes {
                   nodes {
                     id
                     personId
                     vote
                   }
                 }`
-                : ''
-              }
+                : ""
+            }
           }
         }
       }
       `;
-    const variables = { sakId };
-    try {
-      const stop = await live({ query, variables }, ({ data }) => {
-        const {
-          referendums: { nodes },
-        } = data;
-        dispatch({ type: "REFERENDUM_SUB_UPDATED", payload: nodes });
-      });
-      dispatch({ type: "REFERENDUM_SUB_FINISHED", payload: stop });
-    } catch (error) {
-      dispatch({ type: "REFERENDUM_SUB_FAILED", error });
-    }
-  },
-  doReferendumVoteSubscribe: ({ personId, referendumId } = {}) => async ({ dispatch }) => {
-    personId = personId ?? store.selectMyself().id;
-    referendumId = referendumId ?? store.selectReferendum().id;
-    const variables = { personId, referendumId };
-    const { subVoteStop } = store.selectReferendumRaw();
-    dispatch({ type: "REFERENDUM_VOTE_SUB_STARTED", payload: variables });
-    if (subVoteStop) subVoteStop();
-    const query = `
+      const variables = { sakId };
+      try {
+        const stop = await live({ query, variables }, ({ data }) => {
+          const {
+            referendums: { nodes },
+          } = data;
+          dispatch({ type: "REFERENDUM_SUB_UPDATED", payload: nodes });
+        });
+        dispatch({ type: "REFERENDUM_SUB_FINISHED", payload: stop });
+      } catch (error) {
+        dispatch({ type: "REFERENDUM_SUB_FAILED", error });
+      }
+    },
+  doReferendumVoteSubscribe:
+    ({ personId, referendumId } = {}) =>
+    async ({ dispatch }) => {
+      personId = personId ?? store.selectMyself().id;
+      referendumId = referendumId ?? store.selectReferendum().id;
+      const variables = { personId, referendumId };
+      const { subVoteStop } = store.selectReferendumRaw();
+      dispatch({ type: "REFERENDUM_VOTE_SUB_STARTED", payload: variables });
+      if (subVoteStop) subVoteStop();
+      const query = `
       subscription MyVote($personId: Int!, $referendumId: Int!) {
         votes(condition: { personId: $personId, referendumId: $referendumId }, first: 1) {
           nodes {
@@ -747,56 +807,64 @@ const referendum = {
         }
       }
       `;
-    try {
-      const stop = await live({ query, variables }, ({ data }) => {
-        const { votes: { nodes } } = data;
-        dispatch({ type: "REFERENDUM_VOTE_SUB_UPDATED", payload: nodes[0] });
-        if (!nodes[0]) return;
-        store.selectReferendumRaw().subVoteStop();
+      try {
+        const stop = await live({ query, variables }, ({ data }) => {
+          const {
+            votes: { nodes },
+          } = data;
+          dispatch({ type: "REFERENDUM_VOTE_SUB_UPDATED", payload: nodes[0] });
+          if (!nodes[0]) return;
+          store.selectReferendumRaw().subVoteStop();
+        });
+        dispatch({ type: "REFERENDUM_VOTE_SUB_FINISHED", payload: stop });
+      } catch (error) {
+        dispatch({ type: "REFERENDUM_VOTE_SUB_FAILED", error });
+      }
+    },
+  doReferendumVote:
+    ({ referendumId, choice }) =>
+    async ({ dispatch, store }) => {
+      const personId = store.selectMyself().id;
+      const { vote } = store.selectReferendum() || {};
+      dispatch({
+        type: "REFERENDUM_VOTE_STARTED",
+        payload: { personId, choice, referendumId },
       });
-      dispatch({ type: "REFERENDUM_VOTE_SUB_FINISHED", payload: stop });
-    } catch (error) {
-      dispatch({ type: "REFERENDUM_VOTE_SUB_FAILED", error });
-    }
-  },
-  doReferendumVote: ({ referendumId, choice }) => async ({ dispatch, store }) => {
-    const personId = store.selectMyself().id;
-    const { vote } = store.selectReferendum() || {};
-    dispatch({
-      type: "REFERENDUM_VOTE_STARTED",
-      payload: { personId, choice, referendumId },
-    });
-    const query = vote?.id ? `
+      const query = vote?.id
+        ? `
     mutation ReferendumVoteUpd($id: Int!, $choice: String!) {
       updateVote(input: {id: $id, patch: {vote: $choice}}) {
         vote { id }
       }
-    }` : `
+    }`
+        : `
     mutation ReferendumVote($referendumId: Int!, $personId: Int!, $choice: String!) {
       createVote(input: {vote: {vote: $choice, referendumId: $referendumId, personId: $personId}}) {
         vote { id }
       }
     }`;
-    try {
-      const res = await gql(query, { id: vote?.id, referendumId, choice, personId });
-      const id = vote ? res.updateVote.vote.id : res.createVote.vote.id;
-      dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: { id, referendumId, vote: choice, personId } });
-      if (vote) {
-        // We changed our vote, re-listen for the update
-        store.doReferendumVoteSubscribe();
+      try {
+        const res = await gql(query, { id: vote?.id, referendumId, choice, personId });
+        const id = vote ? res.updateVote.vote.id : res.createVote.vote.id;
+        dispatch({ type: "REFERENDUM_VOTE_FINISHED", payload: { id, referendumId, vote: choice, personId } });
+        if (vote) {
+          // We changed our vote, re-listen for the update
+          store.doReferendumVoteSubscribe();
+        }
+      } catch (error) {
+        dispatch({
+          type: "REFERENDUM_VOTE_FAILED",
+          error,
+          payload: referendumId,
+        });
       }
-    } catch (error) {
-      dispatch({
-        type: "REFERENDUM_VOTE_FAILED",
-        error,
-        payload: referendumId,
-      });
-    }
-  },
-  doReferendumCount: ({ sakId } = {}) => async ({ dispatch, store }) => {
-    sakId = sakId ?? store.selectSakId();
-    dispatch({ type: "REFERENDUM_COUNT_STARTED", payload: { sakId } });
-    const query = `
+    },
+  doReferendumCount:
+    ({ sakId } = {}) =>
+    async ({ dispatch, store }) => {
+      sakId = sakId ?? store.selectSakId();
+      dispatch({ type: "REFERENDUM_COUNT_STARTED", payload: { sakId } });
+      const query = `
       query VoteCount($sakId: Int!) {
         voteCount(sakId: $sakId) {
           nodes {
@@ -807,16 +875,16 @@ const referendum = {
         }
       }
     `;
-    try {
-      const res = await gql(query, { sakId });
-      dispatch({
-        type: "REFERENDUM_COUNT_FINISHED",
-        payload: res.voteCount.nodes,
-      });
-    } catch (error) {
-      dispatch({ type: "REFERENDUM_COUNT_FAILED", error, payload: sakId });
-    }
-  },
+      try {
+        const res = await gql(query, { sakId });
+        dispatch({
+          type: "REFERENDUM_COUNT_FINISHED",
+          payload: res.voteCount.nodes,
+        });
+      } catch (error) {
+        dispatch({ type: "REFERENDUM_COUNT_FAILED", error, payload: sakId });
+      }
+    },
 
   selectReferendumRaw: (state) => state.referendum,
   selectReferendumsData: (state) => state.referendum.data,
@@ -827,16 +895,15 @@ const referendum = {
   ),
   selectReferendumPrev: createSelector(
     "selectReferendums",
-    (referendums) => referendums.filter(r => r.finishedAt).sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0]
+    (referendums) =>
+      referendums.filter((r) => r.finishedAt).sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt))[0]
   ),
-  selectReferendumLiveCount: createSelector(
-    "selectReferendumsData",
-    (referendumData) => {
-      const referendum = referendumData.filter((r) => r.startedAt && !r.finishedAt)[0];
-      return referendum?.votes?.nodes.reduce(
-          (o, v) => ({ ...o, [v.vote]: (o[v.vote] || 0) + 1 }), { referendumId: referendum.id })
-    }
-  ),
+  selectReferendumLiveCount: createSelector("selectReferendumsData", (referendumData) => {
+    const referendum = referendumData.filter((r) => r.startedAt && !r.finishedAt)[0];
+    return referendum?.votes?.nodes.reduce((o, v) => ({ ...o, [v.vote]: (o[v.vote] || 0) + 1 }), {
+      referendumId: referendum.id,
+    });
+  }),
   selectReferendums: createSelector(
     "selectReferendumRaw",
     "selectReferendumsData",
@@ -851,7 +918,7 @@ const referendum = {
       }
       return referendumsData.map((r) => {
         // Vote is null when loading, {} when "known not voted"
-        const vote = raw.lastVote ? raw.lastVote.find(v => v?.referendumId == r.id) || {} : null;
+        const vote = raw.lastVote ? raw.lastVote.find((v) => v?.referendumId == r.id) || {} : null;
         const live = r.id === referendumLiveCount?.referendumId ? referendumLiveCount : {};
         const counts = [...r.choices, ""].map((choice) => ({
           choice,
@@ -863,14 +930,20 @@ const referendum = {
     }
   ),
 
-  reactReferendumSubscribes: createSelector("selectReferendumRaw", "selectClientManage", "selectReferendum", "selectSakId", (raw, clientManage, referendum, sakId) => {
-    if (sakId && sakId != raw.subSak && !raw.subscribing) {
-      return { actionCreator: "doReferendumSubscribe", args: [sakId, { withVotes: clientManage }] };
+  reactReferendumSubscribes: createSelector(
+    "selectReferendumRaw",
+    "selectClientManage",
+    "selectReferendum",
+    "selectSakId",
+    (raw, clientManage, referendum, sakId) => {
+      if (sakId && sakId != raw.subSak && !raw.subscribing) {
+        return { actionCreator: "doReferendumSubscribe", args: [sakId, { withVotes: clientManage }] };
+      }
+      if (referendum && !clientManage && referendum.id !== raw.subReferendum) {
+        return { actionCreator: "doReferendumVoteSubscribe", args: [{ referendumId: referendum.id }] };
+      }
     }
-    if (referendum && !clientManage && referendum.id !== raw.subReferendum) {
-      return { actionCreator: "doReferendumVoteSubscribe", args: [{ referendumId: referendum.id }] };
-    }
-  }),
+  ),
 };
 
 const out = {
@@ -916,52 +989,58 @@ const test = {
     return state;
   },
 
-  doTestReq: ({ requesterId } = {}) => async ({ dispatch }) => {
-    requesterId = requesterId ?? store.selectMyselfId();
-    dispatch({ type: "TEST_REQ_STARTED", payload: requesterId });
-    const query = `
+  doTestReq:
+    ({ requesterId } = {}) =>
+    async ({ dispatch }) => {
+      requesterId = requesterId ?? store.selectMyselfId();
+      dispatch({ type: "TEST_REQ_STARTED", payload: requesterId });
+      const query = `
       mutation NewTest($requesterId: Int!) {
         createTest(input: {test: {requesterId: $requesterId}}) {
           test { id }
         }
       }`;
-    try {
-      const res = await gql(query, { requesterId });
-      const {
-        createTest: { test },
-      } = res;
-      dispatch({ type: "TEST_REQ_FINISHED", payload: test });
-    } catch (error) {
-      dispatch({ type: "TEST_REQ_FAILED", error, payload: requesterId });
-    }
-  },
-  doTestUpdateStatus: (id, status) => async ({ dispatch }) => {
-    dispatch({ type: "TEST_UPD_STARTED", payload: { id, status } });
-    const query = `
+      try {
+        const res = await gql(query, { requesterId });
+        const {
+          createTest: { test },
+        } = res;
+        dispatch({ type: "TEST_REQ_FINISHED", payload: test });
+      } catch (error) {
+        dispatch({ type: "TEST_REQ_FAILED", error, payload: requesterId });
+      }
+    },
+  doTestUpdateStatus:
+    (id, status) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "TEST_UPD_STARTED", payload: { id, status } });
+      const query = `
       mutation {
         updateTest(input: {id: ${id}, patch: {${
-      { start: `startedAt: "now()"`, stop: `finishedAt: "now()"` }[status]
-    }}}) {
+        { start: `startedAt: "now()"`, stop: `finishedAt: "now()"` }[status]
+      }}}) {
           test { id }
         }
       }`;
-    try {
-      const res = await gql(query);
-      const {
-        updateTest: { test },
-      } = res;
-      dispatch({ type: "TEST_REQ_FINISHED", payload: test });
-    } catch (error) {
-      dispatch({ type: "TEST_REQ_FAILED", error, payload: id });
-    }
-  },
-  doTestSubscribe: (requesterId) => async ({ dispatch }) => {
-    requesterId = requesterId ?? store.selectMyselfId();
-    const { subStop } = store.selectTestRaw();
-    // Limit to self in common case, but allow "all"
-    dispatch({ type: "TEST_SUB_STARTED", payload: requesterId });
-    if (subStop) subStop();
-    const query = `
+      try {
+        const res = await gql(query);
+        const {
+          updateTest: { test },
+        } = res;
+        dispatch({ type: "TEST_REQ_FINISHED", payload: test });
+      } catch (error) {
+        dispatch({ type: "TEST_REQ_FAILED", error, payload: id });
+      }
+    },
+  doTestSubscribe:
+    (requesterId) =>
+    async ({ dispatch }) => {
+      requesterId = requesterId ?? store.selectMyselfId();
+      const { subStop } = store.selectTestRaw();
+      // Limit to self in common case, but allow "all"
+      dispatch({ type: "TEST_SUB_STARTED", payload: requesterId });
+      if (subStop) subStop();
+      const query = `
       subscription Tests${requesterId == "all" ? "" : "($requesterId: Int!)"} {
         tests${requesterId == "all" ? "" : "(condition: {requesterId: $requesterId})"} {
           nodes {
@@ -973,19 +1052,19 @@ const test = {
           }
         }
       }`;
-    const variables = { requesterId };
-    try {
-      const stop = await live({ query, variables }, ({ data }) => {
-        const {
-          tests: { nodes },
-        } = data;
-        dispatch({ type: "TEST_SUB_UPDATED", payload: nodes });
-      });
-      dispatch({ type: "TEST_SUB_FINISHED", payload: stop });
-    } catch (error) {
-      dispatch({ type: "TEST_SUB_FAILED", error });
-    }
-  },
+      const variables = { requesterId };
+      try {
+        const stop = await live({ query, variables }, ({ data }) => {
+          const {
+            tests: { nodes },
+          } = data;
+          dispatch({ type: "TEST_SUB_UPDATED", payload: nodes });
+        });
+        dispatch({ type: "TEST_SUB_FINISHED", payload: stop });
+      } catch (error) {
+        dispatch({ type: "TEST_SUB_FAILED", error });
+      }
+    },
 
   selectTestRaw: (state) => state.test,
   selectTests: (state) => state.test.data,
@@ -1022,11 +1101,11 @@ const client = {
       config = JSON.parse(localStorage.config);
     } catch {}
     const initialState = {
-      manage: 'manage' in document.body.dataset,
+      manage: "manage" in document.body.dataset,
       ui: "",
       useWaitRoom: null,
-      userFacing: 'externals' in document.body.dataset,
-      reloadable: 'reloadable' in document.body.dataset,
+      userFacing: "externals" in document.body.dataset,
+      reloadable: "reloadable" in document.body.dataset,
       youtubeSize: "",
       config,
     };
@@ -1059,10 +1138,12 @@ const client = {
   doClientUi: (ui) => ({ type: "CLIENT_UI", payload: ui }),
   doClientYoutubeSize: (big) => ({ type: "CLIENT_YOUTUBE_SIZE", payload: big }),
   doClientUseWaitRoom: (use) => ({ type: "CLIENT_USE_WAIT_ROOM", payload: use }),
-  doClientConfig: (cfg) => ({ store, dispatch }) => {
-    localStorage.config = JSON.stringify({ ...store.selectClientRaw().config, ...cfg });
-    dispatch({ type: "CLIENT_CONFIG", payload: cfg });
-  },
+  doClientConfig:
+    (cfg) =>
+    ({ store, dispatch }) => {
+      localStorage.config = JSON.stringify({ ...store.selectClientRaw().config, ...cfg });
+      dispatch({ type: "CLIENT_CONFIG", payload: cfg });
+    },
 
   selectClientRaw: (state) => state.client,
   selectClientUi: (state) => state.client.ui,
@@ -1121,19 +1202,21 @@ const whereby = {
 
 const emoji = {
   name: "emoji",
-  doEmojiSend: (type = "like") => async ({ dispatch }) => {
-    const HOST = /127.0.0.1/.test(location.hostname) ? `http://localhost:3001` : '';
-    dispatch({ type: "EMOJI_SEND_STARTED" });
-    try {
-      const res = await fetch(`${HOST}/emoji/${type}`, { method: "POST" });
-      const text = await res.text()
-      console.log("XX emoji send", res, text);
-      dispatch({ type: "EMOJI_SEND_FINISHED", payload: text });
-    } catch (error) {
-      console.log("XX emoji send err", error);
-      dispatch({ type: "EMOJI_SEND_FAILED", error });
-    }
-  },
+  doEmojiSend:
+    (type = "like") =>
+    async ({ dispatch }) => {
+      const HOST = /127.0.0.1/.test(location.hostname) ? `http://localhost:3001` : "";
+      dispatch({ type: "EMOJI_SEND_STARTED" });
+      try {
+        const res = await fetch(`${HOST}/emoji/${type}`, { method: "POST" });
+        const text = await res.text();
+        console.log("XX emoji send", res, text);
+        dispatch({ type: "EMOJI_SEND_FINISHED", payload: text });
+      } catch (error) {
+        console.log("XX emoji send err", error);
+        dispatch({ type: "EMOJI_SEND_FAILED", error });
+      }
+    },
 };
 
 const errors = {
@@ -1155,7 +1238,20 @@ const errors = {
   },
 };
 
-const store = composeBundles(meeting, myself, speech, sak, people, referendum, out, test, client, whereby, emoji, errors)();
+const store = composeBundles(
+  meeting,
+  myself,
+  speech,
+  sak,
+  people,
+  referendum,
+  out,
+  test,
+  client,
+  whereby,
+  emoji,
+  errors
+)();
 window.store = store;
 
 function addSelect(sel) {
