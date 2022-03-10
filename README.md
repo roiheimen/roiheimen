@@ -49,3 +49,13 @@ Ongoing referendum.
 There's also a manage interface those who run the meeting is using:
 
 ![](./docs/manage.png)
+
+Special pages
+-------------
+The client interface is at `/queue.html` and you'll be redirected there
+once logging in. The `/manage.html` is where you control the meeting.
+However there are some addresses that are not in the menu:
+
+- `/gfx.html` - overlay for use on a livestream of the meeting
+- `/fullscreen.html` - used in-meeting to show the audience what is
+  happening.

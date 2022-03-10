@@ -26,10 +26,16 @@ define("RoiGfxTitle", {
         transform: scale(0.6);
         will-change: transform;
       }
+      ${self} h1.simple {
+        padding: 0;
+        font-size: inherit;
+        transform-origin: top center;
+      }
     `;
   },
   oninit() {
     this.h1 = ref();
+    this.simple = this.getAttribute("simple") != null;
   },
   render({ useEffect, useSel, usePrevious }) {
     const { sak } = useSel("sak");
@@ -46,7 +52,7 @@ define("RoiGfxTitle", {
       );
     }, [this.h1, title]);
     this.html`
-      <h1 ref=${this.h1}>${title}</h1>
+      <h1 class=${this.simple ? "simple" : ""} ref=${this.h1}>${title}</h1>
     `;
   },
 });
