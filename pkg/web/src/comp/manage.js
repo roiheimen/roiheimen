@@ -66,15 +66,16 @@ const gqlCreateSpeech = `
       }
     }
   }`;
-const gqlFetchPeople = `
-query FetchPeople {
-  people {
+const gqlFetchStats = `
+query FetchStats {
+  statsPeople {
     nodes {
       id
-      name
       num
-      admin
-      nodeId
+      speechesInnlegg
+      speechesReplikk
+      votes
+      speeches
     }
   }
 }`;
@@ -114,16 +115,6 @@ function handleAdderAction(action, store) {
   if (action.vote) {
     return store.doReferendumReq({ type: action.vote, ...action });
   }
-}
-
-async function fetchPeople() {
-  const res = await gql(gqlFetchPeople);
-  const {
-    people: { nodes },
-  } = res;
-  const byId = Object.fromEntries(nodes.map((p) => [p.id, p]));
-  storage("people").byId = byId;
-  return byId;
 }
 
 const SakTitle = {
@@ -420,10 +411,86 @@ const FinishedSaker = {
   },
 };
 
+function sum(ar) {
+  return ar.reduce((memo, v) => +memo + +v, 0);
+}
+function avg(ar) {
+  return sum(ar) / ar.length;
+}
+function numStat(ar) {
+  const sum_ = sum(ar);
+  if (!sum_) return "";
+  const avg_ = sum_ / ar.length;
+  const avgPr = Math.trunc(avg_ * 10) / 10;
+  return html`${sum_ + " "} <small>(${avgPr})</small>`;
+}
+function numP(n) {
+  return +n ? n : "";
+}
+const ShowStats = {
+  render({ useCallback, useEffect, useState, useSel }) {
+    const { peopleById } = useSel("peopleById");
+    const [stats, setStats] = useState([]);
+    useEffect(async () => {
+      const res = await gql(gqlFetchStats);
+      const stats = res.statsPeople.nodes;
+      setStats(stats);
+    }, []);
+    if (!stats.length) return;
+    const statOrg = {};
+    for (const statPerson of stats) {
+      const person = peopleById[statPerson.id];
+      let o = (statOrg[person.org] = statOrg[person.org] || {});
+      for (const t of ["speechesInnlegg", "speechesReplikk", "votes"]) {
+        o[t] = o[t] || [];
+        o[t].push(statPerson[t]);
+      }
+    }
+    this.html`
+    <h2>Stats</h2>
+    <table style="width: 100%">
+      <thead>
+        <tr><th>Num <th>Person <th>Innlegg <th>Replikkar <th>Røyster
+      </thead>
+      <tbody>
+        ${stats.map(
+          (s) =>
+            html`<tr>
+              <td>${s.num}</td>
+              <td>${peopleById[s.id].name}</td>
+              <td>${numP(s.speechesInnlegg)}</td>
+              <td>${numP(s.speechesReplikk)}</td>
+              <td>${numP(s.votes)}</td>
+            </tr>`
+        )}
+      </tbody>
+    </table>
+    <h3>Lokallag stats</h3>
+    <table style="width: 100%">
+      <thead>
+        <tr><th>Org <th>Innlegg <th>Replikkar <th>Røyster
+      </thead>
+      <tbody>
+        ${Object.entries(statOrg).map(
+          ([org, stat]) =>
+            html`<tr>
+              <td>${org}</td>
+              <td>${numStat(stat.speechesInnlegg)}</td>
+              <td>${numStat(stat.speechesReplikk)}</td>
+              <td>${sum(stat.votes)}</td>
+            </tr>`
+        )}
+      </tbody>
+    </table>
+      `;
+  },
+};
+
 const MoreDialog = {
   extends: "dialog",
   includes: {
     ShowSaker,
+    ShowStats,
     FinishedSaker,
   },
   mappedAttributes: ["err"],
@@ -523,6 +590,7 @@ const MoreDialog = {
       this.tab === "showsak" && "active"
     }>Sjå eller slett saker</button>
         <li><button onclick=${this} name=finished class=${this.tab === "finished" && "active"}>Ferdige saker</button>
+        <li><button onclick=${this} name=stats class=${this.tab === "stats" && "active"}>Statistikk</button>
       </ul>
       <form name=${this.tab}>
         ${
@@ -565,6 +633,7 @@ Som dette :)"
             `,
             showsak: html` <ShowSaker /> `,
             finished: html` <FinishedSaker /> `,
+            stats: html` <ShowStats /> `,
           }[this.tab]
         }
       </form>
@@ -717,7 +786,9 @@ define("RoiManage", {
       ${
         sak?.id
           ? html`
-              <input class=title value=${sak?.title} title=${`sak-id: ${sak?.id}`} oninput=${this} placeholder="Ingenting">
+              <input class=title value=${
+                sak?.title
+              } title=${`sak-id: ${sak?.id}`} oninput=${this} placeholder="Ingenting">
               <button class=finish onclick=${this}>Ferdig sak</button>
               <div class=config onchange=${this}>
                 <label><input class=speechDisabled type=checkbox checked=${

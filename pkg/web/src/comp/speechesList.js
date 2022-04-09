@@ -70,7 +70,11 @@ export default define("RoiSpeechesList", {
           html`
             <tr class=${speechClass(speech)} title=${`${speech.type} av ${speech.speaker.name}`}>
               <td>${speech.speaker.num}</td>
-              <td><div style="display: flex">${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}${rm(speech)}</div></td>
+              <td>
+                <div style="display: flex">
+                  ${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}${rm(speech)}
+                </div>
+              </td>
               <td>${speech.speaker.org}</td>
             </tr>
           `
