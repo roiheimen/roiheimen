@@ -15,16 +15,18 @@ define("RoiGfxTitle", {
       ${self} h1 {
         background: #6A9325;
         color: white;
-        display: inline-block;
         font-size: 3.5vw;
         font-weight: 600;
         margin: 0 auto;
-        line-height: 1;
-        opacity: 1;
         padding: 0 1vw;
+        opacity: 1;
         transform-origin: top right;
-        transform: scale(0.6);
         will-change: transform;
+      }
+      ${self} h1:not(.simple) {
+        transform: scale(0.6);
+        display: inline-block;
+        line-height: 1;
       }
       ${self} h1.simple {
         padding: 0;
@@ -43,7 +45,7 @@ define("RoiGfxTitle", {
     //const prevTitle = usePrevious(title);
     //if (prevTitle && prevTitle == title) return;
     useEffect(() => {
-      if (!this.h1.current) return;
+      if (!this.h1.current || this.simple) return;
       const DURATION = 5000;
       const SCALE = 0.6;
       this.h1.current.animate(

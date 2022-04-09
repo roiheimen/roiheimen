@@ -2,6 +2,7 @@ import { define, html } from "/web_modules/heresy.js";
 
 export default define("RoiSpeechesList", {
   oninit() {
+    this.readonly = this.getAttribute("readonly") != null;
     this.simple = this.getAttribute("simple") != null;
     this.color = this.getAttribute("color") != null;
   },
@@ -52,6 +53,7 @@ export default define("RoiSpeechesList", {
       `;
     };
     const rm = (speech) => {
+      if (this.readonly) return null;
       if (speech.endedAt) return null;
       if (speech.speakerId == myself.id || (myself.admin && !this.simple))
         return html`
@@ -68,7 +70,7 @@ export default define("RoiSpeechesList", {
           html`
             <tr class=${speechClass(speech)} title=${`${speech.type} av ${speech.speaker.name}`}>
               <td>${speech.speaker.num}</td>
-              <td style="display: flex">${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}${rm(speech)}</td>
+              <td><div style="display: flex">${speech.type == "REPLIKK" ? "↳ " : ""}${speech.speaker.name}${rm(speech)}</div></td>
               <td>${speech.speaker.org}</td>
             </tr>
           `

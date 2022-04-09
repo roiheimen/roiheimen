@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Roiheimen fullskjerm</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/lib/boot.js></script>
+<script type=module src=/comp/gfx.js></script>
+<script type=module src=/comp/speechesList.js></script>
+<style>
+  #grid {
+    display: grid;
+    grid-template-rows: 40px 1fr max-content;
+    grid-template-areas:
+      'title'
+      'content'
+      'about';
+    height: 100vh;
+  }
+  roi-gfx-title {
+    grid-area: title;
+    text-align: center;
+  }
+  roi-speeches-list {
+    align-self: center;
+    grid-area: content;
+    overflow: auto;
+    max-height: 100%;
+  }
+  roi-speeches-list table {
+    width: calc(100% - 40px);
+    margin-bottom: 32%; /* clearly see the end of the list */
+  }
+  roi-speeches-list::-webkit-scrollbar {
+    width: 0;
+  }
+  roi-gfx-speaker {
+    grid-area: about;
+  }
+  roi-gfx-vote {
+    grid-area: content;
+    align-self: end;
+    justify-self: center;
+    width: calc(100% - 40px);
+    padding: 10px 20px 20px;
+    background: var(--roi-theme-main-color);
+  }
+  .link {
+    grid-area: about;
+    background-color: blue;
+  }
+</style>
+<body data-externals data-manage>
+  <div id=grid>
+    <roi-gfx-title simple></roi-gfx-title>
+    <roi-speeches-list simple readonly></roi-speeches-list>
+    <roi-gfx-speaker></roi-gfx-speaker>
+    <roi-gfx-vote></roi-gfx-vote>
+  </div>
+</body>
