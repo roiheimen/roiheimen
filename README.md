@@ -50,6 +50,30 @@ There's also a manage interface those who run the meeting is using:
 
 ![](./docs/manage.png)
 
+Configuration
+-------------
+
+Each meeting, sak and person has a config object. These exist:
+
+- `voteDisallowNum`: Array of person num's to disallow to vote
+- `speechDisabled`: Whether to disallow new speeches (has UI, steng taleliste)
+- `speechInnleggDisabled`: Whether to only disallow new "Innlegg" speeches (has UI)
+- `hideClosedReferendumResults`: Don't show results of the closed referendums to people
+  (this would normally tally up the score)
+- `gfxIframeOnQueue`: Show live voting results to all users by (default
+ true) - this can be heavy for the server or clients with bad internet
+- `userGfxIframeOnQueue`: The user overidden setting
+- `stableChoices`: If `true` won't randomize vote choices, but keep them as-is
+- `emojis`: If `true` show emoji reactions (not finished)
+- `video`: If `false`, disable all video, else a youtube ID for the live stream being shown
+- `externalCss`: External CSS to load (only on Meeting)
+
+These are not really used much anymore, it's for fully-remote meetings using Whereby.
+- `tests` (Whereby): Allow people to talk to the backroom for tests
+- `speechRoom` (Whereby): Which room the speech happens in
+- `waitRoom` (Whereby): Which room waiting happens in
+- `backroom` (Whereby): The backroom
+
 Special pages
 -------------
 The client interface is at `/queue.html` and you'll be redirected there
