@@ -68,14 +68,13 @@ const gqlCreateSpeech = `
   }`;
 const gqlFetchStats = `
 query FetchStats {
-  statsPeople {
+  statsPeopleMeeting {
     nodes {
-      id
-      num
+      personId
+      speeches
       speechesInnlegg
       speechesReplikk
       votes
-      speeches
     }
   }
 }`;
@@ -433,13 +432,17 @@ const ShowStats = {
     const [stats, setStats] = useState([]);
     useEffect(async () => {
       const res = await gql(gqlFetchStats);
-      const stats = res.statsPeople.nodes;
+      const stats = res.statsPeopleMeeting.nodes;
       setStats(stats);
     }, []);
     if (!stats.length) return;
     const statOrg = {};
     for (const statPerson of stats) {
-      const person = peopleById[statPerson.id];
+      const person = peopleById[statPerson.personId];
+      if (!person) {
+        console.error(`ShowStats: Missing person ${statPerson.id}`);
+        continue;
+      }
       let o = (statOrg[person.org] = statOrg[person.org] || {});
       for (const t of ["speechesInnlegg", "speechesReplikk", "votes"]) {
         o[t] = o[t] || [];
@@ -456,8 +459,8 @@ const ShowStats = {
         ${stats.map(
           (s) =>
             html`<tr>
-              <td>${s.num}</td>
-              <td>${peopleById[s.id].name}</td>
+              <td>${peopleById[s.personId].num}</td>
+              <td>${peopleById[s.personId].name}</td>
               <td>${numP(s.speechesInnlegg)}</td>
               <td>${numP(s.speechesReplikk)}</td>
               <td>${numP(s.votes)}</td>
