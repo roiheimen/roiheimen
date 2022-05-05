@@ -214,7 +214,7 @@ begin
       account.person_id,
       $2,
       person.admin,
-      extract(epoch from (now() + interval '2 days'))
+      extract(epoch from (now() + interval '6 days'))
     )::roiheimen.jwt_token;
   else
     return null;
