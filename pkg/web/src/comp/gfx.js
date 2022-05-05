@@ -161,6 +161,7 @@ define("RoiGfxVote", {
         display: inline-block;
         margin: 3px;
         padding: 2px 6px;
+        font-size: var(--roi-vote-header-size, revert);
       }
       ${self} .vote {
         display: inline-block;
