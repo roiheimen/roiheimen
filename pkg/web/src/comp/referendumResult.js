@@ -39,7 +39,7 @@ export default define("RoiReferendumResult", {
                   : html` <span class="choice">${c.choice || "<blank>"} (${c.count})</span> `
               )
         }
-        ${referendumPrev.vote ? html` <p>Du valde «${referendumPrev.vote.vote}».</p> ` : null}
+        ${referendumPrev.vote && !hideResults ? html` <p>Du valde «${referendumPrev.vote.vote}».</p> ` : null}
       </div>
       `;
   },

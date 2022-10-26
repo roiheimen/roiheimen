@@ -46,6 +46,7 @@ export default define("RoiReferendum", {
     const { id, title, type, finishedAt } = referendum;
     const vote = referendum.vote?.vote;
     const humanType = { OPEN: "open avrøysting", CLOSED: "lukka votering" }[type] || type;
+    const hideVote = type === "CLOSED" && config.hideClosedReferendumResults;
     const chooser = () => html`
       <ul style="list-style: none">
         ${choices.map(
@@ -62,7 +63,7 @@ export default define("RoiReferendum", {
     const didVote = () =>
       html`
         <p>
-          Du har røysta. ${vote ? `Du valde «${vote}».` : null}
+          Du har røysta. ${vote && !hideVote ? `Du valde «${vote}».` : null}
           ${choose ? null : html` <button name="back" type="button" onclick=${() => setChoose(true)}>Endra</button> `}
         </p>
       `;
