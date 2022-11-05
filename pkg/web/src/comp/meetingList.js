@@ -20,6 +20,7 @@ define("RoiMeetingList", {
     }
     ${self} li a {
       background: var(--roi-theme-main-color);
+      border-bottom: 0.1px solid white;
       height: 100px;
       color: var(--roi-theme-main-color2);
       display: flex;
@@ -51,10 +52,17 @@ define("RoiMeetingList", {
         `;
     }
     if (!meetings || meetingId == null) return this.html`Lastar...`;
+    const currentMeetings = meetings.filter((m) => {
+      const { finishedAt } = m.config || {};
+      if (finishedAt) {
+        return Date.now() <= +new Date(finishedAt);
+      }
+      return true;
+    });
     this.html`
     Vel eit møte:
     <ul onclick=${this}>
-      ${meetings.map(
+      ${currentMeetings.map(
         (m) => html`
           <li style=${toCss(m.theme)}>
             <a data-id=${m.id} href=${`/?m=${m.id}`}>

@@ -67,6 +67,7 @@ Each meeting, sak and person has a config object. These exist:
 - `emojis`: If `true` show emoji reactions (not finished)
 - `video`: If `false`, disable all video, else a youtube ID for the live stream being shown
 - `externalCss`: External CSS to load (only on Meeting)
+- `finishedAt`: When to start hiding the meeting on the front page
 
 These are not really used much anymore, it's for fully-remote meetings using Whereby.
 - `tests` (Whereby): Allow people to talk to the backroom for tests
