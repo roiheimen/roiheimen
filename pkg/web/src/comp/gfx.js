@@ -184,7 +184,7 @@ define("RoiGfxVote", {
     `;
   },
   render({ useEffect, useStore, useSel, usePrevious }) {
-    const { referendum, peopleDelegates } = useSel("referendum", "peopleDelegates");
+    const { config, referendum, peopleDelegates } = useSel("config", "referendum", "peopleDelegates");
     const store = useStore();
     const title = referendum?.title;
     const votesByPerson = referendum?.votes.nodes.reduce((o, v) => ({ ...o, [v.personId]: v }), {}) || {};
@@ -207,6 +207,7 @@ define("RoiGfxVote", {
       );
     }, [this.div, title]);
     if (!title) return this.html`<div></div>`;
+    const hideResult = referendum.type === "CLOSED" && config.hideClosedReferendumResults;
     this.html`
       <div class=refbox ref=${this.div}>
         ${this.noheader ? null : html` <h2>${title}</h2> `}
@@ -219,13 +220,13 @@ define("RoiGfxVote", {
             for (const c of referendum.counts) {
               doneVotes += c.privateCount;
               if (doneVotes > i) {
-                cn = `voted ${voteToClass(c.choice)}`.trim();
+                cn = `voted ${hideResult ? '' : voteToClass(c.choice)}`.trim();
                 break;
               }
             }
           } else {
             const v = votesByPerson[p.id];
-            if (v) cn = `voted ${voteToClass(v.vote)}`.trim();
+            if (v) cn = `voted ${hideResult ? '' : voteToClass(v.vote)}`.trim();
           }
           cn = `vote ${cn}`;
           return html` <div class=${cn}>${name}</div> `;
