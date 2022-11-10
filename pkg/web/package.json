@@ -5,7 +5,7 @@
     "build": "snowpack build",
     "lint": "prettier --check \"src/**/*.js\"",
     "prepare": "snowpack prepare",
-    "start": "es-dev-server --http2 --watch --port 8080 --compatibility none --root-dir src/",
+    "start": "es-dev-server",
     "test": "echo \"Nothing yet\" && exit 1"
   },
   "snowpack": {
