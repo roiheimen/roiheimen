@@ -169,6 +169,9 @@ define("RoiGfxVote", {
         padding: 2px 3px;
         font-weight: 400;
       }
+      ${self} .type-CLOSED .vote {
+        margin: 2px 0;
+      }
       ${self} .voted {
         background-color: #333;
       }
@@ -211,26 +214,28 @@ define("RoiGfxVote", {
     this.html`
       <div class=refbox ref=${this.div}>
         ${this.noheader ? null : html` <h2>${title}</h2> `}
-        <div class=ppl>${peopleDelegates?.map((p, i) => {
-          let name = p.num;
-          let cn = "not_voted";
-          if (referendum.type === "CLOSED") {
-            name = "  "; // nbsp :shrug:
-            let doneVotes = 0;
-            for (const c of referendum.counts) {
-              doneVotes += c.privateCount;
-              if (doneVotes > i) {
-                cn = `voted ${hideResult ? '' : voteToClass(c.choice)}`.trim();
-                break;
+        <div class=${`ppl type-${referendum.type}`}>
+          ${peopleDelegates?.map((p, i) => {
+            let name = p.num;
+            let cn = "not_voted";
+            if (referendum.type === "CLOSED") {
+              name = "  "; // nbsp :shrug:
+              let doneVotes = 0;
+              for (const c of referendum.counts) {
+                doneVotes += c.privateCount;
+                if (doneVotes > i) {
+                  cn = `voted ${hideResult ? "" : voteToClass(c.choice)}`.trim();
+                  break;
+                }
               }
+            } else {
+              const v = votesByPerson[p.id];
+              if (v) cn = `voted ${hideResult ? "" : voteToClass(v.vote)}`.trim();
             }
-          } else {
-            const v = votesByPerson[p.id];
-            if (v) cn = `voted ${hideResult ? '' : voteToClass(v.vote)}`.trim();
-          }
-          cn = `vote ${cn}`;
-          return html` <div class=${cn}>${name}</div> `;
-        })}</div>
+            cn = `vote ${cn}`;
+            return html` <div class=${cn}>${name}</div> `;
+          })}
+        </div>
       </div>
     `;
   },
