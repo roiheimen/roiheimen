@@ -19,9 +19,16 @@ export default define("RoiReferendumResult", {
     }
     `;
   },
-  render({ useSel, useStore, useMemo }) {
+  render({ useEffect, useRef, useSel, useStore, useMemo }) {
     this.store = useStore();
     const { config, referendumPrev } = useSel("config", "referendumPrev");
+    const div = useRef();
+    useEffect(() => {
+      const t = setTimeout(() => {
+        if (div.current) div.current.hidden = true;
+      }, 30000);
+      return () => clearTimeout(t);
+    }, [div.current, referendumPrev?.id]);
     if (!referendumPrev) {
       return this.html`${null}`;
     }
@@ -31,8 +38,10 @@ export default define("RoiReferendumResult", {
     counts.sort((a, b) => b.count - a.count);
     const winner = counts && counts[0]?.count > counts[1].count ? counts[0] : null;
     this.html`
-      <div data-id=${id} title="${referendumPrev.vote && !hideResults ? `Du valde «${referendumPrev.vote.vote}».` : ""}">
-        <h3><span class="prev">Førre avrøysting:</span> ${title}</h3>
+      <div ref=${div} data-id=${id} title="${
+      referendumPrev.vote && !hideResults ? `Du valde «${referendumPrev.vote.vote}».` : ""
+    }">
+           <h3><span class="prev">Førre avrøysting:</span> ${title}</h3>
         ${
           hideResults
             ? winner
