@@ -27,19 +27,23 @@ export default define("RoiReferendumResult", {
     }
     const { id, type, title } = referendumPrev;
     const hideResults = type === "CLOSED" && config.hideClosedReferendumResults;
+    const counts = referendumPrev.counts.slice() || [];
+    counts.sort((a, b) => b.count - a.count);
+    const winner = counts && counts[0]?.count > counts[1].count ? counts[0] : null;
     this.html`
-      <div data-id=${id}>
+      <div data-id=${id} title="${referendumPrev.vote && !hideResults ? `Du valde «${referendumPrev.vote.vote}».` : ""}">
         <h3><span class="prev">Førre avrøysting:</span> ${title}</h3>
         ${
           hideResults
-            ? null
-            : referendumPrev.counts?.map((c) =>
+            ? winner
+              ? html`<span class="choice">${winner.choice || "<blank>"}</span>`
+              : html`&ndash;`
+            : counts.map((c) =>
                 !c.choice && !c.count
                   ? html`${[]}`
                   : html` <span class="choice">${c.choice || "<blank>"} (${c.count})</span> `
               )
         }
-        ${referendumPrev.vote && !hideResults ? html` <p>Du valde «${referendumPrev.vote.vote}».</p> ` : null}
       </div>
       `;
   },

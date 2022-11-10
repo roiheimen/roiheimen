@@ -6,6 +6,7 @@
 <script type=module src=/lib/boot.js></script>
 <script type=module src=/comp/gfx.js></script>
 <script type=module src=/comp/speechesList.js></script>
+<script type=module src=/comp/referendumResult.js></script>
 <style>
   #grid {
     display: grid;
@@ -33,8 +34,20 @@
   roi-speeches-list::-webkit-scrollbar {
     width: 0;
   }
+  roi-referendum-result {
+    grid-area: about;
+  }
+  roi-referendum-result h3 {
+    display: inline-block;
+    margin-right: 1em;
+  }
   roi-gfx-speaker {
     grid-area: about;
+  }
+  roi-gfx-speaker .underbox {
+    background: white;
+    margin: 0;
+    padding-top: 0.5vw;
   }
   roi-gfx-vote {
     grid-area: content;
@@ -54,6 +67,7 @@
   <div id=grid>
     <roi-gfx-title simple></roi-gfx-title>
     <roi-speeches-list simple readonly></roi-speeches-list>
+    <roi-referendum-result></roi-referendum-result>
     <roi-gfx-speaker></roi-gfx-speaker>
     <roi-gfx-vote style="--roi-vote-header-size: 22pt"></roi-gfx-vote>
   </div>

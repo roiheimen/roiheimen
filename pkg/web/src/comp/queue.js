@@ -200,7 +200,7 @@ define("RoiQueue", {
   },
   style(self) {
     return `
-    ${self} { 
+    ${self} {
       display: block;
       min-height: 400px;
     }
