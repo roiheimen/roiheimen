@@ -55,7 +55,7 @@ define("RoiMeetingList", {
     const currentMeetings = meetings.filter((m) => {
       const { finishedAt } = m.config || {};
       if (finishedAt) {
-        return Date.now() <= +new Date(finishedAt);
+        return Date.now() <= +new Date(finishedAt.length === 10 ? finishedAt + ' 23:59' : finishedAt);
       }
       return true;
     });
