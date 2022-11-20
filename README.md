@@ -59,9 +59,10 @@ Each meeting, sak and person has a config object. These exist:
 - `speechDisabled`: Whether to disallow new speeches (has UI, steng taleliste)
 - `speechInnleggDisabled`: Whether to only disallow new "Innlegg" speeches (has UI)
 - `hideClosedReferendumResults`: Don't show results of the closed referendums to people
-  (this would normally tally up the score)
-- `gfxIframeOnQueue`: Show live voting results to all users by (default
- true) - this can be heavy for the server or clients with bad internet
+   (this would normally tally up the score)
+- `gfxIframeOnQueue`: Show live voting results to all users.
+   This can be heavy for the server or clients with bad internet.
+   Will override user setting and disable their choice if set to false.
 - `userGfxIframeOnQueue`: The user overidden setting
 - `stableChoices`: If `true` won't randomize vote choices, but keep them as-is
 - `emojis`: If `true` show emoji reactions (not finished)
