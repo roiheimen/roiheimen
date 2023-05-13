@@ -1,7 +1,7 @@
 const proxy = require("koa-http2-proxy");
 
 module.exports = {
-  http2: true,
+  //http2: true, -- if using Whereby, also add --ssl-cert --ssl-key and this
   rootDir: "src/",
   compatibility: "none",
   watch: true,

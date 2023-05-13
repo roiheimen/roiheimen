@@ -2,6 +2,8 @@ import storage from "../lib/storage.js";
 
 const creds = storage("creds");
 
+const isLocalHttp = location.protocol === "http:" && location.hostname.endsWith("localhost");
+
 function printErrors(name, errors) {
   if (errors) {
     errors.forEach((e) => console.error(name + ":", e.message));
@@ -22,7 +24,8 @@ export async function gql(query, variables, { jwt, retry, timeout } = {}) {
   const timeoutId = setTimeout(() => aborter.abort(), timeout);
   let res;
   try {
-    res = await fetch("/graphql", {
+    const host = isLocalHttp ? "http://localhost:3000" : "";
+    res = await fetch(`${host}/graphql`, {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -111,7 +114,8 @@ async function openWs(reconnect) {
     resolve = res;
     reject = rej;
   });
-  const ws = new WebSocket(`wss://${location.host}/graphql`, "graphql-ws");
+  const wsUrl = isLocalHttp ? "ws://localhost:3000" : `wss://${location.host}/graphql`;
+  const ws = new WebSocket(`${wsUrl}/graphql`, "graphql-ws");
   ws.onerror = (e) => console.error("ws err", e);
   ws.onclose = (e) => {
     console.info("ws close", e);
