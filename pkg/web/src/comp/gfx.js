@@ -191,8 +191,9 @@ define("RoiGfxVote", {
     const store = useStore();
     const title = referendum?.title;
     const votesByPerson = referendum?.votes.nodes.reduce((o, v) => ({ ...o, [v.personId]: v }), {}) || {};
+    const isClosed = referendum?.type === "CLOSED";
     useEffect(() => {
-      if (referendum?.type !== "CLOSED") return;
+      if (isClosed) return;
       store.doReferendumCount();
       const i = setInterval(() => store.doReferendumCount(), 5000);
       return () => clearInterval(i);
@@ -210,7 +211,7 @@ define("RoiGfxVote", {
       );
     }, [this.div, title]);
     if (!title) return this.html`<div></div>`;
-    const hideResult = referendum.type === "CLOSED" && config.hideClosedReferendumResults;
+    const hideResult = isClosed && config.hideClosedReferendumResults;
     this.html`
       <div class=refbox ref=${this.div}>
         ${this.noheader ? null : html` <h2>${title}</h2> `}
