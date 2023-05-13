@@ -15,17 +15,17 @@ define("RoiGfxTitle", {
       ${self} h1 {
         background: #6A9325;
         color: white;
-        font-size: 3.5vw;
+        font-size: 40pt;
         font-weight: 600;
-        margin: 0 auto;
-        padding: 0 1vw;
+        margin: 7px 7px auto;
+        padding: 6px 20px;
         opacity: 1;
-        transform-origin: top right;
+        transform-origin: top left;
         will-change: transform;
       }
       ${self} h1:not(.simple) {
-        transform: scale(0.6);
         display: inline-block;
+        transform: scale(0.8);
         line-height: 1;
       }
       ${self} h1.simple {
@@ -73,18 +73,18 @@ define("RoiGfxSpeaker", {
         background: #6A9325;
         display: block;
         color: white;
-        font-size: 2.5vw;
-        padding: 2px 1vw;
+        font-size: 26pt;
+        padding: 6px 12px;
       }
       ${self} .underbox {
         color: #333;
-        font-size: 1.8vw;
-        margin-top: 0.5vw;
+        font-size: 20pt;
+        margin-top: 3px;
       }
       ${self} .underbox > div {
         background: #fff;
         display: inline-block;
-        padding: 0 1vw;
+        padding: 0 12px;
       }
       ${self} .hidden {
         /*
