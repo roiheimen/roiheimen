@@ -152,7 +152,7 @@ define("RoiGfxVote", {
         border-radius: 2px;
         background: white;
 
-        font-size: 10pt;
+        font-size: var(--roi-vote-font-size, 10pt);
         font-weight: 600;
         line-height: 1;
       }

@@ -85,3 +85,17 @@ However there are some addresses that are not in the menu:
 - `/gfx.html` - overlay for use on a livestream of the meeting
 - `/fullscreen.html` - used in-meeting to show the audience what is happening.
 - `/screen.html` - same as fullscreen, but a bit different display, more features
+
+You can override some CSS styling using CSS variables:
+```
+--roi-vote-header-size: 16pt;
+--roi-vote-font-size: 10pt;
+
+--roi-theme-main-color: #2b2c3a;
+--roi-theme-main-color2: #ffffff;
+--roi-theme-video-bg: #9c9fbd;
+--roi-theme-font: "sans-serif";
+--roi-theme-font-color: #333;
+--roi-theme-head-size: 42px;
+--roi-theme-head-font: inherit;
+```
