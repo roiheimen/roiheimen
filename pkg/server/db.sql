@@ -206,7 +206,8 @@ begin
   if account.password_hash = crypt(password, account.password_hash) then
     update roiheimen_private.person_login
       set logout_at = now()
-      where logout_at is null;
+      where person_id = account.person_id
+      and logout_at is null;
     insert into roiheimen_private.person_login (person_id)
       values (account.person_id);
     return (
