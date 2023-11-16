@@ -114,7 +114,7 @@ async function openWs(reconnect) {
     resolve = res;
     reject = rej;
   });
-  const wsUrl = isLocalHttp ? "ws://localhost:3000" : `wss://${location.host}/graphql`;
+  const wsUrl = isLocalHttp ? "ws://localhost:3000" : `wss://${location.host}`;
   const ws = new WebSocket(`${wsUrl}/graphql`, "graphql-ws");
   ws.onerror = (e) => console.error("ws err", e);
   ws.onclose = (e) => {
