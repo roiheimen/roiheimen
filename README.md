@@ -14,7 +14,7 @@ Setup
   setup](./pkg/server/README.md)).
 
 - `yarn setup`
-- `yarn start`
+- `yarn start` (may want `DATABASE_URL=postgres:///` first if permission errors)
 - Open project at https://localhost:8080/
 - Log in with "nummer" `1000` and "kode" `test`.
 
