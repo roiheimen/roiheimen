@@ -187,7 +187,7 @@ create view ordered_speech as
 
 -- Functions
 
-create function roiheimen.authenticate(
+create or replace function roiheimen.authenticate(
   num integer,
   meeting_id text,
   password text
@@ -222,7 +222,7 @@ begin
   end if;
 end;
 $$ language plpgsql strict security definer;
-comment on function roiheimen.authenticate(integer, text, text) is 'Creates a JWT token that will securely identify a person and give them certain permissions. This token expires in 2 days.';
+comment on function roiheimen.authenticate(integer, text, text) is 'Creates a JWT token that will securely identify a person and give them certain permissions. This token expires in 6 days.';
 
 create function roiheimen.logout(person_id integer) returns roiheimen_private.person_login as $$
   update roiheimen_private.person_login
@@ -573,7 +573,7 @@ create trigger speech_updated_at before update
 -- update meeting disallow when sak is
 create function roiheimen_private.update_disallowed_voters_on_sak() returns trigger as $$
 begin
-  if old.finished_at is null then
+  if old.finished_at is null and (new.config ? 'voteDisallowNum') then
     update roiheimen.meeting m
       set config = m.config || jsonb_build_object('voteDisallowNum', (new.config->>'voteDisallowNum')::jsonb)
       where m.id = new.meeting_id;
