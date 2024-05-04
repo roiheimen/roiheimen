@@ -15,7 +15,8 @@ const meeting = {
     { type, payload, error }
   ) => {
     if (type == "MEETING_FETCH_STARTED") return { ...state, started: true };
-    if (type == MEETING_FETCH_FINISHED) return { ...state, data: payload.meetings };
+    if (type == MEETING_FETCH_FINISHED)
+      return { ...state, data: payload.meetings, id: payload.currentPerson?.meetingId || state.id };
     if (type == "MEETING_FETCH_FAILED") return { ...state, failed: error || true };
     if (type == "MEETING_SUB_STARTED") return { ...state, subTo: payload };
     if (type == "MEETING_SUB_FAILED") return { ...state, failed: error || true };
@@ -163,7 +164,6 @@ const myself = {
   selectMyself: (state) => state.myself.data,
   selectMyselfId: (state) => state.myself.data?.id,
   selectMyselfAnonymous: (state) => (state.myself.fetched ? !state.myself.data : null),
-  selectMyselfMeetingId: (state) => state.myself.data?.meetingId,
   selectMyselfErrors: (state) => state.myself.errors,
   selectMyselfCanVote: createSelector(
     "selectConfig",
@@ -199,7 +199,7 @@ const people = {
         }
       }
       `;
-      const variables = { meetingId: store.selectMyselfMeetingId() };
+      const variables = { meetingId: store.selectMeetingId() };
       try {
         await live({ query, variables }, ({ data }) => {
           const { people } = data;
