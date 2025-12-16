@@ -38,13 +38,13 @@ You don't need to do a full phase in one go.
 - [x] Create `password-reset.js` component
 - [x] Update `login.js` with email/password fields and links
 - [x] Add userAuth Redux bundle to `state.js`
-- [ ] **Test**: Register new user, verify email token in DB
-- [ ] **Test**: Verify email flow (use token from DB or email)
-- [ ] **Test**: Login with verified user, confirm JWT returned
-- [ ] **Test**: Login with unverified user fails
-- [ ] **Test**: Account locks after 3 failed attempts, unlocks after 5 min
-- [ ] **Test**: Request password reset, verify token in DB
-- [ ] **Test**: Reset password with token, login with new password
+- [x] **Test**: Register new user, verify email token in DB
+- [x] **Test**: Verify email flow (use token from DB or email)
+- [x] **Test**: Login with verified user, confirm JWT returned
+- [x] **Test**: Login with unverified user fails
+- [x] **Test**: Account locks after 3 failed attempts, unlocks after 5 min
+- [x] **Test**: Request password reset, verify token in DB
+- [x] **Test**: Reset password with token, login with new password
 
 ### Phase 2: Organizations
 - [ ] Create `roiheimen.organization` table (id, slug, name, config, created_at)
@@ -246,15 +246,20 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 1: Frontend pages - remaining components
+- [ ] Phase 2: Organizations
 
 ### Completed This Session
-- [x] Added userAuth Redux bundle to `state.js`:
-  - `doUserAuthFetch()` - fetches current user account via GraphQL `currentUserAccount` query
-  - `doUserAuthLogout()` - logs out user (calls server-side `userLogout`, clears credentials, redirects)
-  - Selectors: `selectUserAuth`, `selectUserAuthFetched`, `selectUserAuthFetching`, `selectUserAuthError`, `selectUserAuthId`, `selectUserAuthEmail`, `selectUserAuthName`, `selectUserAuthLoggedIn`, `selectUserAuthAnonymous`
-  - Auto-fetch reactor: automatically fetches user data when JWT is present
+- [x] Created `e2e/tests/user-auth.spec.ts` with 12 comprehensive tests:
+  - User Registration tests: register new user with token in DB, weak password fails, mismatched passwords fails
+  - Email Verification tests: verify with valid token, invalid token fails
+  - User Login tests: verified user gets JWT, unverified user fails, wrong password fails
+  - Brute Force Protection tests: account locks after 3 failed attempts
+  - Password Reset tests: request creates token in DB, reset with token works, invalid token fails
+- [x] Fixed `login.js` GraphQL mutation to use correct field name `jwtToken` (not `userJwtToken`)
+- [x] Fixed `password-reset-request.js` GraphQL mutation to use `string` return type (not `boolean`)
+- [x] Fixed `graphql.js` to throw errors when GraphQL returns errors (even with partial data)
+- [x] All 12 Phase 1 auth tests passing
 
 ### Next Steps
-1. Write and run e2e tests for the auth flow
-2. Begin Phase 2: Organizations
+1. Begin Phase 2: Organizations - create database tables and functions
+2. Update old voting.spec.ts tests to work with new auth system (if needed)

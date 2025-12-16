@@ -59,7 +59,7 @@ export async function gql(query, variables, { jwt, retry, timeout } = {}) {
   }
   const { data, errors } = await res.json();
   printErrors(name, errors);
-  if (!data && errors) {
+  if (errors && errors.length > 0) {
     const e = new Error(`Error returned for ${name}`);
     e.extra = { body: { errors } };
     throw e;

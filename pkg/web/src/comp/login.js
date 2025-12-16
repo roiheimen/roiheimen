@@ -80,16 +80,16 @@ define("RoiLogin", {
     const mutation = `
       mutation Login($email: String!, $password: String!) {
         authenticateUser(input: {email: $email, password: $password}) {
-          userJwtToken
+          jwtToken
         }
       }
     `;
 
     try {
       const res = await gql(mutation, { email, password }, { jwt: false });
-      const { authenticateUser: { userJwtToken } } = res;
+      const jwtToken = res?.authenticateUser?.jwtToken;
 
-      if (!userJwtToken) {
+      if (!jwtToken) {
         this.state.error = "Feil e-post eller passord";
         this.state.loading = false;
         this.render();
@@ -97,7 +97,7 @@ define("RoiLogin", {
       }
 
       // Store JWT and redirect to dashboard
-      this.creds.jwt = userJwtToken;
+      this.creds.jwt = jwtToken;
       save("creds");
       location.assign("/oversikt.html");
     } catch (error) {

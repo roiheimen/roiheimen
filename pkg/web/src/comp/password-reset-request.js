@@ -75,7 +75,7 @@ define("RoiPasswordResetRequest", {
     const mutation = `
       mutation RequestPasswordReset($email: String!) {
         requestPasswordReset(input: {email: $email}) {
-          boolean
+          string
         }
       }
     `;
