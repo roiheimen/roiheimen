@@ -413,3 +413,68 @@ CREATE TRIGGER user_account_updated_at
   BEFORE UPDATE ON roiheimen.user_account
   FOR EACH ROW
   EXECUTE PROCEDURE roiheimen_private.set_updated_at();
+
+-- ============================================================================
+-- Email Triggers (via graphile_worker)
+-- ============================================================================
+
+-- Trigger function to queue verification email after registration
+CREATE OR REPLACE FUNCTION roiheimen_private.queue_verification_email()
+RETURNS TRIGGER AS $$
+DECLARE
+  user_record roiheimen.user_account;
+BEGIN
+  -- Get user info for the email
+  SELECT * INTO user_record
+    FROM roiheimen.user_account
+    WHERE id = NEW.user_id;
+
+  -- Queue email job via graphile_worker
+  PERFORM graphile_worker.add_job(
+    'send_email',
+    json_build_object(
+      'type', 'verification',
+      'email', user_record.email,
+      'token', NEW.token,
+      'name', user_record.name
+    )
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER queue_verification_email_on_insert
+  AFTER INSERT ON roiheimen_private.email_verification
+  FOR EACH ROW
+  EXECUTE FUNCTION roiheimen_private.queue_verification_email();
+
+-- Trigger function to queue password reset email
+CREATE OR REPLACE FUNCTION roiheimen_private.queue_password_reset_email()
+RETURNS TRIGGER AS $$
+DECLARE
+  user_record roiheimen.user_account;
+BEGIN
+  -- Get user info for the email
+  SELECT * INTO user_record
+    FROM roiheimen.user_account
+    WHERE id = NEW.user_id;
+
+  -- Queue email job via graphile_worker
+  PERFORM graphile_worker.add_job(
+    'send_email',
+    json_build_object(
+      'type', 'password_reset',
+      'email', user_record.email,
+      'token', NEW.token
+    )
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER queue_password_reset_email_on_insert
+  AFTER INSERT ON roiheimen_private.password_reset
+  FOR EACH ROW
+  EXECUTE FUNCTION roiheimen_private.queue_password_reset_email();

@@ -21,11 +21,13 @@ You don't need to do a full phase in one go.
   - [x] Brute force protection: lock after 3 failures in 5 min, reset on success
 - [x] Implement `request_password_reset(email)` function
 - [x] Implement `reset_password(token, new_password)` function
-- [ ] Create `pkg/server/email.js` with Nodemailer SMTP setup
-  - [ ] Dev mode: console.log email content with token instead of sending (no SMTP required)
-- [ ] Implement `sendVerificationEmail(email, token)` function
-- [ ] Implement `sendPasswordResetEmail(email, token)` function
-- [ ] Update `pkg/server/server.js` with email hooks and JWT config
+- [x] Create `pkg/server/email.js` with Nodemailer SMTP setup
+  - [x] Dev mode: console.log email content with token instead of sending (no SMTP required)
+- [x] Implement `sendVerificationEmail(email, token)` function
+- [x] Implement `sendPasswordResetEmail(email, token)` function
+- [x] Update `pkg/server/server.js` with email hooks and JWT config
+- [x] Create `pkg/server/tasks/send_email.js` worker task for async email sending
+- [x] Add database triggers to queue emails on user registration and password reset
 - [ ] Create `/registrer.html` signup page
 - [ ] Create `/stadfest-epost.html` email verification page
 - [ ] Create `/gløymt-passord.html` password reset request page
@@ -215,11 +217,27 @@ APP_URL=https://roiheimen.example.com
   - Helper functions (current_user_account, user_logout)
   - Role `roiheimen_user` with proper permissions
   - RLS policies for user_account table
+  - Database triggers for queuing emails via graphile_worker
+- [x] Created `pkg/server/email.js` with:
+  - Nodemailer SMTP configuration (env vars: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, APP_URL)
+  - Dev mode: logs emails to console instead of sending
+  - `sendVerificationEmail(email, token, name)` - Norwegian Nynorsk email with verification link
+  - `sendPasswordResetEmail(email, token)` - Norwegian Nynorsk email with reset link
+  - HTML and plain text versions of all emails
+- [x] Created `pkg/server/tasks/send_email.js`:
+  - Graphile worker task for async email sending
+  - Handles 'verification' and 'password_reset' email types
+- [x] Updated `pkg/server/server.js`:
+  - Added support for multiple JWT types (jwt_token and user_jwt_token)
+- [x] Added nodemailer@6.9.0 dependency to package.json
 
 ### In Progress
-- [ ] Phase 1: Email service and frontend components
+- [ ] Phase 1: Frontend pages and components
 
 ### Next Steps
-1. Create `pkg/server/email.js` with Nodemailer SMTP setup (dev mode logs to console)
-2. Update `pkg/server/server.js` with email hooks and JWT config
-3. Create frontend pages and components for signup/login/password reset
+1. Create `/registrer.html` signup page
+2. Create `signup.js` component
+3. Create other frontend pages (stadfest-epost, gloeymt-passord, nullstill-passord)
+4. Create corresponding components (email-verify, password-reset-request, password-reset)
+5. Update login.js with email/password fields
+6. Add userAuth Redux bundle to state.js
