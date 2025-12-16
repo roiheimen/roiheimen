@@ -29,13 +29,13 @@ You don't need to do a full phase in one go.
 - [x] Create `pkg/server/tasks/send_email.js` worker task for async email sending
 - [x] Add database triggers to queue emails on user registration and password reset
 - [x] Create `/registrer.html` signup page
-- [ ] Create `/stadfest-epost.html` email verification page
-- [ ] Create `/gløymt-passord.html` password reset request page
-- [ ] Create `/nullstill-passord.html` new password form page
+- [x] Create `/stadfest-epost.html` email verification page
+- [x] Create `/gløymt-passord.html` password reset request page
+- [x] Create `/nullstill-passord.html` new password form page
 - [x] Create `signup.js` component
-- [ ] Create `email-verify.js` component
-- [ ] Create `password-reset-request.js` component
-- [ ] Create `password-reset.js` component
+- [x] Create `email-verify.js` component
+- [x] Create `password-reset-request.js` component
+- [x] Create `password-reset.js` component
 - [ ] Update `login.js` with email/password fields and links
 - [ ] Add userAuth Redux bundle to `state.js`
 - [ ] **Test**: Register new user, verify email token in DB
@@ -231,13 +231,20 @@ APP_URL=https://roiheimen.example.com
   - Added support for multiple JWT types (jwt_token and user_jwt_token)
 - [x] Added nodemailer@6.9.0 dependency to package.json
 
+- [x] Created `/stadfest-epost.html` and `email-verify.js` component:
+  - Auto-verifies token from URL query parameter (?token=xxx)
+  - Shows success/error states with appropriate Norwegian messages
+- [x] Created `/gloeymt-passord.html` and `password-reset-request.js` component:
+  - Email input form that requests password reset
+  - Always shows success to prevent email enumeration
+- [x] Created `/nullstill-passord.html` and `password-reset.js` component:
+  - New password form with confirmation
+  - Validates token from URL and enforces 8-char minimum
+
 ### In Progress
-- [ ] Phase 1: Frontend pages and components
+- [ ] Phase 1: Frontend pages - remaining components
 
 ### Next Steps
-1. Create `/stadfest-epost.html` email verification page and `email-verify.js` component
-2. Create `/gloeymt-passord.html` password reset request page and `password-reset-request.js` component
-3. Create `/nullstill-passord.html` password reset page and `password-reset.js` component
-4. Update login.js with email/password fields
-5. Add userAuth Redux bundle to state.js
-6. Run tests
+1. Update login.js with email/password fields and links to new pages
+2. Add userAuth Redux bundle to state.js
+3. Run tests for the auth flow
