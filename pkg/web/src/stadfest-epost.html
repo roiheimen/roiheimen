@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset=utf8>
+<title>Stadfest e-post | Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/email-verify.js></script>
+<style>
+.card.verify {
+  min-height: 150px;
+}
+</style>
+
+<body>
+  <header>
+    <h1>
+      <span>roiheimen</span><br>
+      Stadfest e-post
+    </h1>
+  </header>
+  <section class="card sm verify">
+    <roi-email-verify>
+      <p>Verifiserer e-postadressa di...</p>
+    </roi-email-verify>
+  </section>
+  <section class="card sm" style="margin-top: 20px; text-align: center">
+    <p><a href="/">Til innlogging</a></p>
+  </section>
+</body>

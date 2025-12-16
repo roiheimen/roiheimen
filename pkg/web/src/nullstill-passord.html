@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset=utf8>
+<title>Nullstill passord | Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/password-reset.js></script>
+<style>
+.card.reset {
+  min-height: 200px;
+}
+</style>
+
+<body>
+  <header>
+    <h1>
+      <span>roiheimen</span><br>
+      Nytt passord
+    </h1>
+  </header>
+  <section class="card sm reset">
+    <roi-password-reset>
+      <p>Vel eit nytt passord</p>
+    </roi-password-reset>
+  </section>
+  <section class="card sm" style="margin-top: 20px; text-align: center">
+    <p><a href="/">Til innlogging</a></p>
+  </section>
+</body>
