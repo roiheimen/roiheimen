@@ -1,45 +1,42 @@
-The web ui that people (or participants or delegates) use.
+# Web Frontend
 
-It's tried built without any build-step. Using `snowpack` to compile the
-dependencies to nice importable modules.
+The web UI that participants and delegates use.
 
-- [heresy](https://github.com/WebReflection/heresy) for the UI
-- [redux-bundler](https://reduxbundler.com) for some of the state
-  management.
+This is something of a "different practices" project - testing a different way to write webapps, closer to how we used to do it in the older days. No build step required. Using `snowpack` to compile dependencies to nice importable modules.
 
-Run `yarn` to install and set up.
-Run `yarn start` to try it out in your browser.
+As it is a test, it's not advisable to take much inspiration from it, as it is very messy in places.
 
-Code
-----
-This is something of a "different" practices project. Since it's testing
-a different way to write webapps. Closer to how we used to do it in the
-older days.
+## Stack
 
-As it is a test, it's not advisable to take much inspiration from it, as
-it is very messy in places.
+- [Heresy](https://github.com/WebReflection/heresy) for the UI (React-like Web Components)
+- [Redux Bundler](https://reduxbundler.com) for state management
 
-The suggested way to read is to first look at the HTML file which is the
-start point for each app. Taking a look at
-[src/queue.html](./src/queue.html) first you can see it uses the
-`roi-queue` element, which you'll read the code for at
-[src/comp/queue.js](./src/comp/queue.js). It's kinda React-ish coming
-from Heresy and its hooks. The most used main hook is `useSel` which
-uses a selector from `redux-bundler`.
+## Setup
 
-That redux state is stored in [src/db/state.js](./src/db/state.js) which
-is ready for a proper filer split.
+```bash
+yarn
+yarn start    # Opens https://localhost:8080
+```
 
-Running with Whereby embed and video
-------------------------------------
+## Reading the Code
 
-You'll likely get some trouble with the Whereby embed. You can install
-an [extension to disable CSP][ext] which will make it embed. However,
-you will also need a domain with keys your browser truly accepts to get
-video.
+Start with an HTML file - that's the entry point for each app. Looking at [src/queue.html](./src/queue.html) you'll see it uses the `roi-queue` element, which you'll find at [src/comp/queue.js](./src/comp/queue.js).
 
-[ext]: https://chrome.google.com/webstore/detail/disable-content-security/ieelmcmcagommplceebfedjlakkhpden
+It's React-ish thanks to Heresy and its hooks. The main hook is `useSel` which uses selectors from redux-bundler. That state lives in [src/db/state.js](./src/db/state.js).
 
-Many ways to do that, but once you have the certs, run like:
+## Pages
 
-    yarn start --ssl-cert=cert.crt --ssl-key=cert.key
+- `queue.html` - Main participant interface
+- `manage.html` - Admin control panel
+- `gfx.html` - Livestream overlay (for OBS)
+- `fullscreen.html` / `screen.html` - Audience displays
+
+## Whereby Integration
+
+You'll likely get trouble with the Whereby embed. You can install an [extension to disable CSP](https://chrome.google.com/webstore/detail/disable-content-security/ieelmcmcagommplceebfedjlakkhpden) which will make it embed. However, you'll also need a domain with keys your browser truly accepts to get video.
+
+Once you have the certs:
+
+```bash
+yarn start --ssl-cert=cert.crt --ssl-key=cert.key
+```
