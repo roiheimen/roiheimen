@@ -34,7 +34,7 @@ if (cluster.isMaster) {
       jwtPgTypeIdentifier: "roiheimen.jwt_token",
       ownerConnectionString: OWNER_DATABASE_URL,
 
-      disableQueryLog: !DEV, // querylog is slow
+      disableQueryLog: !DEV || process.env.NODE_ENV === "test",
       enhanceGraphiql: DEV,
       enableCors: DEV,
       extendedErrors: DEV ? ["hint", "detail", "errcode"] : ["errcode"],

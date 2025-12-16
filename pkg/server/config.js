@@ -1,4 +1,6 @@
-process.env["PGHOST"] = "/run/postgresql";
+if (!process.env.PGHOST) {
+  process.env.PGHOST = "/run/postgresql";
+}
 
 const DEV = process.env.NODE_ENV !== "production";
 const DATABASE_URL = process.env.DATABASE_URL || "postgres://roiheimen_postgraphile:xyz@localhost/odin";
