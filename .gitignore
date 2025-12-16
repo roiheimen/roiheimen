@@ -2,3 +2,20 @@
 *.key
 
 node_modules
+
+# Local/private files (rename to *.ignore.* or *.ignore to keep locally)
+*.ignore.*
+*.ignore
+
+# Local environment
+.env.local
+.claude/
+
+# Database dumps (contain PII)
+*.sql.xz
+*.sql.gz
+*.tgz
+pkg/server/db_*.sql
+
+# Unfinished experiment (noted in CLAUDE.md)
+v2/

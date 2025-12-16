@@ -1,0 +1,13 @@
+- feat: Betre handtering av <blank>? La ordstyrarar skru det av? Ha eigen knapp
+  for det som er meir opplagt i bruk?
+- bug: Funksjonen med å vise resultatet av votering, men ikke antallet stemmer, var helt genial.
+  Fikk dette til å funke på en måte som gjorde at hele navnet ble synlig på skjermen, men ikke før
+  jeg hadde meg selv oppført på talelisten under voteringene
+- feat: At ei avrøysting treng reint fleirtal o.l. gjev jo meining viss systemet skal utpeika 'vinnar'. So
+  kanhenda systemet, berre for å gjera ting enklare, ikkje bør utpeikna vinnar i det heile teke, men
+  heller seia 'X fekk flest røyster' eller noko liknande. Hmm.
+- feat: Ein knapp for å opna førre sak og kanhenda visa neste sak oppe på same plassen høyrast ut som om
+  det vil vera veldig nyttig! :)
+- feat: Vi fikk aldri til å legge til flere adminbrukere (delegatnummer >1000) med samme tilganger som bruker 1000,
+- feat: Eksponer eksport til brukarar
+  - Vis stor ting til ordstyrarar når møtet er ferdig at dei kan eksportera?
