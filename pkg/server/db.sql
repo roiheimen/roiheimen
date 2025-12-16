@@ -423,7 +423,6 @@ grant select, update, insert, delete on table roiheimen.vote to roiheimen_person
 grant usage on sequence roiheimen.vote_id_seq to roiheimen_person;
 
 grant select on roiheimen.ordered_speech to roiheimen_anonymous, roiheimen_person;
-grant select on roiheimen.stats_person to roiheimen_person;
 
 grant execute on function roiheimen.authenticate(integer, text, text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.register_person(integer, text, text, text, text, text) to roiheimen_person;
@@ -433,6 +432,7 @@ grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roi
 grant execute on function roiheimen.current_speech(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.vote_count(integer) to roiheimen_person;
+grant execute on function roiheimen.stats_people_meeting(text) to roiheimen_person;
 
 -- Row lewel security policy
 alter table roiheimen.meeting enable row level security;
