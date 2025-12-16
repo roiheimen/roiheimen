@@ -36,7 +36,7 @@ You don't need to do a full phase in one go.
 - [x] Create `email-verify.js` component
 - [x] Create `password-reset-request.js` component
 - [x] Create `password-reset.js` component
-- [ ] Update `login.js` with email/password fields and links
+- [x] Update `login.js` with email/password fields and links
 - [ ] Add userAuth Redux bundle to `state.js`
 - [ ] **Test**: Register new user, verify email token in DB
 - [ ] **Test**: Verify email flow (use token from DB or email)
@@ -153,9 +153,13 @@ You don't need to do a full phase in one go.
 - **UI Language**: Norwegian Nynorsk (consistent with existing UI)
 
 ### Testing Approach
-- Use Chrome DevTools MCP for UI testing (navigate, click, fill, verify)
-- Use `psql` to verify database state (tokens, RLS policies)
-- Run `./test-app.sh` to start server before testing
+- **Automated e2e tests**: Run `yarn test:e2e` for Playwright tests (auto-starts servers with test DB)
+  - Tests are in `e2e/tests/` - add new test files here
+  - Use `yarn test:e2e:ui` for interactive Playwright UI
+  - Use `yarn test:e2e:debug` for verbose debug output
+- Use Chrome DevTools MCP for ad-hoc UI testing (navigate, click, fill, verify)
+- Use `psql roiheimen_test` to verify database state (tokens, RLS policies)
+- Run `./test-app.sh` to start server manually for dev/debugging
 - Test credentials: In dev mode, tokens are printed to console; or check DB directly
 - RLS tests: Connect as different roles to verify access control
 
@@ -244,7 +248,18 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 1: Frontend pages - remaining components
 
+### Completed This Session
+- [x] Updated `login.js` component with email/password authentication:
+  - Uses `authenticateUser` mutation instead of old `authenticate`
+  - Email/password fields instead of num/code
+  - Loading state and error handling
+  - Link to forgot password page
+- [x] Updated `login.html` page:
+  - Updated title to "Logg inn | Roiheimen"
+  - Updated header to "Logg inn"
+  - Added link to registration page
+  - Updated prompt text for email login
+
 ### Next Steps
-1. Update login.js with email/password fields and links to new pages
-2. Add userAuth Redux bundle to state.js
-3. Run tests for the auth flow
+1. Add userAuth Redux bundle to state.js
+2. Run tests for the auth flow
