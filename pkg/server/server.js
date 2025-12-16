@@ -31,8 +31,7 @@ if (cluster.isMaster) {
       //},
       pgDefaultRole: "roiheimen_anonymous",
       jwtSecret: JWT_SECRET,
-      // Support both meeting-scoped JWT (jwt_token) and user JWT (user_jwt_token)
-      jwtPgTypeIdentifier: "roiheimen.jwt_token,roiheimen.user_jwt_token",
+      jwtPgTypeIdentifier: "roiheimen.jwt_token",
       ownerConnectionString: OWNER_DATABASE_URL,
 
       disableQueryLog: !DEV, // querylog is slow
