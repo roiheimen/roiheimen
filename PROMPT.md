@@ -37,7 +37,7 @@ You don't need to do a full phase in one go.
 - [x] Create `password-reset-request.js` component
 - [x] Create `password-reset.js` component
 - [x] Update `login.js` with email/password fields and links
-- [ ] Add userAuth Redux bundle to `state.js`
+- [x] Add userAuth Redux bundle to `state.js`
 - [ ] **Test**: Register new user, verify email token in DB
 - [ ] **Test**: Verify email flow (use token from DB or email)
 - [ ] **Test**: Login with verified user, confirm JWT returned
@@ -249,17 +249,12 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 1: Frontend pages - remaining components
 
 ### Completed This Session
-- [x] Updated `login.js` component with email/password authentication:
-  - Uses `authenticateUser` mutation instead of old `authenticate`
-  - Email/password fields instead of num/code
-  - Loading state and error handling
-  - Link to forgot password page
-- [x] Updated `login.html` page:
-  - Updated title to "Logg inn | Roiheimen"
-  - Updated header to "Logg inn"
-  - Added link to registration page
-  - Updated prompt text for email login
+- [x] Added userAuth Redux bundle to `state.js`:
+  - `doUserAuthFetch()` - fetches current user account via GraphQL `currentUserAccount` query
+  - `doUserAuthLogout()` - logs out user (calls server-side `userLogout`, clears credentials, redirects)
+  - Selectors: `selectUserAuth`, `selectUserAuthFetched`, `selectUserAuthFetching`, `selectUserAuthError`, `selectUserAuthId`, `selectUserAuthEmail`, `selectUserAuthName`, `selectUserAuthLoggedIn`, `selectUserAuthAnonymous`
+  - Auto-fetch reactor: automatically fetches user data when JWT is present
 
 ### Next Steps
-1. Add userAuth Redux bundle to state.js
-2. Run tests for the auth flow
+1. Write and run e2e tests for the auth flow
+2. Begin Phase 2: Organizations

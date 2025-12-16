@@ -1219,6 +1219,101 @@ const emoji = {
     },
 };
 
+// userAuth: Redux bundle for new email-based user authentication
+// Handles currentUserAccount and user logout for the SaaS platform
+const userAuth = {
+  name: "userAuth",
+  reducer: (
+    state = { fetched: false, fetching: false, data: null, error: null },
+    { type, payload, error }
+  ) => {
+    if (type === "USER_AUTH_FETCH_STARTED") return { ...state, fetching: true, error: null };
+    if (type === "USER_AUTH_FETCH_FINISHED") return { ...state, fetching: false, fetched: true, data: payload };
+    if (type === "USER_AUTH_FETCH_FAILED") return { ...state, fetching: false, fetched: true, error: error || true };
+    if (type === "USER_AUTH_LOGOUT") return { ...state, data: null, fetched: false };
+    return state;
+  },
+
+  // Fetch current user account
+  doUserAuthFetch:
+    () =>
+    async ({ dispatch }) => {
+      dispatch({ type: "USER_AUTH_FETCH_STARTED" });
+      const query = `
+        query CurrentUserAccount {
+          currentUserAccount {
+            id
+            email
+            name
+            createdAt
+          }
+        }
+      `;
+      try {
+        const res = await gql(query, {}, { timeout: 10000, retry: true });
+        dispatch({ type: "USER_AUTH_FETCH_FINISHED", payload: res.currentUserAccount });
+      } catch (error) {
+        dispatch({ type: "USER_AUTH_FETCH_FAILED", error });
+      }
+    },
+
+  // Logout current user
+  doUserAuthLogout:
+    () =>
+    async ({ dispatch }) => {
+      dispatch({ type: "USER_AUTH_LOGOUT_STARTED" });
+
+      // Try to call server-side logout (to end session)
+      try {
+        const mutation = `
+          mutation UserLogout {
+            userLogout
+          }
+        `;
+        await gql(mutation);
+      } catch {
+        // Ignore errors - we're logging out anyway
+      }
+
+      // Clear local credentials
+      Object.keys(creds).forEach((k) => delete creds[k]);
+      save("creds");
+
+      dispatch({ type: "USER_AUTH_LOGOUT" });
+
+      // Redirect to login page
+      if (!["/", "/login.html"].includes(location.pathname)) {
+        location.assign("/login.html");
+      }
+    },
+
+  selectUserAuth: (state) => state.userAuth.data,
+  selectUserAuthFetched: (state) => state.userAuth.fetched,
+  selectUserAuthFetching: (state) => state.userAuth.fetching,
+  selectUserAuthError: (state) => state.userAuth.error,
+  selectUserAuthId: (state) => state.userAuth.data?.id,
+  selectUserAuthEmail: (state) => state.userAuth.data?.email,
+  selectUserAuthName: (state) => state.userAuth.data?.name,
+  selectUserAuthLoggedIn: createSelector("selectUserAuthFetched", "selectUserAuth", (fetched, user) =>
+    fetched && user !== null
+  ),
+  selectUserAuthAnonymous: createSelector("selectUserAuthFetched", "selectUserAuth", (fetched, user) =>
+    fetched ? !user : null
+  ),
+
+  // Auto-fetch user auth on app init if credentials exist
+  reactUserAuthFetch: createSelector(
+    "selectUserAuthFetched",
+    "selectUserAuthFetching",
+    (fetched, fetching) => {
+      // Only fetch if we have a JWT stored and haven't fetched yet
+      if (!fetched && !fetching && creds.jwt) {
+        return { actionCreator: "doUserAuthFetch" };
+      }
+    }
+  ),
+};
+
 const errors = {
   name: "errors",
   init(store) {
@@ -1250,6 +1345,7 @@ const store = composeBundles(
   client,
   whereby,
   emoji,
+  userAuth,
   errors
 )();
 window.store = store;
