@@ -13,11 +13,12 @@ Ignore `v2/` - it's an unfinished experiment with Graphile Starter.
 ## Quick Start
 
 ```bash
-yarn setup    # needs PostgreSQL with wal2json plugin
-yarn start
-# Open https://localhost:8080
+./test-app.sh   # checks postgres, starts server
+# Open http://localhost:8080
 # Login: num=1000, password=test
 ```
+
+Database is already set up. Just need PostgreSQL running.
 
 ## Norwegian Terms
 
@@ -101,3 +102,13 @@ sudo apt install postgresql-12-wal2json
 ## How to work here
 - Only git add files you changed, never use `git add -A`.
 - Don't add the 'Made with Claude' advert to the commits.
+
+## Testing the App
+
+To verify the app works:
+1. Run `./test-app.sh` (or just `yarn start` if postgres is running)
+2. Use Chrome DevTools MCP to navigate to http://localhost:8080
+3. Click "Test" meeting, login with num=1000, password=test
+4. Verify queue page shows speaker list with names like "Kong Harald"
+
+That's it. No setup needed - database is configured.

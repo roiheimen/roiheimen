@@ -54,12 +54,36 @@ SELECT * FROM pg_replication_slots;
 
 ## Testing
 
-Default credentials for `meet20`:
+### Quick start
+```bash
+./test-app.sh
+# Open http://localhost:8080
+```
+
+### Default credentials (meet20)
 - Admin: num=1000, password=test
 - Participant: num=10, password=test
 
-Manual testing flow:
+### Manual testing flow
 1. Log in as admin (1000)
 2. Create a sak
 3. Open another browser, log in as participant (10)
 4. Add speeches and vote on referendums
+
+### Automated testing with Chrome DevTools MCP
+With Claude Code and chrome-devtools MCP connected:
+```
+navigate to http://localhost:8080
+click on "Test" meeting
+fill login: num=1000, password=test
+verify queue page shows speaker list
+```
+
+### One-time setup (already done)
+If starting fresh:
+```bash
+yarn setup
+psql -c "ALTER ROLE roiheimen_postgraphile WITH PASSWORD 'xyz';"
+```
+The password must be set because `db.sql` creates the role but pg_hba.conf
+requires password auth for TCP connections (localhost).
