@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset=utf8>
+<title>Registrer deg | Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/signup.js></script>
+<style>
+.card.signup {
+  min-height: 200px;
+}
+</style>
+
+<body>
+  <header>
+    <h1>
+      <span>roiheimen</span><br>
+      Registrer deg
+    </h1>
+  </header>
+  <section class="card sm signup">
+    <roi-signup>
+      <p>Opprett ein ny konto</p>
+    </roi-signup>
+  </section>
+  <section class="card sm" style="margin-top: 20px; text-align: center">
+    <p>Har du allereie ein konto? <a href="/">Logg inn</a></p>
+  </section>
+</body>

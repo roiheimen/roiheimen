@@ -28,11 +28,11 @@ You don't need to do a full phase in one go.
 - [x] Update `pkg/server/server.js` with email hooks and JWT config
 - [x] Create `pkg/server/tasks/send_email.js` worker task for async email sending
 - [x] Add database triggers to queue emails on user registration and password reset
-- [ ] Create `/registrer.html` signup page
+- [x] Create `/registrer.html` signup page
 - [ ] Create `/stadfest-epost.html` email verification page
 - [ ] Create `/gløymt-passord.html` password reset request page
 - [ ] Create `/nullstill-passord.html` new password form page
-- [ ] Create `signup.js` component
+- [x] Create `signup.js` component
 - [ ] Create `email-verify.js` component
 - [ ] Create `password-reset-request.js` component
 - [ ] Create `password-reset.js` component
@@ -235,9 +235,9 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 1: Frontend pages and components
 
 ### Next Steps
-1. Create `/registrer.html` signup page
-2. Create `signup.js` component
-3. Create other frontend pages (stadfest-epost, gloeymt-passord, nullstill-passord)
-4. Create corresponding components (email-verify, password-reset-request, password-reset)
-5. Update login.js with email/password fields
-6. Add userAuth Redux bundle to state.js
+1. Create `/stadfest-epost.html` email verification page and `email-verify.js` component
+2. Create `/gloeymt-passord.html` password reset request page and `password-reset-request.js` component
+3. Create `/nullstill-passord.html` password reset page and `password-reset.js` component
+4. Update login.js with email/password fields
+5. Add userAuth Redux bundle to state.js
+6. Run tests
