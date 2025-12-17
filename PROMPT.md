@@ -70,9 +70,9 @@ You don't need to do a full phase in one go.
 - [x] **Test**: Create organization, verify owner membership
 - [x] **Test**: Update organization name/config
 - [x] **Test**: Invite member by email, verify pending invite
-- [ ] **Test**: RLS: non-member cannot see org data
-- [ ] **Test**: RLS: member can view, admin can edit
-- [ ] **Test**: Remove member, verify access revoked
+- [x] **Test**: RLS: non-member cannot see org data
+- [x] **Test**: RLS: member can view, admin can edit
+- [x] **Test**: Remove member, verify access revoked
 - [x] **Test**: Dashboard shows user's organizations
 
 ### Phase 3: Meeting Creation
@@ -250,9 +250,23 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 2: Organizations - UI components and remaining tests
+- [ ] Phase 3: Meeting Creation - starting next
 
-### Completed This Session
+### Completed This Session (RLS Tests)
+- [x] Fixed organization tests - all 14 tests now pass
+- [x] Fixed `createVerifiedUser` helper to use `page.route()` interception to prevent
+  redirect issues caused by old meeting-based auth system
+- [x] Fixed `expect().rejects.toThrow()` usage - replaced with try/catch pattern
+  compatible with Playwright
+- [x] Updated slug validation test to match actual database behavior (normalizes
+  to lowercase, rejects invalid characters and length violations)
+- [x] All RLS tests now passing:
+  - non-member cannot see org data
+  - member can view, admin can edit
+  - Remove member, verify access revoked
+- [x] All 26 tests pass (14 organization + 12 user-auth)
+
+### Previous Session (Completed This Session)
 - [x] Added organizations Redux bundle to `state.js` with:
   - Actions: doOrganizationsFetch, doOrganizationCreate, doOrganizationUpdate, doOrganizationDelete, doOrganizationInvite, doOrganizationRemoveMember
   - Selectors: selectOrganizations, selectOrganizationsFetched, selectOrganizationsFetching, selectOrganizationsError, selectOrganizationBySlug, selectOrganizationById
@@ -322,6 +336,9 @@ APP_URL=https://roiheimen.example.com
 - [x] Fixed `graphql.js` error handling
 
 ### Next Steps
-1. Continue Phase 2: Create remaining UI components (org-settings, org-members)
-2. Add organizations Redux bundle to state.js
-3. Fix remaining RLS tests (some have timeout issues due to multiple user creation)
+1. Begin Phase 3: Meeting Creation
+   - Add `organization_id` column to `meeting` table
+   - Add `created_by` column to `meeting` table
+   - Implement meeting creation/update/delete functions
+2. Create meeting-related UI components (meeting-create, meeting-card, meeting-settings)
+3. Update dashboard to show meetings grouped by organization

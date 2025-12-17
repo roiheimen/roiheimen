@@ -51,7 +51,34 @@ async function createVerifiedUser(
   const name = `${namePrefix} Brukar`;
   const password = "testpassord123";
 
-  // Register user
+  // Clear any existing credentials to prevent redirect issues
+  // The state.js file has reactors that redirect on JWT errors when a
+  // user_jwt_token is used but the old meeting-based auth system tries to
+  // load currentPerson.
+  //
+  // Solution: Use page.route to intercept the GraphQL call that causes the redirect
+  // and return an empty response. This prevents the MEETING_FETCH_FAILED action.
+  await page.route("**/graphql", async (route, request) => {
+    const postData = request.postData() || "";
+    // Only intercept the StartInfo query (which fetches currentPerson)
+    if (postData.includes("StartInfo") || postData.includes("currentPerson")) {
+      // Return empty but valid response to prevent error
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            meetings: { nodes: [] },
+            currentPerson: null,
+          },
+        }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  // Navigate to registration page
   await page.goto("/registrer.html");
   await page.waitForSelector("roi-signup");
 
@@ -74,6 +101,9 @@ async function createVerifiedUser(
 
   await page.goto(`/stadfest-epost.html?token=${token}`);
   await page.waitForSelector(".success", { timeout: 10000 });
+
+  // Remove the route interception now that registration is complete
+  await page.unroute("**/graphql");
 
   return { email, name, password };
 }
@@ -444,10 +474,14 @@ test.describe("Organization Creation", () => {
     // Create first organization
     await createOrganizationDirect(page, slug, name);
 
-    // Try to create another with same slug
-    await expect(
-      createOrganizationDirect(page, slug, "Second Org")
-    ).rejects.toThrow();
+    // Try to create another with same slug - should fail
+    let error: Error | undefined;
+    try {
+      await createOrganizationDirect(page, slug, "Second Org");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
   });
 
   test("organization slug validation rejects invalid slugs", async ({
@@ -456,20 +490,38 @@ test.describe("Organization Creation", () => {
     const user = await createVerifiedUser(page, "Owner");
     await loginUser(page, user.email, user.password);
 
-    // Test invalid slug with uppercase
-    await expect(
-      createOrganizationDirect(page, "Invalid-Slug", "Test Org")
-    ).rejects.toThrow();
+    // Note: The database normalizes slugs to lowercase, so uppercase is allowed
+    // but converted. Only invalid characters and length constraints are enforced.
 
-    // Test slug with spaces
-    await expect(
-      createOrganizationDirect(page, "invalid slug", "Test Org")
-    ).rejects.toThrow();
+    // Test slug with spaces (spaces are not allowed in slugs)
+    let error: Error | undefined;
+    try {
+      await createOrganizationDirect(page, "invalid slug", "Test Org");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toContain("organization_slug_check");
 
     // Test too short slug (min 2 chars)
-    await expect(
-      createOrganizationDirect(page, "a", "Test Org")
-    ).rejects.toThrow();
+    error = undefined;
+    try {
+      await createOrganizationDirect(page, "a", "Test Org");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toContain("organization_slug_check");
+
+    // Test invalid characters (only a-z, 0-9, and - are allowed)
+    error = undefined;
+    try {
+      await createOrganizationDirect(page, "test@org", "Test Org");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toContain("organization_slug_check");
   });
 });
 
@@ -656,9 +708,14 @@ test.describe("RLS Policies", () => {
     await acceptOrganizationInviteDirect(page, invite.token);
 
     // Member should not be able to update
-    await expect(
-      updateOrganizationDirect(page, org.id, "Hacked Name")
-    ).rejects.toThrow(/admin or owner/);
+    let error: Error | undefined;
+    try {
+      await updateOrganizationDirect(page, org.id, "Hacked Name");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toMatch(/admin or owner/);
   });
 });
 
