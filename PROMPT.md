@@ -131,7 +131,7 @@ You don't need to do a full phase in one go.
 - [x] Add org switcher dropdown
 - [x] Add user menu (Profil, Logg ut)
 - [x] Add breadcrumb navigation
-- [ ] Add activity feed on dashboard
+- [x] Add activity feed on dashboard
 - [x] Update `index.html` to redirect to dashboard if logged in
 - [ ] Remove legacy `person_account` table (after confirming no use)
 - [ ] Remove legacy `authenticate(num, meeting_id, password)` function
@@ -256,7 +256,30 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Participant Flow Tests)
+### Completed This Iteration (Activity Feed)
+- [x] Created `roiheimen.activity_item` composite type for activity data structure
+- [x] Created `roiheimen.get_user_activity(activity_limit)` function:
+  - Returns recent activity for the logged-in user
+  - Includes org_created, org_joined, meeting_created, meeting_joined activities
+  - Sorted by timestamp descending
+  - Configurable limit (default 10)
+- [x] Created `pkg/server/migrations/020-activity-feed.sql` migration file
+- [x] Created `activity-feed.js` component:
+  - Shows recent activity with icons for each activity type
+  - Displays relative timestamps ("Akkurat no", "5 min sidan", etc.)
+  - Links to org settings or meeting settings pages
+  - Norwegian Nynorsk UI text
+  - Loading and error states
+- [x] Updated `dashboard.js` with sidebar layout:
+  - Two-column layout (main content + activity sidebar)
+  - Responsive design (stacks on mobile)
+  - Activity feed in right sidebar
+- [x] Added E2E test for activity feed:
+  - Tests that org_created and meeting_created activities appear
+  - Validates activity titles and descriptions
+- [x] All 80 E2E tests pass
+
+### Completed Previous Iteration (Participant Flow Tests)
 - [x] Created `e2e/tests/participant-flows.spec.ts` with comprehensive tests:
   - **Generate Invite → Share Link → Participant Joins**:
     - Admin creates org + meeting + generates invite code
