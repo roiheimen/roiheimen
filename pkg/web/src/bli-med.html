@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset=utf8>
+<title>Bli med i mote | Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/join-meeting.js></script>
+<style>
+.card.join {
+  min-height: 200px;
+}
+</style>
+
+<body>
+  <header>
+    <h1>
+      <span>roiheimen</span><br>
+      Bli med i mote
+    </h1>
+  </header>
+  <section class="card sm join">
+    <roi-join-meeting>
+      <p>Skriv inn invitasjonskoden for a bli med i motet</p>
+    </roi-join-meeting>
+  </section>
+  <section class="card sm" style="margin-top: 20px; text-align: center">
+    <p>Har du ikkje ein konto? <a href="/registrer.html">Registrer deg</a></p>
+    <p>Har du allereie ein konto? <a href="/">Logg inn</a></p>
+  </section>
+</body>

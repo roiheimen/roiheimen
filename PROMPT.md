@@ -106,11 +106,11 @@ You don't need to do a full phase in one go.
 - [x] Implement `get_meeting_invites(meeting_id)` function
 - [x] Implement `get_meeting_participants(meeting_id)` function
 - [x] Add RLS policies for meeting_invite and meeting_participant tables
-- [ ] Create `/bli-med.html` invite code entry page
-- [ ] Create `/i/{code}` direct invite link landing page
+- [x] Create `/bli-med.html` invite code entry page
+- [x] Create `/i/{code}` direct invite link landing page
 - [ ] Create `invite-generator.js` component
 - [ ] Create `invite-list.js` component
-- [ ] Create `join-meeting.js` component
+- [x] Create `join-meeting.js` component
 - [ ] Create `qr-code.js` component
 - [ ] Update `manage.html` with "Invitasjonar" tab
 - [ ] **Test**: Generate invite code, verify in DB
@@ -254,9 +254,23 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 4: Invite System - database schema and functions complete, UI components next
+- [ ] Phase 4: Invite System - join meeting UI complete, invite generator and list components next
 
-### Completed This Iteration (Meeting Invite System - Database Schema)
+### Completed This Iteration (Join Meeting UI)
+- [x] Created `/bli-med.html` invite code entry page
+- [x] Created `join-meeting.js` component with:
+  - Invite code entry form with validation
+  - Auto-validation of code from URL parameter (?code=XXX)
+  - Meeting info display (title, organization name)
+  - Display name entry for joining
+  - Login redirect for unauthenticated users
+  - Success screen with link to queue.html
+  - Norwegian Nynorsk UI text and error messages
+- [x] Added `/i/{code}` route middleware to `es-dev-server.config.js`:
+  - Redirects `/i/XXXXXXXX` to `/bli-med.html?code=XXXXXXXX`
+  - Enables shareable invite links
+
+### Previous Session (Meeting Invite System - Database Schema)
 - [x] Created `roiheimen.meeting_invite` table with:
   - id, meeting_id, code, max_uses, uses_count, expires_at, created_by, created_at
   - Unique code index
