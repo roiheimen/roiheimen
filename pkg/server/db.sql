@@ -326,6 +326,7 @@ create table roiheimen.meeting_participant (
   participant_num  integer not null, -- Sequential number within the meeting
   is_organizer     boolean default false,
   joined_via       integer references roiheimen.meeting_invite(id) on delete set null,
+  person_id        integer references roiheimen.person(id) on delete set null, -- Bridge to legacy person table
   created_at       timestamptz default now(),
   unique(meeting_id, user_id),
   unique(meeting_id, participant_num)
@@ -334,6 +335,7 @@ comment on table roiheimen.meeting_participant is 'Participants who have joined 
 create index on roiheimen.meeting_participant(meeting_id);
 create index on roiheimen.meeting_participant(user_id);
 create index on roiheimen.meeting_participant(participant_num);
+create index on roiheimen.meeting_participant(person_id);
 
 -- Views
 
@@ -531,6 +533,17 @@ create function roiheimen.current_person() returns roiheimen.person as $$
   where id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
 $$ language sql stable;
 comment on function roiheimen.current_person() is 'Gets the person who was identified by our JWT.';
+
+-- current_participant: Returns the meeting_participant for the current user and meeting
+-- This is the new function for the SaaS platform, providing participant info for users
+-- who joined via invite code or org membership
+create or replace function roiheimen.current_participant() returns roiheimen.meeting_participant as $$
+  select mp.*
+  from roiheimen.meeting_participant mp
+  where mp.user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer
+    and mp.meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+$$ language sql stable;
+comment on function roiheimen.current_participant() is 'Gets the meeting participant for the current user and meeting from JWT.';
 
 create or replace function roiheimen.stats_people_meeting(meeting_id text)
   returns table (
@@ -1468,6 +1481,7 @@ $$ language plpgsql security definer;
 comment on function roiheimen.validate_invite_code(text) is 'Validates an invite code and returns meeting info if valid';
 
 -- join_meeting: Joins a meeting using an invite code
+-- Also creates a person record for legacy compatibility with speech/vote tables
 create or replace function roiheimen.join_meeting(
   p_meeting_id text,
   p_invite_code text,
@@ -1478,6 +1492,7 @@ declare
   invite roiheimen.meeting_invite;
   next_num integer;
   new_participant roiheimen.meeting_participant;
+  new_person roiheimen.person;
 begin
   current_user_id := nullif(current_setting('jwt.claims.user_id', true), '')::integer;
 
@@ -1513,14 +1528,24 @@ begin
     raise exception 'This invite code has reached its maximum uses';
   end if;
 
-  -- Get next participant number
-  select coalesce(max(participant_num), 0) + 1 into next_num
-    from roiheimen.meeting_participant
-    where meeting_id = p_meeting_id;
+  -- Get next participant number (considering both tables for uniqueness)
+  select greatest(
+    coalesce((select max(participant_num) + 1 from roiheimen.meeting_participant where meeting_id = p_meeting_id), 1),
+    coalesce((select max(num) + 1 from roiheimen.person where meeting_id = p_meeting_id), 1)
+  ) into next_num;
 
-  -- Create participant
-  insert into roiheimen.meeting_participant (meeting_id, user_id, display_name, participant_num, joined_via)
-    values (p_meeting_id, current_user_id, trim(p_display_name), next_num, invite.id)
+  -- Create the person record for legacy compatibility (speech, vote tables)
+  insert into roiheimen.person (num, name, admin, meeting_id, org)
+    values (next_num, trim(p_display_name), false, p_meeting_id, '')
+    returning * into new_person;
+
+  -- Create password for the person (not used, but required by the system)
+  insert into roiheimen_private.person_account (person_id, password_hash)
+    values (new_person.id, crypt(encode(gen_random_bytes(32), 'hex'), gen_salt('bf')));
+
+  -- Create participant with link to person record
+  insert into roiheimen.meeting_participant (meeting_id, user_id, display_name, participant_num, joined_via, person_id)
+    values (p_meeting_id, current_user_id, trim(p_display_name), next_num, invite.id, new_person.id)
     returning * into new_participant;
 
   -- Increment uses count
@@ -1534,12 +1559,16 @@ $$ language plpgsql security definer;
 comment on function roiheimen.join_meeting(text, text, text) is 'Joins a meeting using an invite code';
 
 -- get_meeting_token: Returns a meeting-scoped JWT for a participant
+-- Also creates person record for org members (organizers) for legacy compatibility
 create or replace function roiheimen.get_meeting_token(
   p_meeting_id text
 ) returns roiheimen.jwt_token as $$
 declare
   current_user_id integer;
   participant roiheimen.meeting_participant;
+  new_person roiheimen.person;
+  user_name text;
+  next_num integer;
 begin
   current_user_id := nullif(current_setting('jwt.claims.user_id', true), '')::integer;
 
@@ -1563,22 +1592,34 @@ begin
       raise exception 'You are not a participant in this meeting';
     end if;
 
-    -- Create organizer participant entry
-    insert into roiheimen.meeting_participant (meeting_id, user_id, display_name, participant_num, is_organizer)
-      select p_meeting_id, current_user_id, ua.name,
-             coalesce((select max(participant_num) from roiheimen.meeting_participant where meeting_id = p_meeting_id), 0) + 1,
-             true
-      from roiheimen.user_account ua
-      where ua.id = current_user_id
+    -- Get user name for the person/participant records
+    select name into user_name from roiheimen.user_account where id = current_user_id;
+
+    -- Get next participant number (considering both tables)
+    select greatest(
+      coalesce((select max(participant_num) + 1 from roiheimen.meeting_participant where meeting_id = p_meeting_id), 1),
+      coalesce((select max(num) + 1 from roiheimen.person where meeting_id = p_meeting_id), 1)
+    ) into next_num;
+
+    -- Create person record for org member/organizer (for legacy compatibility)
+    insert into roiheimen.person (num, name, admin, meeting_id, org)
+      values (next_num, user_name, true, p_meeting_id, '')
+      returning * into new_person;
+
+    -- Create password for the person (not used, but required by the system)
+    insert into roiheimen_private.person_account (person_id, password_hash)
+      values (new_person.id, crypt(encode(gen_random_bytes(32), 'hex'), gen_salt('bf')));
+
+    -- Create organizer participant entry with link to person
+    insert into roiheimen.meeting_participant (meeting_id, user_id, display_name, participant_num, is_organizer, person_id)
+      values (p_meeting_id, current_user_id, user_name, next_num, true, new_person.id)
       returning * into participant;
   end if;
 
-  -- Return meeting-scoped JWT
-  -- Uses the existing jwt_token type with person_id set to participant_num for compatibility
-  -- and meeting_id set to the meeting
+  -- Return meeting-scoped JWT with person_id for legacy compatibility
   return (
     'roiheimen_person',
-    participant.participant_num, -- Use participant_num as person_id for legacy compatibility
+    participant.person_id, -- Use the actual person.id for legacy compatibility
     p_meeting_id,
     participant.is_organizer, -- Organizers get admin access
     extract(epoch from (now() + interval '6 days')),
@@ -1766,6 +1807,7 @@ grant execute on function roiheimen.register_people(text, roiheimen.people_input
 grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_speech(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
+grant execute on function roiheimen.current_participant() to roiheimen_person, roiheimen_user;
 grant execute on function roiheimen.vote_count(integer) to roiheimen_person;
 grant execute on function roiheimen.stats_people_meeting(text) to roiheimen_person;
 
@@ -2374,6 +2416,6 @@ COPY roiheimen.speech (id, speaker_id, sak_id, type, created_at, updated_at) FRO
 8	6	1	innlegg	2020-09-30 00:38:43.920796	2020-09-30 00:38:43.920796
 \.
 
-SELECT pg_catalog.setval('roiheimen.person_id_seq', 7, true);
+SELECT pg_catalog.setval('roiheimen.person_id_seq', 14, true);
 SELECT pg_catalog.setval('roiheimen.sak_id_seq', 1, true);
 SELECT pg_catalog.setval('roiheimen.speech_id_seq', 8, true);

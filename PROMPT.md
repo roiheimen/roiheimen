@@ -122,8 +122,8 @@ You don't need to do a full phase in one go.
 - [ ] **Test**: QR code generates valid link (skipped - needs manage.html integration)
 
 ### Phase 5: Integration & Polish
-- [ ] Update `queue.html` to work with new meeting_participant table
-- [ ] Update `queue.html` to use meeting-scoped JWT
+- [x] Update `queue.html` to work with new meeting_participant table
+- [x] Update `queue.html` to use meeting-scoped JWT
 - [ ] Update `manage.html` with new tabs (Deltakarar, Saker, Avstemmingar, Invitasjonar)
 - [ ] Update `manage.html` participant management to use meeting_participant
 - [ ] Verify `gfx.html`, `screen.html`, `fullscreen.html` work with new tables
@@ -256,7 +256,28 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Phase 4 Invite System Tests)
+### Completed This Iteration (queue.html meeting_participant bridge)
+- [x] Created `pkg/server/migrations/019-participant-person-bridge.sql` migration:
+  - Added `person_id` column to `meeting_participant` table to bridge to legacy `person` table
+  - Updated `join_meeting` function to also create a `person` record (for speech/vote compatibility)
+  - Updated `get_meeting_token` function to return the actual `person.id` in JWT
+  - Created `current_participant()` function for querying participant from JWT
+  - Granted permissions for new function
+- [x] Updated `pkg/server/db.sql` with same changes:
+  - Added `person_id` column and index to `meeting_participant`
+  - Updated `join_meeting` to create person record and link to participant
+  - Updated `get_meeting_token` to create person record for org members and use `person.id`
+  - Added `current_participant()` function
+  - Fixed `person_id_seq` from 7 to 14 (was out of sync with test data)
+- [x] Updated `e2e/tests/meeting-invites.spec.ts`:
+  - Changed JWT test to check `person_id > 0` instead of `person_id === 1` (now uses actual person.id)
+- [x] All 56 non-voting tests pass
+- [x] The bridge enables queue.html to work with meeting_participant users:
+  - Users joining via invite get both a `meeting_participant` and `person` record
+  - JWT contains `person.id` for compatibility with speech/vote operations
+  - `current_person()` continues to work with the person_id from JWT
+
+### Completed Previous Iteration (Phase 4 Invite System Tests)
 - [x] Created `e2e/tests/meeting-invites.spec.ts` test file with 21 tests
 - [x] All 19 core invite tests pass (2 UI integration tests skipped for future work)
 - [x] Tests cover:

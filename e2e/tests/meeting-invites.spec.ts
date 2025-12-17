@@ -824,7 +824,7 @@ test.describe("Meeting Token", () => {
 
     expect(claims.role).toBe("roiheimen_person");
     expect(claims.meeting_id).toBe(meetingId);
-    expect(claims.person_id).toBe(1); // First participant
+    expect(claims.person_id).toBeGreaterThan(0); // Valid person ID (from bridge)
     expect(claims.admin).toBe(false);
   });
 
