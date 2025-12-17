@@ -20,6 +20,11 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install PostgreSQL development headers
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libpq-dev
+
       - name: Setup PostgreSQL
         run: |
           echo "=== Detecting PostgreSQL version ==="
