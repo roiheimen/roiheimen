@@ -2,6 +2,7 @@ import { define, html } from "/web_modules/heresy.js";
 
 import storage from "../lib/storage.js";
 import { gql } from "../lib/graphql.js";
+import "./org-card.js";
 
 define("RoiDashboard", {
   oninit() {
@@ -17,24 +18,9 @@ define("RoiDashboard", {
     return `
     ${self} .orgs {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
       margin-top: 20px;
-    }
-    ${self} .org-card {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 20px;
-      background: #fafafa;
-    }
-    ${self} .org-card h3 {
-      margin: 0 0 10px 0;
-      color: var(--roi-theme-main-color);
-    }
-    ${self} .org-card p {
-      margin: 0;
-      color: #666;
-      font-size: 14px;
     }
     ${self} .empty {
       text-align: center;
@@ -81,6 +67,7 @@ define("RoiDashboard", {
               slug
               name
               createdAt
+              myRoleInOrganization
             }
           }
         }
@@ -119,10 +106,7 @@ define("RoiDashboard", {
               <div class="orgs">
                 ${organizations.map(
                   (org) => html`
-                    <div class="org-card">
-                      <h3>${org.name}</h3>
-                      <p>${org.slug}</p>
-                    </div>
+                    <div is="roi-org-card" .org=${org}></div>
                   `
                 )}
               </div>

@@ -62,18 +62,18 @@ You don't need to do a full phase in one go.
 - [x] Create `/oversikt.html` dashboard page
 - [x] Create `/org/ny.html` organization creation page
 - [x] Create `dashboard.js` component
-- [ ] Create `org-card.js` component
+- [x] Create `org-card.js` component
 - [x] Create `org-create.js` component
 - [ ] Create `org-settings.js` component
 - [ ] Create `org-members.js` component
 - [ ] Add organizations Redux bundle to `state.js`
 - [x] **Test**: Create organization, verify owner membership
-- [ ] **Test**: Update organization name/config
-- [ ] **Test**: Invite member by email, verify pending invite
+- [x] **Test**: Update organization name/config
+- [x] **Test**: Invite member by email, verify pending invite
 - [ ] **Test**: RLS: non-member cannot see org data
 - [ ] **Test**: RLS: member can view, admin can edit
 - [ ] **Test**: Remove member, verify access revoked
-- [ ] **Test**: Dashboard shows user's organizations
+- [x] **Test**: Dashboard shows user's organizations
 
 ### Phase 3: Meeting Creation
 - [ ] Add `organization_id` column to `meeting` table
@@ -253,9 +253,10 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 2: Organizations - UI components and remaining tests
 
 ### Completed This Session
-- [x] Created `/org/ny.html` organization creation page with `org-create.js` component
-- [x] Added 2 UI tests for organization creation (create via form, duplicate slug error)
-- [x] Fixed issue where SaaS pages (oversikt.html, org/ny.html) were loading state.js which triggered meeting-related auto-fetches causing logout with user JWT
+- [x] Created `org-card.js` component showing org name, slug, role badge (eigar/admin/medlem) and meeting count
+- [x] Updated `dashboard.js` to use the new org-card component
+- [x] Updated dashboard GraphQL query to fetch `myRoleInOrganization` field
+- [x] Tests verified: dashboard shows user's organizations, update org name/config, invite member by email
 
 ### Previous Session (continued)
 - [x] Created `roiheimen.organization` table with slug, name, config
@@ -286,6 +287,6 @@ APP_URL=https://roiheimen.example.com
 - [x] Fixed `graphql.js` error handling
 
 ### Next Steps
-1. Continue Phase 2: Create remaining UI components (org-card, org-settings, org-members)
+1. Continue Phase 2: Create remaining UI components (org-settings, org-members)
 2. Add organizations Redux bundle to state.js
-3. Add remaining Phase 2 tests (Update org name/config, Dashboard shows orgs)
+3. Fix remaining RLS tests (some have timeout issues due to multiple user creation)
