@@ -45,7 +45,7 @@ You don't need to do a full phase in one go.
 - [x] **Test**: Account locks after 3 failed attempts, unlocks after 5 min
 - [x] **Test**: Request password reset, verify token in DB
 - [x] **Test**: Reset password with token, login with new password
-- [ ] **Test**: The old 'voting' tests using the num/code test should still work, you must either
+- [x] **Test**: The old 'voting' tests using the num/code test should still work, you must either
   rework the test (how it logs in), or make a way to use the old login in the app. Until the new
   system can also do the 'voting' test. (This has been postponed, because we can make the new user
   do the voting test later).
@@ -256,7 +256,16 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Breadcrumb Navigation)
+### Completed This Iteration (Legacy Login Component)
+- [x] Created `pkg/web/src/comp/legacy-login.js` component with:
+  - Num/code (password) login form for meeting-specific authentication
+  - Uses the legacy `authenticate(num, meeting_id, password)` function via `doMyselfLogin`
+  - Preserves backward compatibility with existing meetings
+- [x] Updated `pkg/web/src/comp/meetingList.js` to use `roi-legacy-login` instead of `roi-login`
+- [x] Updated `pkg/web/src/index.html` to import `legacy-login.js` instead of `login.js`
+- [x] All 66 tests pass (3 voting tests now working again)
+
+### Completed Previous Iteration (Breadcrumb Navigation)
 - [x] Created `pkg/web/src/comp/breadcrumbs.js` component with:
   - Hierarchical navigation with home icon
   - Support for any number of breadcrumb items

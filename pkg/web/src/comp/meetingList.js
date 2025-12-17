@@ -45,9 +45,9 @@ define("RoiMeetingList", {
       this.store.doMeetingId(m?.id || "");
     }, [location.hostname, meeting, meetings, this.store]);
     if (meeting) {
-      return this.html`<roi-login>
+      return this.html`<roi-legacy-login>
         <p>Ver venleg og logg inn</p>
-      </roi-login>
+      </roi-legacy-login>
       <a data-id="" href=/ onclick=${this}>Tilbake</a>
         `;
     }
