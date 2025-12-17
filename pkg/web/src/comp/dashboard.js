@@ -4,6 +4,7 @@ import storage from "../lib/storage.js";
 import { gql } from "../lib/graphql.js";
 import "./org-card.js";
 import "./meeting-card.js";
+import "./activity-feed.js";
 
 define("RoiDashboard", {
   oninit() {
@@ -109,6 +110,34 @@ define("RoiDashboard", {
     ${self} .create-meeting-btn:hover {
       opacity: 0.9;
     }
+    ${self} .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      ${self} .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+      ${self} .activity-section {
+        order: -1;
+      }
+    }
+    ${self} .main-content {
+      min-width: 0;
+    }
+    ${self} .activity-section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    ${self} .activity-section h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: #374151;
+    }
     `;
   },
   async loadData() {
@@ -169,50 +198,58 @@ define("RoiDashboard", {
     );
 
     return this.html`
-      <div class="section">
-        <h2>Mine organisasjonar og mote</h2>
-        ${
-          organizations.length === 0
-            ? html`
-                <div class="empty">
-                  <p>Du er ikkje medlem av nokon organisasjonar enno.</p>
-                  <p>Opprett ein organisasjon for a koma i gang.</p>
-                </div>
-              `
-            : html`
-                ${organizations.map(
-                  (org) => html`
-                    <div class="org-section">
-                      <div class="org-header">
-                        <h3>${org.name}</h3>
-                        <a href=${`/org-innstillingar.html?slug=${org.slug}`}>Innstillingar</a>
-                      </div>
-                      ${org.organizationMeetings?.nodes?.length > 0
-                        ? html`
-                            <div class="meetings-grid">
-                              ${org.organizationMeetings.nodes.map(
-                                (meeting) => html`
-                                  <div is="roi-meeting-card" .meeting=${meeting} .orgSlug=${org.slug}></div>
-                                `
-                              )}
-                            </div>
-                          `
-                        : html`<p class="no-meetings">Ingen mote i denne organisasjonen enno.</p>`}
-                      ${["owner", "admin"].includes(org.myRole)
-                        ? html`
-                            <a href=${`/meeting/ny.html?org=${org.slug}`} class="create-meeting-btn">
-                              + Nytt mote
-                            </a>
-                          `
-                        : ""}
+      <div class="dashboard-layout">
+        <div class="main-content">
+          <div class="section">
+            <h2>Mine organisasjonar og mote</h2>
+            ${
+              organizations.length === 0
+                ? html`
+                    <div class="empty">
+                      <p>Du er ikkje medlem av nokon organisasjonar enno.</p>
+                      <p>Opprett ein organisasjon for a koma i gang.</p>
                     </div>
                   `
-                )}
-              `
-        }
-      </div>
-      <div class="actions">
-        <a href="/org/ny.html" class="btn">Opprett ny organisasjon</a>
+                : html`
+                    ${organizations.map(
+                      (org) => html`
+                        <div class="org-section">
+                          <div class="org-header">
+                            <h3>${org.name}</h3>
+                            <a href=${`/org-innstillingar.html?slug=${org.slug}`}>Innstillingar</a>
+                          </div>
+                          ${org.organizationMeetings?.nodes?.length > 0
+                            ? html`
+                                <div class="meetings-grid">
+                                  ${org.organizationMeetings.nodes.map(
+                                    (meeting) => html`
+                                      <div is="roi-meeting-card" .meeting=${meeting} .orgSlug=${org.slug}></div>
+                                    `
+                                  )}
+                                </div>
+                              `
+                            : html`<p class="no-meetings">Ingen mote i denne organisasjonen enno.</p>`}
+                          ${["owner", "admin"].includes(org.myRole)
+                            ? html`
+                                <a href=${`/meeting/ny.html?org=${org.slug}`} class="create-meeting-btn">
+                                  + Nytt mote
+                                </a>
+                              `
+                            : ""}
+                        </div>
+                      `
+                    )}
+                  `
+            }
+          </div>
+          <div class="actions">
+            <a href="/org/ny.html" class="btn">Opprett ny organisasjon</a>
+          </div>
+        </div>
+        <div class="activity-section">
+          <h3>Siste aktivitet</h3>
+          <div is="roi-activity-feed"></div>
+        </div>
       </div>
     `;
   },

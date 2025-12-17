@@ -941,6 +941,73 @@ test.describe("Dashboard", () => {
     expect(m2).toBeTruthy();
     expect(m2.title).toBe("Meeting Two");
   });
+
+  test("activity feed shows recent activity", async ({ page }) => {
+    // Create owner and organization
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Activity Test Org");
+
+    // Create a meeting
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Activity Test Meeting");
+
+    // Query activity feed
+    const result = await page.evaluate(async () => {
+      const response = await fetch("http://localhost:3000/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+        },
+        body: JSON.stringify({
+          query: `
+            mutation GetUserActivity($limit: Int) {
+              getUserActivity(input: { activityLimit: $limit }) {
+                activityItems {
+                  activityType
+                  activityTitle
+                  activityDescription
+                  activityTimestamp
+                  orgSlug
+                  meetingId
+                }
+              }
+            }
+          `,
+          variables: { limit: 10 },
+        }),
+      });
+      return response.json();
+    });
+
+    if (result.errors) {
+      throw new Error(result.errors[0].message);
+    }
+
+    const items = result.data.getUserActivity.activityItems;
+    expect(items.length).toBeGreaterThanOrEqual(2); // At least org created and meeting created
+
+    // Check for org_created activity
+    const orgActivity = items.find(
+      (item: { activityType: string; orgSlug: string }) =>
+        item.activityType === "org_created" && item.orgSlug === slug
+    );
+    expect(orgActivity).toBeTruthy();
+    expect(orgActivity.activityTitle).toBe("Activity Test Org");
+    expect(orgActivity.activityDescription).toBe("Du oppretta organisasjonen");
+
+    // Check for meeting_created activity
+    const meetingActivity = items.find(
+      (item: { activityType: string; meetingId: string }) =>
+        item.activityType === "meeting_created" && item.meetingId === meetingId
+    );
+    expect(meetingActivity).toBeTruthy();
+    expect(meetingActivity.activityTitle).toBe("Activity Test Meeting");
+    expect(meetingActivity.activityDescription).toContain("Du oppretta motet");
+  });
 });
 
 /**
