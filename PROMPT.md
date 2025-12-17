@@ -124,8 +124,8 @@ You don't need to do a full phase in one go.
 ### Phase 5: Integration & Polish
 - [x] Update `queue.html` to work with new meeting_participant table
 - [x] Update `queue.html` to use meeting-scoped JWT
-- [ ] Update `manage.html` with new tabs (Deltakarar, Saker, Avstemmingar, Invitasjonar)
-- [ ] Update `manage.html` participant management to use meeting_participant
+- [x] Update `manage.html` with new tabs (Deltakarar, Saker, Avstemmingar, Invitasjonar)
+- [x] Update `manage.html` participant management to use meeting_participant
 - [ ] Verify `gfx.html`, `screen.html`, `fullscreen.html` work with new tables
 - [ ] Create global navigation component
 - [ ] Add org switcher dropdown
@@ -256,7 +256,20 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (queue.html meeting_participant bridge)
+### Completed This Iteration (manage.html Deltakarar Tab)
+- [x] Created `pkg/web/src/comp/participant-list.js` component:
+  - Fetches participants using `getMeetingParticipants` GraphQL mutation
+  - Displays participant number, display name, role (Arrangor/Deltakar), and join date
+  - Shows loading, error, and empty states
+  - Responsive table layout with proper Norwegian Nynorsk text
+- [x] Updated `manage.js` to add "Deltakarar" tab:
+  - Added import for participant-list.js
+  - Added tab button between "Statistikk" and "Invitasjonar"
+  - Added tab content with roi-participant-list component
+  - Added CSS styling for deltakarar-tab layout
+- [x] All 44 tests pass (meeting-invites + organizations)
+
+### Completed Previous Iteration (queue.html meeting_participant bridge)
 - [x] Created `pkg/server/migrations/019-participant-person-bridge.sql` migration:
   - Added `person_id` column to `meeting_participant` table to bridge to legacy `person` table
   - Updated `join_meeting` function to also create a `person` record (for speech/vote compatibility)

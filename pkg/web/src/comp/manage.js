@@ -9,6 +9,7 @@ import "./personList.js";
 import "./referendumList.js";
 import "./invite-generator.js";
 import "./invite-list.js";
+import "./participant-list.js";
 
 const gqlAllOpenSaks = `
   query AllOpenSaks {
@@ -549,6 +550,12 @@ const MoreDialog = {
     ${self} .invitasjonar-tab roi-invite-list {
       width: 100%;
     }
+    ${self} .deltakarar-tab {
+      min-width: 600px;
+    }
+    ${self} .deltakarar-tab roi-participant-list {
+      width: 100%;
+    }
     `;
   },
   onerr() {
@@ -606,6 +613,7 @@ const MoreDialog = {
     }>Sjå eller slett saker</button>
         <li><button onclick=${this} name=finished class=${this.tab === "finished" && "active"}>Ferdige saker</button>
         <li><button onclick=${this} name=stats class=${this.tab === "stats" && "active"}>Statistikk</button>
+        <li><button onclick=${this} name=deltakarar class=${this.tab === "deltakarar" && "active"}>Deltakarar</button>
         <li><button onclick=${this} name=invitasjonar class=${this.tab === "invitasjonar" && "active"}>Invitasjonar</button>
       </ul>
       <form name=${this.tab}>
@@ -650,6 +658,11 @@ Som dette :)"
             showsak: html` <ShowSaker /> `,
             finished: html` <FinishedSaker /> `,
             stats: html` <ShowStats /> `,
+            deltakarar: html`
+              <div class="deltakarar-tab">
+                <roi-participant-list meeting-id=${meetingId}></roi-participant-list>
+              </div>
+            `,
             invitasjonar: html`
               <div class="invitasjonar-tab">
                 <roi-invite-generator meeting-id=${meetingId}></roi-invite-generator>
