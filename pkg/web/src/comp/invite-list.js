@@ -1,6 +1,7 @@
 import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
+import "./qr-code.js";
 
 define("RoiInviteList", {
   mappedAttributes: ["meeting-id"],
@@ -13,6 +14,7 @@ define("RoiInviteList", {
       deleting: null,
       showDeleteConfirm: null,
       copiedCode: null,
+      showQrFor: null,
     };
   },
   onconnected() {
@@ -200,6 +202,71 @@ define("RoiInviteList", {
     ${self} .expiry-text.expired {
       color: #dc2626;
     }
+    ${self} .btn-qr {
+      padding: 4px 8px;
+      background: #e5e7eb;
+      color: #374151;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    ${self} .btn-qr:hover {
+      background: #d1d5db;
+    }
+    ${self} .qr-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    ${self} .qr-modal {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+    ${self} .qr-modal h4 {
+      margin: 0 0 16px 0;
+      color: var(--roi-theme-main-color, #2b2c3a);
+    }
+    ${self} .qr-modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #666;
+      cursor: pointer;
+      line-height: 1;
+    }
+    ${self} .qr-modal-close:hover {
+      color: #333;
+    }
+    ${self} .qr-modal-code {
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--roi-theme-main-color, #2b2c3a);
+      letter-spacing: 2px;
+      margin: 12px 0;
+    }
+    ${self} .qr-modal-link {
+      font-size: 12px;
+      color: #666;
+      word-break: break-all;
+      margin-top: 12px;
+    }
     `;
   },
   async loadInvites() {
@@ -250,6 +317,18 @@ define("RoiInviteList", {
       this.render();
     } else if (action === "confirm-delete") {
       this.deleteInvite(parseInt(inviteId));
+    } else if (action === "show-qr") {
+      this.state.showQrFor = code;
+      this.render();
+    } else if (action === "close-qr") {
+      this.state.showQrFor = null;
+      this.render();
+    } else if (action === "close-qr-overlay") {
+      // Close when clicking the overlay background
+      if (event.target.classList.contains("qr-modal-overlay")) {
+        this.state.showQrFor = null;
+        this.render();
+      }
     }
   },
   async copyToClipboard(text, button) {
@@ -335,8 +414,11 @@ define("RoiInviteList", {
       minute: "2-digit",
     });
   },
+  getInviteLink(code) {
+    return `${window.location.origin}/i/${code}`;
+  },
   render() {
-    const { loading, invites, error } = this.state;
+    const { loading, invites, error, showQrFor } = this.state;
 
     if (loading) {
       return this.html`<div class="invites-section"><div class="loading">Lastar invitasjonskoder...</div></div>`;
@@ -389,6 +471,13 @@ define("RoiInviteList", {
                             onclick=${this}
                             title="Kopier lenke"
                           >Lenke</button>
+                          <button
+                            class="btn-qr"
+                            data-action="show-qr"
+                            data-code=${invite.code}
+                            onclick=${this}
+                            title="Vis QR-kode"
+                          >QR</button>
                         </div>
                       </td>
                       <td>
@@ -440,6 +529,28 @@ define("RoiInviteList", {
               </tbody>
             </table>
           `}
+
+        ${showQrFor
+          ? html`
+              <div
+                class="qr-modal-overlay"
+                data-action="close-qr-overlay"
+                onclick=${this}
+              >
+                <div class="qr-modal">
+                  <button
+                    class="qr-modal-close"
+                    data-action="close-qr"
+                    onclick=${this}
+                  >×</button>
+                  <h4>QR-kode for invitasjon</h4>
+                  <div class="qr-modal-code">${showQrFor}</div>
+                  <roi-qr-code data=${this.getInviteLink(showQrFor)} size="200"></roi-qr-code>
+                  <div class="qr-modal-link">${this.getInviteLink(showQrFor)}</div>
+                </div>
+              </div>
+            `
+          : ""}
       </div>
     `;
   },

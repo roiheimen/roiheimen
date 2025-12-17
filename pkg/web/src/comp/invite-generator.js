@@ -1,6 +1,7 @@
 import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
+import "./qr-code.js";
 
 define("RoiInviteGenerator", {
   mappedAttributes: ["meeting-id"],
@@ -13,6 +14,7 @@ define("RoiInviteGenerator", {
       error: null,
       createdInvite: null,
       showForm: true,
+      showQr: false,
     };
   },
   style(self) {
@@ -164,6 +166,24 @@ define("RoiInviteGenerator", {
     ${self} .btn-new:hover {
       opacity: 0.9;
     }
+    ${self} .qr-section {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+    }
+    ${self} .toggle-qr {
+      padding: 8px 16px;
+      background: #e5e7eb;
+      color: #374151;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin: 4px;
+    }
+    ${self} .toggle-qr:hover {
+      background: #d1d5db;
+    }
     `;
   },
   oninput(event) {
@@ -244,6 +264,10 @@ define("RoiInviteGenerator", {
       this.state.createdInvite = null;
       this.state.maxUses = "";
       this.state.expiresAt = "";
+      this.state.showQr = false;
+      this.render();
+    } else if (action === "toggle-qr") {
+      this.state.showQr = !this.state.showQr;
       this.render();
     }
   },
@@ -275,7 +299,7 @@ define("RoiInviteGenerator", {
     });
   },
   render() {
-    const { showForm, creating, error, createdInvite } = this.state;
+    const { showForm, creating, error, createdInvite, showQr } = this.state;
 
     if (!showForm && createdInvite) {
       const inviteLink = this.getInviteLink();
@@ -295,7 +319,17 @@ define("RoiInviteGenerator", {
               <button class="copy-btn" data-action="copy-link" onclick=${this}>
                 Kopier lenke
               </button>
+              <button class="toggle-qr" data-action="toggle-qr" onclick=${this}>
+                ${showQr ? "Gøym QR-kode" : "Vis QR-kode"}
+              </button>
             </div>
+            ${showQr
+              ? html`
+                  <div class="qr-section">
+                    <roi-qr-code data=${inviteLink} size="200"></roi-qr-code>
+                  </div>
+                `
+              : ""}
             <div class="invite-meta">
               ${createdInvite.maxUses
                 ? html`<span>Maks ${createdInvite.maxUses} bruk</span>`

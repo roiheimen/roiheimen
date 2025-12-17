@@ -111,7 +111,7 @@ You don't need to do a full phase in one go.
 - [x] Create `invite-generator.js` component
 - [x] Create `invite-list.js` component
 - [x] Create `join-meeting.js` component
-- [ ] Create `qr-code.js` component
+- [x] Create `qr-code.js` component
 - [ ] Update `manage.html` with "Invitasjonar" tab
 - [ ] **Test**: Generate invite code, verify in DB
 - [ ] **Test**: Join meeting via invite code
@@ -254,9 +254,24 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 4: Invite System - invite generator and list components complete, QR code component next
+- [ ] Phase 4: Invite System - QR code component complete, manage.html tab next
 
-### Completed This Iteration (Invite Generator & List Components)
+### Completed This Iteration (QR Code Component)
+- [x] Created `qr-code.js` component with:
+  - Pure client-side QR code generation using canvas
+  - Custom QR Code class implementing Reed-Solomon error correction
+  - Supports version 1-8 QR codes (up to ~150 chars)
+  - Download QR code as PNG functionality
+  - Norwegian Nynorsk UI text
+- [x] Updated `invite-generator.js` to show QR code toggle on success screen:
+  - "Vis QR-kode" / "Gøym QR-kode" toggle button
+  - QR code renders the invite link
+- [x] Updated `invite-list.js` with QR code modal:
+  - Added "QR" button for each invite code in the list
+  - Modal overlay displays QR code with invite link
+  - Click outside or X button closes modal
+
+### Completed Previous Iteration (Invite Generator & List Components)
 - [x] Created `invite-generator.js` component with:
   - Form to create invite codes with optional max uses and expiry date
   - Success screen displaying the generated code and direct link
