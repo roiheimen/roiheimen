@@ -108,8 +108,8 @@ You don't need to do a full phase in one go.
 - [x] Add RLS policies for meeting_invite and meeting_participant tables
 - [x] Create `/bli-med.html` invite code entry page
 - [x] Create `/i/{code}` direct invite link landing page
-- [ ] Create `invite-generator.js` component
-- [ ] Create `invite-list.js` component
+- [x] Create `invite-generator.js` component
+- [x] Create `invite-list.js` component
 - [x] Create `join-meeting.js` component
 - [ ] Create `qr-code.js` component
 - [ ] Update `manage.html` with "Invitasjonar" tab
@@ -254,9 +254,24 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 4: Invite System - join meeting UI complete, invite generator and list components next
+- [ ] Phase 4: Invite System - invite generator and list components complete, QR code component next
 
-### Completed This Iteration (Join Meeting UI)
+### Completed This Iteration (Invite Generator & List Components)
+- [x] Created `invite-generator.js` component with:
+  - Form to create invite codes with optional max uses and expiry date
+  - Success screen displaying the generated code and direct link
+  - Copy to clipboard functionality for code and link
+  - Event emission for parent component refresh
+  - Norwegian Nynorsk UI text
+- [x] Created `invite-list.js` component with:
+  - Fetches and displays all invites for a meeting via `getMeetingInvites`
+  - Shows invite code, status, usage, expiry, and creation date
+  - Status badges (Active, Expired, Exhausted)
+  - Copy buttons for code and link
+  - Delete functionality with confirmation
+  - Auto-refresh when new invite is created
+
+### Completed Previous Iteration (Join Meeting UI)
 - [x] Created `/bli-med.html` invite code entry page
 - [x] Created `join-meeting.js` component with:
   - Invite code entry form with validation
