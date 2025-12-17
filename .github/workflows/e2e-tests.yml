@@ -83,7 +83,7 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install
-          cd pkg/server && (yarn install || echo "Warning: Some native modules failed to build, continuing...")
+          cd pkg/server && yarn install
           cd ../web && yarn install
           cd ../../e2e && yarn install
 
