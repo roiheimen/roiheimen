@@ -207,13 +207,13 @@ define("RoiGlobalNav", {
               id
               slug
               name
-              myRoleInOrganization
+              myRole
             }
           }
         }
       `;
 
-      const result = await gql(query, {}, this.creds.jwt);
+      const result = await gql(query, {}, { jwt: this.creds.jwt });
       this.state.user = result.currentUserAccount;
       this.state.organizations = result.myOrganizations?.nodes || [];
       this.state.loading = false;
@@ -299,7 +299,7 @@ define("RoiGlobalNav", {
                         class="dropdown-item ${org.slug === currentOrgSlug ? "active" : ""}"
                       >
                         ${org.name}
-                        ${roleBadge(org.myRoleInOrganization)}
+                        ${roleBadge(org.myRole)}
                       </a>
                     `)}
                     <div class="dropdown-divider"></div>

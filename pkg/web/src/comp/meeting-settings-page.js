@@ -100,13 +100,13 @@ define("RoiMeetingSettingsPage", {
               id
               slug
               name
-              myRoleInOrganization
+              myRole
             }
           }
         }
       `;
 
-      const result = await gql(query, { meetingId }, this.creds.jwt);
+      const result = await gql(query, { meetingId }, { jwt: this.creds.jwt });
       if (!result.meetingById) {
         this.state.error = "Motet finst ikkje eller du har ikkje tilgang";
         this.state.loading = false;

@@ -208,11 +208,11 @@ define("RoiMeetingSettings", {
     `;
   },
   canEdit() {
-    const role = this.organization?.myRoleInOrganization;
+    const role = this.organization?.myRole;
     return role === "owner" || role === "admin";
   },
   isOwner() {
-    return this.organization?.myRoleInOrganization === "owner";
+    return this.organization?.myRole === "owner";
   },
   getConfig() {
     if (this.state.editedConfig !== null) {
@@ -274,7 +274,7 @@ define("RoiMeetingSettings", {
       const result = await gql(
         mutation,
         { meetingId: this.meeting.id, newTitle, newConfig },
-        this.creds.jwt
+        { jwt: this.creds.jwt }
       );
       // Update the meeting data
       Object.assign(this.meeting, result.updateOrgMeeting.meeting);
@@ -314,7 +314,7 @@ define("RoiMeetingSettings", {
     `;
 
     try {
-      await gql(mutation, { meetingId: this.meeting.id }, this.creds.jwt);
+      await gql(mutation, { meetingId: this.meeting.id }, { jwt: this.creds.jwt });
       // Redirect to dashboard after deletion
       window.location.href = "/oversikt.html";
     } catch (error) {

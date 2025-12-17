@@ -242,11 +242,11 @@ define("RoiOrgMembers", {
     `;
   },
   canManage() {
-    const role = this.org?.myRoleInOrganization;
+    const role = this.org?.myRole;
     return role === "owner" || role === "admin";
   },
   isOwner() {
-    return this.org?.myRoleInOrganization === "owner";
+    return this.org?.myRole === "owner";
   },
   async loadMembers() {
     if (!this.org) return;
@@ -267,7 +267,7 @@ define("RoiOrgMembers", {
         }
       `;
 
-      const result = await gql(query, { orgId: this.org.id }, this.creds.jwt);
+      const result = await gql(query, { orgId: this.org.id }, { jwt: this.creds.jwt });
       this.state.members = result.getOrganizationMembers?.nodes || [];
       this.state.loading = false;
 
@@ -297,7 +297,7 @@ define("RoiOrgMembers", {
         }
       `;
 
-      const result = await gql(query, { orgId: this.org.id }, this.creds.jwt);
+      const result = await gql(query, { orgId: this.org.id }, { jwt: this.creds.jwt });
       // Filter to only pending invites (not accepted)
       this.state.pendingInvites = (result.organizationInvites?.nodes || [])
         .filter(inv => !inv.acceptedAt && new Date(inv.expiresAt) > new Date());
@@ -344,7 +344,7 @@ define("RoiOrgMembers", {
         }
       `;
 
-      await gql(mutation, { orgId: this.org.id, email, role }, this.creds.jwt);
+      await gql(mutation, { orgId: this.org.id, email, role }, { jwt: this.creds.jwt });
 
       // Clear form and show success
       this.state.inviteEmail = "";
@@ -397,7 +397,7 @@ define("RoiOrgMembers", {
         }
       `;
 
-      await gql(mutation, { orgId: this.org.id, userId }, this.creds.jwt);
+      await gql(mutation, { orgId: this.org.id, userId }, { jwt: this.creds.jwt });
 
       // Remove from list
       this.state.members = this.state.members.filter(m => m.userId !== userId);
@@ -422,7 +422,7 @@ define("RoiOrgMembers", {
     }
   },
   canRemoveMember(member) {
-    const myRole = this.org?.myRoleInOrganization;
+    const myRole = this.org?.myRole;
     if (!myRole) return false;
 
     // Owners can remove anyone except themselves if they're the only owner

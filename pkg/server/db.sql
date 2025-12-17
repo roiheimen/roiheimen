@@ -1145,8 +1145,9 @@ create or replace function roiheimen.get_organization_by_slug(
 $$ language sql stable security definer;
 comment on function roiheimen.get_organization_by_slug(text) is 'Returns an organization by slug if the current user is a member';
 
--- my_role_in_organization: Get current user's role in an organization
-create or replace function roiheimen.my_role_in_organization(
+-- organization_my_role: Get current user's role in an organization (computed field on Organization)
+-- Named organization_* so PostGraphile exposes it as a computed field 'myRole' on Organization type
+create or replace function roiheimen.organization_my_role(
   org roiheimen.organization
 ) returns roiheimen.organization_role as $$
   select role
@@ -1154,7 +1155,7 @@ create or replace function roiheimen.my_role_in_organization(
     where organization_id = org.id
       and user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer;
 $$ language sql stable;
-comment on function roiheimen.my_role_in_organization(roiheimen.organization) is 'Returns the current user''s role in the given organization';
+comment on function roiheimen.organization_my_role(roiheimen.organization) is 'Returns the current user''s role in the given organization';
 
 -- organization_member_info: Composite type for org member with user info
 create type roiheimen.organization_member_info as (
@@ -1843,7 +1844,7 @@ grant execute on function roiheimen.remove_organization_member(integer, integer)
 grant execute on function roiheimen.delete_organization(integer) to roiheimen_user;
 grant execute on function roiheimen.my_organizations() to roiheimen_user;
 grant execute on function roiheimen.get_organization_by_slug(text) to roiheimen_user;
-grant execute on function roiheimen.my_role_in_organization(roiheimen.organization) to roiheimen_user;
+grant execute on function roiheimen.organization_my_role(roiheimen.organization) to roiheimen_user;
 grant execute on function roiheimen.get_organization_members(integer) to roiheimen_user;
 
 -- Meeting table permissions for roiheimen_user

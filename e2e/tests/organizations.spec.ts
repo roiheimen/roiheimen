@@ -1295,6 +1295,118 @@ test.describe("Meeting Delete", () => {
   });
 });
 
+test.describe("Global Navigation", () => {
+  test("org switcher navigates between organizations", async ({ page }) => {
+    // Create user with two organizations
+    const owner = await createVerifiedUser(page, "NavUser");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug1 = uniqueSlug();
+    const slug2 = uniqueSlug();
+    await createOrganizationDirect(page, slug1, "Org Alpha");
+    await createOrganizationDirect(page, slug2, "Org Beta");
+
+    // Go to org settings page which has global-nav
+    await page.goto(`/org-innstillingar.html?slug=${slug1}`);
+
+    // Wait for the nav to load data - look for dropdown with organizations
+    await page.waitForSelector("roi-global-nav .dropdown-toggle", { timeout: 15000 });
+
+    // Find and click the org switcher dropdown (first dropdown)
+    const orgDropdownButton = await page.$("roi-global-nav .dropdown-toggle");
+    expect(orgDropdownButton).toBeTruthy();
+
+    await orgDropdownButton!.click();
+
+    // Wait for dropdown to appear
+    await page.waitForSelector("roi-global-nav .dropdown-menu", { timeout: 5000 });
+
+    // Should see both orgs in the dropdown
+    const dropdownText = await page.textContent("roi-global-nav .dropdown-menu");
+    expect(dropdownText).toContain("Org Alpha");
+    expect(dropdownText).toContain("Org Beta");
+
+    // Click on Org Beta to navigate
+    await page.click(`roi-global-nav .dropdown-item:has-text("Org Beta")`);
+
+    // Should navigate to org settings page for Org Beta
+    await page.waitForURL(`**/org-innstillingar.html?slug=${slug2}`, { timeout: 10000 });
+
+    // Verify we're on the right page
+    const url = page.url();
+    expect(url).toContain(`slug=${slug2}`);
+
+    // Now open dropdown again and navigate to Org Alpha
+    await page.waitForSelector("roi-global-nav .dropdown-toggle");
+    await page.click("roi-global-nav .dropdown-toggle");
+    await page.waitForSelector("roi-global-nav .dropdown-menu", { timeout: 5000 });
+
+    await page.click(`roi-global-nav .dropdown-item:has-text("Org Alpha")`);
+
+    await page.waitForURL(`**/org-innstillingar.html?slug=${slug1}`, { timeout: 10000 });
+
+    const url2 = page.url();
+    expect(url2).toContain(`slug=${slug1}`);
+  });
+
+  test("user menu logout clears session", async ({ page }) => {
+    // Create and login user
+    const user = await createVerifiedUser(page, "LogoutUser");
+    await loginUser(page, user.email, user.password);
+
+    // Verify we have JWT in storage
+    const hasJwtBefore = await page.evaluate(() => {
+      const creds = JSON.parse(localStorage.getItem("creds") || "{}");
+      return !!creds.jwt;
+    });
+    expect(hasJwtBefore).toBe(true);
+
+    // Create an org so we can go to its settings page
+    const slug = uniqueSlug();
+    await createOrganizationDirect(page, slug, "Logout Test Org");
+
+    // Go to org settings page with global nav
+    await page.goto(`/org-innstillingar.html?slug=${slug}`);
+
+    // Wait for nav to load - look for user dropdown (last dropdown)
+    await page.waitForSelector("roi-global-nav .dropdown", { timeout: 15000 });
+
+    // Find the user menu dropdown (it's after the org dropdown)
+    const dropdowns = await page.$$("roi-global-nav .dropdown");
+    expect(dropdowns.length).toBeGreaterThanOrEqual(2);
+
+    // The user dropdown is the last one
+    const userDropdown = dropdowns[dropdowns.length - 1];
+
+    // Click the dropdown toggle in the user menu
+    const toggleButton = await userDropdown.$(".dropdown-toggle");
+    await toggleButton!.click();
+
+    // Wait for dropdown menu to appear
+    await page.waitForSelector("roi-global-nav .dropdown-menu", { timeout: 5000 });
+
+    // Click "Logg ut" button
+    await page.click(`roi-global-nav .dropdown-item:has-text("Logg ut")`);
+
+    // Should redirect to login page
+    await page.waitForURL("**/login.html", { timeout: 10000 });
+
+    // Verify JWT is cleared from storage
+    const hasJwtAfter = await page.evaluate(() => {
+      const creds = JSON.parse(localStorage.getItem("creds") || "{}");
+      return !!creds.jwt;
+    });
+    expect(hasJwtAfter).toBe(false);
+
+    // Verify we're not authenticated by checking localStorage again
+    const stillNoJwt = await page.evaluate(() => {
+      const creds = JSON.parse(localStorage.getItem("creds") || "{}");
+      return !creds.jwt;
+    });
+    expect(stillNoJwt).toBe(true);
+  });
+});
+
 test.describe("Meeting RLS", () => {
   test("non-member cannot see meetings in organization", async ({ page }) => {
     const owner = await createVerifiedUser(page, "Owner");

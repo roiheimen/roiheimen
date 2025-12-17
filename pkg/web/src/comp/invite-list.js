@@ -291,7 +291,7 @@ define("RoiInviteList", {
         }
       `;
 
-      const result = await gql(query, { meetingId: this["meeting-id"] }, this.creds.jwt);
+      const result = await gql(query, { meetingId: this["meeting-id"] }, { jwt: this.creds.jwt });
       this.state.invites = result.getMeetingInvites?.nodes || [];
       this.state.loading = false;
       this.state.error = null;
@@ -359,7 +359,7 @@ define("RoiInviteList", {
         }
       `;
 
-      await gql(mutation, { inviteId }, this.creds.jwt);
+      await gql(mutation, { inviteId }, { jwt: this.creds.jwt });
 
       // Remove from list
       this.state.invites = this.state.invites.filter((i) => i.id !== inviteId);

@@ -91,7 +91,7 @@ define("RoiOrgCard", {
       return this.html`<p>Lastar...</p>`;
     }
 
-    const role = org.myRoleInOrganization || "member";
+    const role = org.myRole || "member";
     const meetingCount = org.meetings?.totalCount || 0;
 
     return this.html`

@@ -1266,7 +1266,7 @@ const organizations = {
               name
               config
               createdAt
-              myRoleInOrganization
+              myRole
             }
           }
         }
@@ -1293,7 +1293,7 @@ const organizations = {
               name
               config
               createdAt
-              myRoleInOrganization
+              myRole
             }
           }
         }
@@ -1322,7 +1322,7 @@ const organizations = {
               name
               config
               createdAt
-              myRoleInOrganization
+              myRole
             }
           }
         }

@@ -121,17 +121,17 @@ define("RoiMeetingCreate", {
   async loadOrganization() {
     try {
       const query = `
-        query GetOrganization($slug: String!) {
-          getOrganizationBySlug(slug: $slug) {
+        query GetOrganization($orgSlug: String!) {
+          getOrganizationBySlug(orgSlug: $orgSlug) {
             id
             slug
             name
-            myRoleInOrganization
+            myRole
           }
         }
       `;
 
-      const result = await gql(query, { slug: this.orgSlug }, this.creds.jwt);
+      const result = await gql(query, { orgSlug: this.orgSlug }, { jwt: this.creds.jwt });
       const org = result.getOrganizationBySlug;
 
       if (!org) {
@@ -142,7 +142,7 @@ define("RoiMeetingCreate", {
       }
 
       // Check permission
-      if (!["owner", "admin"].includes(org.myRoleInOrganization)) {
+      if (!["owner", "admin"].includes(org.myRole)) {
         this.state.error = "Du må vera admin eller eigar for å oppretta mote";
         this.state.loadingOrg = false;
         this.render();
@@ -234,7 +234,7 @@ define("RoiMeetingCreate", {
         meetingId,
         title,
         config: {}
-      }, this.creds.jwt);
+      }, { jwt: this.creds.jwt });
 
       this.state.success = true;
       this.state.createdMeeting = result.createOrgMeeting.meeting;

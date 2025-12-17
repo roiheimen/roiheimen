@@ -126,7 +126,7 @@ define("RoiDashboard", {
               slug
               name
               createdAt
-              myRoleInOrganization
+              myRole
               organizationMeetings {
                 nodes {
                   id
@@ -142,7 +142,7 @@ define("RoiDashboard", {
         }
       `;
 
-      const result = await gql(query, {}, this.creds.jwt);
+      const result = await gql(query, {}, { jwt: this.creds.jwt });
       this.state.organizations = result.myOrganizations?.nodes || [];
       this.state.loading = false;
     } catch (err) {
@@ -198,7 +198,7 @@ define("RoiDashboard", {
                             </div>
                           `
                         : html`<p class="no-meetings">Ingen mote i denne organisasjonen enno.</p>`}
-                      ${["owner", "admin"].includes(org.myRoleInOrganization)
+                      ${["owner", "admin"].includes(org.myRole)
                         ? html`
                             <a href=${`/meeting/ny.html?org=${org.slug}`} class="create-meeting-btn">
                               + Nytt mote

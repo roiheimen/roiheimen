@@ -145,8 +145,8 @@ You don't need to do a full phase in one go.
 - [x] **Test**: gfx.html displays speaker list correctly
 - [x] **Test**: screen.html shows votes/results
 - [x] **Test**: fullscreen.html works for audience display
-- [ ] **Test**: Org switcher navigates between organizations
-- [ ] **Test**: User menu logout clears session
+- [x] **Test**: Org switcher navigates between organizations
+- [x] **Test**: User menu logout clears session
 
 ## Technical Specifications
 
@@ -272,9 +272,31 @@ APP_URL=https://roiheimen.example.com
     - Admin can access all tabs (Saker, Action, Stats, Deltakarar, Invitasjonar)
     - Admin can create sak from manage.html dialog
     - Admin can create invite from Invitasjonar tab
-- [x] All 77 E2E tests pass
+- [x] All 79 E2E tests pass (added 2 global nav tests)
 - [x] Note: Skipped Deltakarar tab participant view test due to JWT scope issue
   (getMeetingParticipants needs user JWT, not meeting JWT)
+
+### Completed This Iteration (Global Navigation Tests)
+- [x] Added tests for global navigation component:
+  - **Org switcher navigates between organizations**:
+    - Creates user with 2 orgs, verifies org dropdown shows both
+    - Clicks org in dropdown and verifies URL navigation
+    - Tests both org Alpha → Beta and Beta → Alpha navigation
+  - **User menu logout clears session**:
+    - Creates user, logs in, verifies JWT in localStorage
+    - Clicks user dropdown and "Logg ut" button
+    - Verifies redirect to login page
+    - Verifies JWT cleared from localStorage
+- [x] Fixed computed column naming convention for PostGraphile:
+  - Renamed `my_role_in_organization` → `organization_my_role` (must start with table name)
+  - PostGraphile now properly exposes it as `myRole` on Organization type
+- [x] Fixed GraphQL argument naming for `getOrganizationBySlug`:
+  - Changed from `slug: $slug` to `orgSlug: $orgSlug` (matches DB parameter `org_slug`)
+- [x] Fixed `gql()` function call patterns in multiple components:
+  - Changed `gql(query, vars, this.creds.jwt)` to `gql(query, vars, { jwt: this.creds.jwt })`
+  - Affected files: dashboard.js, global-nav.js, org-settings-page.js, org-members-page.js,
+    meeting-create.js, meeting-settings-page.js, org-members.js, org-settings.js,
+    meeting-settings.js, invite-list.js
 
 ### Completed Previous Iteration (Integration Flow Test)
 - [x] Created `e2e/tests/integration-flows.spec.ts` with full user flow test:

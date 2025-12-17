@@ -81,19 +81,19 @@ define("RoiOrgSettingsPage", {
 
     try {
       const query = `
-        query GetOrganization($slug: String!) {
-          getOrganizationBySlug(slug: $slug) {
+        query GetOrganization($orgSlug: String!) {
+          getOrganizationBySlug(orgSlug: $orgSlug) {
             id
             slug
             name
             config
             createdAt
-            myRoleInOrganization
+            myRole
           }
         }
       `;
 
-      const result = await gql(query, { slug }, this.creds.jwt);
+      const result = await gql(query, { orgSlug: slug }, { jwt: this.creds.jwt });
       if (!result.getOrganizationBySlug) {
         this.state.error = "Organisasjonen finst ikkje eller du har ikkje tilgang";
         this.state.loading = false;

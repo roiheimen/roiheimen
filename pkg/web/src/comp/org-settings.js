@@ -151,11 +151,11 @@ define("RoiOrgSettings", {
     `;
   },
   canEdit() {
-    const role = this.org?.myRoleInOrganization;
+    const role = this.org?.myRole;
     return role === "owner" || role === "admin";
   },
   isOwner() {
-    return this.org?.myRoleInOrganization === "owner";
+    return this.org?.myRole === "owner";
   },
   async onsubmit(event) {
     event.preventDefault();
@@ -183,7 +183,7 @@ define("RoiOrgSettings", {
             slug
             name
             config
-            myRoleInOrganization
+            myRole
           }
         }
       }
@@ -193,7 +193,7 @@ define("RoiOrgSettings", {
       const result = await gql(
         mutation,
         { orgId: this.org.id, newName, newConfig: null },
-        this.creds.jwt
+        { jwt: this.creds.jwt }
       );
       // Update the org data
       Object.assign(this.org, result.updateOrganization.organization);
@@ -232,7 +232,7 @@ define("RoiOrgSettings", {
     `;
 
     try {
-      await gql(mutation, { orgId: this.org.id }, this.creds.jwt);
+      await gql(mutation, { orgId: this.org.id }, { jwt: this.creds.jwt });
       // Redirect to dashboard after deletion
       window.location.href = "/oversikt.html";
     } catch (error) {
