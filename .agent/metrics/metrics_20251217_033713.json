@@ -1,0 +1,14 @@
+{
+  "iterations": 20,
+  "successful": 20,
+  "failed": 0,
+  "errors": 0,
+  "checkpoints": 4,
+  "rollbacks": 0,
+  "cost": {
+    "total": 2.732043,
+    "by_tool": {
+      "claude": 2.732043
+    }
+  }
+}
