@@ -84,10 +84,10 @@ You don't need to do a full phase in one go.
 - [x] Add RLS policies for meeting-org relationship
 - [ ] Create meeting creation wizard page
 - [ ] Create `meeting-create.js` component (multi-step wizard)
-- [ ] Create `meeting-card.js` component
+- [x] Create `meeting-card.js` component
 - [ ] Create `meeting-settings.js` component
 - [ ] Create `theme-picker.js` component
-- [ ] Update dashboard to show meetings grouped by organization
+- [x] Update dashboard to show meetings grouped by organization
 - [ ] **Test**: Create meeting under organization
 - [ ] **Test**: Update meeting title/config
 - [ ] **Test**: RLS: only org members can see/edit meeting
@@ -252,7 +252,18 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 3: Meeting Creation - UI components next
 
-### Completed This Session (Meeting-Org Schema)
+### Completed This Session (Meeting UI Components)
+- [x] Created `meeting-card.js` component with:
+  - Display for meeting title, ID, creation date
+  - Sak (agenda item) count
+  - Links to meeting settings and admin panel
+  - Consistent styling with org-card component
+- [x] Updated `dashboard.js` to show meetings grouped by organization:
+  - Each organization section shows its meetings in a grid
+  - "Nytt mote" (new meeting) button for admins/owners
+  - GraphQL query includes organizationMeetings with saks count
+
+### Completed Previous Session (Meeting-Org Schema)
 - [x] Created migration `017-meeting-organization.sql` with:
   - `organization_id` column on `meeting` table (FK to `organization`)
   - `created_by` column on `meeting` table (FK to `user_account`)
