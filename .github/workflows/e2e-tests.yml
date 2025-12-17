@@ -1,0 +1,122 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup PostgreSQL
+        run: |
+          echo "=== Detecting PostgreSQL version ==="
+          # Find installed PostgreSQL version
+          PG_VERSION=$(psql --version | grep -oP '\d+' | head -1)
+          echo "PostgreSQL version detected: $PG_VERSION"
+
+          # Show available PostgreSQL packages
+          echo "=== Available PostgreSQL packages ==="
+          apt-cache search postgresql-.*-wal2json || true
+
+          echo "=== Starting PostgreSQL service ==="
+          sudo systemctl start postgresql
+          sudo systemctl status postgresql --no-pager || true
+
+          echo "=== Installing wal2json extension ==="
+          # Try to install wal2json for detected version, fall back to common versions
+          sudo apt-get update -qq
+          if apt-cache show postgresql-${PG_VERSION}-wal2json > /dev/null 2>&1; then
+            echo "Installing postgresql-${PG_VERSION}-wal2json"
+            sudo apt-get install -y postgresql-${PG_VERSION}-wal2json
+          else
+            echo "postgresql-${PG_VERSION}-wal2json not found, trying alternative sources..."
+            # Add PostgreSQL official repository
+            sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+            sudo apt-get update -qq
+
+            # Try again with updated repos
+            if apt-cache show postgresql-${PG_VERSION}-wal2json > /dev/null 2>&1; then
+              echo "Installing postgresql-${PG_VERSION}-wal2json from pgdg"
+              sudo apt-get install -y postgresql-${PG_VERSION}-wal2json
+            else
+              echo "ERROR: Cannot find wal2json for PostgreSQL $PG_VERSION"
+              echo "Available versions:"
+              apt-cache search postgresql-.*-wal2json
+              exit 1
+            fi
+          fi
+
+          echo "=== Configuring PostgreSQL for logical replication ==="
+          sudo -u postgres psql -c "ALTER SYSTEM SET wal_level = logical;"
+          sudo -u postgres psql -c "ALTER SYSTEM SET max_wal_senders = 10;"
+          sudo -u postgres psql -c "ALTER SYSTEM SET max_replication_slots = 10;"
+
+          echo "=== Restarting PostgreSQL ==="
+          sudo systemctl restart postgresql
+          sudo systemctl status postgresql --no-pager || true
+
+          echo "=== Creating application database user ==="
+          sudo -u postgres psql -c "CREATE USER roiheimen_postgraphile WITH PASSWORD 'xyz' SUPERUSER;"
+
+          echo "=== Verifying wal2json installation ==="
+          sudo -u postgres psql -c "SELECT * FROM pg_available_extensions WHERE name = 'wal2json';"
+
+      - name: Install dependencies
+        run: |
+          yarn install
+          cd pkg/server && yarn install
+          cd ../web && yarn install
+          cd ../../e2e && yarn install
+
+      - name: Install Playwright browsers
+        run: |
+          cd e2e
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: |
+          echo "=== Environment check ==="
+          echo "Node version: $(node --version)"
+          echo "Yarn version: $(yarn --version)"
+          echo "PostgreSQL status:"
+          sudo systemctl status postgresql --no-pager || true
+
+          echo "=== Running E2E tests ==="
+          yarn test:e2e
+        env:
+          CI: true
+          DATABASE_URL: postgres://roiheimen_postgraphile:xyz@localhost/roiheimen_test
+          OWNER_DATABASE_URL: postgres://postgres@localhost/roiheimen_test
+          NODE_ENV: test
+          PGHOST: localhost
+          PGPORT: 5432
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
+      - name: Upload test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: e2e/test-results/
+          retention-days: 7
