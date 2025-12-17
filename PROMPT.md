@@ -76,12 +76,12 @@ You don't need to do a full phase in one go.
 - [x] **Test**: Dashboard shows user's organizations
 
 ### Phase 3: Meeting Creation
-- [ ] Add `organization_id` column to `meeting` table
-- [ ] Add `created_by` column to `meeting` table
-- [ ] Implement `create_meeting(org_id, id, title, config)` function
-- [ ] Implement `update_meeting(meeting_id, title, config)` function
-- [ ] Implement `delete_meeting(meeting_id)` function
-- [ ] Add RLS policies for meeting-org relationship
+- [x] Add `organization_id` column to `meeting` table
+- [x] Add `created_by` column to `meeting` table
+- [x] Implement `create_meeting(org_id, id, title, config)` function
+- [x] Implement `update_meeting(meeting_id, title, config)` function
+- [x] Implement `delete_meeting(meeting_id)` function
+- [x] Add RLS policies for meeting-org relationship
 - [ ] Create meeting creation wizard page
 - [ ] Create `meeting-create.js` component (multi-step wizard)
 - [ ] Create `meeting-card.js` component
@@ -250,9 +250,22 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 3: Meeting Creation - starting next
+- [ ] Phase 3: Meeting Creation - UI components next
 
-### Completed This Session (RLS Tests)
+### Completed This Session (Meeting-Org Schema)
+- [x] Created migration `017-meeting-organization.sql` with:
+  - `organization_id` column on `meeting` table (FK to `organization`)
+  - `created_by` column on `meeting` table (FK to `user_account`)
+  - Indexes for both new columns
+  - `create_meeting(org_id, meeting_id, meeting_title, meeting_config)` function
+  - `update_meeting(meeting_id, new_title, new_config)` function
+  - `delete_meeting(meeting_id)` function
+  - `organization_meetings(org)` function to get meetings for an org
+  - RLS policies: select_meeting_org, insert_meeting_org, update_meeting_org, delete_meeting_org
+  - Permission grants for roiheimen_user role
+- [x] Updated `pkg/server/db.sql` with same schema changes
+
+### Previous Session (RLS Tests)
 - [x] Fixed organization tests - all 14 tests now pass
 - [x] Fixed `createVerifiedUser` helper to use `page.route()` interception to prevent
   redirect issues caused by old meeting-based auth system
