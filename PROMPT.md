@@ -65,7 +65,7 @@ You don't need to do a full phase in one go.
 - [x] Create `org-card.js` component
 - [x] Create `org-create.js` component
 - [x] Create `org-settings.js` component
-- [ ] Create `org-members.js` component
+- [x] Create `org-members.js` component
 - [ ] Add organizations Redux bundle to `state.js`
 - [x] **Test**: Create organization, verify owner membership
 - [x] **Test**: Update organization name/config
@@ -253,6 +253,21 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 2: Organizations - UI components and remaining tests
 
 ### Completed This Session
+- [x] Created `org-members.js` component with:
+  - Member list with name, email, role badges
+  - Invite form for admins/owners
+  - Remove member functionality with confirmation
+  - Pending invites display
+  - Role-based permissions (owner can invite any role, admin can only invite members)
+- [x] Created `org-members-page.js` wrapper component
+- [x] Created `/org-medlemer.html` page
+- [x] Created `pkg/server/migrations/016-org-members-view.sql` with:
+  - `get_organization_members(org_id)` function returning member info with user data
+  - `organization_member_info` composite type
+  - RLS policy `select_org_member_user_account` to allow viewing fellow org members' user_account data
+- [x] Updated `pkg/server/db.sql` with the same function, type, and RLS policy
+
+### Previous Session (org-settings)
 - [x] Created `org-settings.js` component with:
   - Organization name editing (admin/owner only)
   - Read-only slug display

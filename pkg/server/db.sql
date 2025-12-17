@@ -1099,6 +1099,59 @@ create or replace function roiheimen.my_role_in_organization(
 $$ language sql stable;
 comment on function roiheimen.my_role_in_organization(roiheimen.organization) is 'Returns the current user''s role in the given organization';
 
+-- organization_member_info: Composite type for org member with user info
+create type roiheimen.organization_member_info as (
+  member_id integer,
+  user_id integer,
+  email text,
+  name text,
+  role roiheimen.organization_role,
+  joined_at timestamptz
+);
+
+-- get_organization_members: Get all members of an organization with user info
+create or replace function roiheimen.get_organization_members(
+  org_id integer
+) returns setof roiheimen.organization_member_info as $$
+declare
+  current_user_id integer;
+begin
+  current_user_id := nullif(current_setting('jwt.claims.user_id', true), '')::integer;
+
+  if current_user_id is null then
+    raise exception 'You must be logged in to view organization members';
+  end if;
+
+  -- Verify user is a member of this organization
+  if not exists (
+    select 1 from roiheimen.organization_member
+    where organization_id = org_id and user_id = current_user_id
+  ) then
+    raise exception 'You are not a member of this organization';
+  end if;
+
+  return query
+    select
+      om.id as member_id,
+      om.user_id,
+      ua.email,
+      ua.name,
+      om.role,
+      om.created_at as joined_at
+    from roiheimen.organization_member om
+    join roiheimen.user_account ua on ua.id = om.user_id
+    where om.organization_id = org_id
+    order by
+      case om.role
+        when 'owner' then 1
+        when 'admin' then 2
+        else 3
+      end,
+      ua.name;
+end;
+$$ language plpgsql stable security definer;
+comment on function roiheimen.get_organization_members(integer) is 'Returns all members of an organization with their user info';
+
 -- Permissions
 
 alter default privileges revoke execute on functions from public;
@@ -1185,6 +1238,7 @@ grant execute on function roiheimen.delete_organization(integer) to roiheimen_us
 grant execute on function roiheimen.my_organizations() to roiheimen_user;
 grant execute on function roiheimen.get_organization_by_slug(text) to roiheimen_user;
 grant execute on function roiheimen.my_role_in_organization(roiheimen.organization) to roiheimen_user;
+grant execute on function roiheimen.get_organization_members(integer) to roiheimen_user;
 
 -- Row lewel security policy
 alter table roiheimen.meeting enable row level security;
@@ -1310,6 +1364,19 @@ create policy select_own_user_account on roiheimen.user_account
 create policy update_own_user_account on roiheimen.user_account
   for update to roiheimen_user
   using (id = nullif(current_setting('jwt.claims.user_id', true), '')::integer);
+
+-- Allow viewing user_account of fellow org members
+create policy select_org_member_user_account on roiheimen.user_account
+  for select to roiheimen_user
+  using (
+    exists (
+      select 1
+      from roiheimen.organization_member om_self
+      join roiheimen.organization_member om_target on om_target.organization_id = om_self.organization_id
+      where om_self.user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer
+        and om_target.user_id = roiheimen.user_account.id
+    )
+  );
 
 -- Organization RLS
 alter table roiheimen.organization enable row level security;
