@@ -1,6 +1,7 @@
 import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
+import "./breadcrumbs.js";
 
 define("RoiMeetingCreate", {
   oninit() {
@@ -290,7 +291,19 @@ define("RoiMeetingCreate", {
     const meetingIdInput = this.querySelector?.('input[name="meetingId"]');
     const currentId = meetingIdInput?.value || '';
 
+    const breadcrumbItems = [
+      { label: "Oversikt", href: "/oversikt.html" },
+    ];
+    if (organization) {
+      breadcrumbItems.push({
+        label: organization.name,
+        href: `/org-innstillingar.html?slug=${organization.slug}`,
+      });
+    }
+    breadcrumbItems.push({ label: "Nytt mote" });
+
     return this.html`
+    <roi-breadcrumbs .items=${breadcrumbItems}></roi-breadcrumbs>
     ${organization ? html`
       <div class="org-info">
         Opprettar mote under <strong>${organization.name}</strong>

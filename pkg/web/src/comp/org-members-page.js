@@ -2,6 +2,7 @@ import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
 import "./org-members.js";
+import "./breadcrumbs.js";
 
 define("RoiOrgMembersPage", {
   oninit() {
@@ -123,7 +124,14 @@ define("RoiOrgMembersPage", {
       `;
     }
 
+    const breadcrumbItems = [
+      { label: "Oversikt", href: "/oversikt.html" },
+      { label: org.name, href: `/org-innstillingar.html?slug=${slug}` },
+      { label: "Medlemer" },
+    ];
+
     return this.html`
+      <roi-breadcrumbs .items=${breadcrumbItems}></roi-breadcrumbs>
       <div class="org-header">
         <h2>${org.name}</h2>
         <nav class="org-nav">
@@ -132,9 +140,6 @@ define("RoiOrgMembersPage", {
         </nav>
       </div>
       <div is="roi-org-members" .org=${org}></div>
-      <div class="back-link">
-        <a href="/oversikt.html">&larr; Tilbake til oversikt</a>
-      </div>
     `;
   },
 });

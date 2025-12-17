@@ -130,7 +130,7 @@ You don't need to do a full phase in one go.
 - [x] Create global navigation component
 - [x] Add org switcher dropdown
 - [x] Add user menu (Profil, Logg ut)
-- [ ] Add breadcrumb navigation
+- [x] Add breadcrumb navigation
 - [ ] Add activity feed on dashboard
 - [x] Update `index.html` to redirect to dashboard if logged in
 - [ ] Remove legacy `person_account` table (after confirming no use)
@@ -256,7 +256,24 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Global Navigation)
+### Completed This Iteration (Breadcrumb Navigation)
+- [x] Created `pkg/web/src/comp/breadcrumbs.js` component with:
+  - Hierarchical navigation with home icon
+  - Support for any number of breadcrumb items
+  - Current page (last item) shown without link
+  - Accessible with aria-label
+  - Consistent styling with theme variables
+  - Norwegian Nynorsk "Brødsmulesti" aria label
+- [x] Updated pages to use breadcrumbs:
+  - `org-settings-page.js` - Oversikt > Org Name > Innstillingar
+  - `org-members-page.js` - Oversikt > Org Name > Medlemer
+  - `meeting-settings-page.js` - Oversikt > Org Name > Meeting Title > Innstillingar
+  - `meeting-create.js` - Oversikt > Org Name > Nytt mote
+  - `org-create.js` - Oversikt > Ny organisasjon
+- [x] Removed redundant "Tilbake til oversikt" links (breadcrumbs provide this navigation)
+- [x] All 25 organization tests pass
+
+### Completed Previous Iteration (Global Navigation)
 - [x] Created `pkg/web/src/comp/global-nav.js` component with:
   - Logo/brand link to home (/oversikt.html when logged in, / when not)
   - Organization switcher dropdown showing all user's organizations

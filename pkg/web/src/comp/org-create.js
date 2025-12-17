@@ -1,6 +1,7 @@
 import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
+import "./breadcrumbs.js";
 
 define("RoiOrgCreate", {
   oninit() {
@@ -199,7 +200,13 @@ define("RoiOrgCreate", {
     const slugInput = this.querySelector?.('input[name="slug"]');
     const currentSlug = slugInput?.value || '';
 
+    const breadcrumbItems = [
+      { label: "Oversikt", href: "/oversikt.html" },
+      { label: "Ny organisasjon" },
+    ];
+
     this.html`
+    <roi-breadcrumbs .items=${breadcrumbItems}></roi-breadcrumbs>
     ${this.children}
     <form onsubmit=${this} oninput=${this}>
       <label for="name">Namn</label>

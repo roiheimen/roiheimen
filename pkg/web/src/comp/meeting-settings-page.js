@@ -2,6 +2,7 @@ import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
 import "./meeting-settings.js";
+import "./breadcrumbs.js";
 
 define("RoiMeetingSettingsPage", {
   oninit() {
@@ -137,7 +138,22 @@ define("RoiMeetingSettingsPage", {
       `;
     }
 
+    const breadcrumbItems = [
+      { label: "Oversikt", href: "/oversikt.html" },
+    ];
+    if (organization) {
+      breadcrumbItems.push({
+        label: organization.name,
+        href: `/org-innstillingar.html?slug=${organization.slug}`,
+      });
+    }
+    breadcrumbItems.push(
+      { label: meeting.title, href: `/mote-innstillingar.html?id=${meetingId}` },
+      { label: "Innstillingar" }
+    );
+
     return this.html`
+      <roi-breadcrumbs .items=${breadcrumbItems}></roi-breadcrumbs>
       <div class="meeting-header">
         <h2>
           ${meeting.title}
@@ -149,9 +165,6 @@ define("RoiMeetingSettingsPage", {
         </nav>
       </div>
       <div is="roi-meeting-settings" .meeting=${meeting} .organization=${organization}></div>
-      <div class="back-link">
-        <a href="/oversikt.html">← Tilbake til oversikt</a>
-      </div>
     `;
   },
 });

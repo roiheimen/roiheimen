@@ -2,6 +2,7 @@ import { define, html } from "/web_modules/heresy.js";
 import { gql } from "../lib/graphql.js";
 import storage from "../lib/storage.js";
 import "./org-settings.js";
+import "./breadcrumbs.js";
 
 define("RoiOrgSettingsPage", {
   oninit() {
@@ -123,7 +124,14 @@ define("RoiOrgSettingsPage", {
       `;
     }
 
+    const breadcrumbItems = [
+      { label: "Oversikt", href: "/oversikt.html" },
+      { label: org.name, href: `/org-innstillingar.html?slug=${slug}` },
+      { label: "Innstillingar" },
+    ];
+
     return this.html`
+      <roi-breadcrumbs .items=${breadcrumbItems}></roi-breadcrumbs>
       <div class="org-header">
         <h2>${org.name}</h2>
         <nav class="org-nav">
@@ -132,9 +140,6 @@ define("RoiOrgSettingsPage", {
         </nav>
       </div>
       <div is="roi-org-settings" .org=${org}></div>
-      <div class="back-link">
-        <a href="/oversikt.html">← Tilbake til oversikt</a>
-      </div>
     `;
   },
 });
