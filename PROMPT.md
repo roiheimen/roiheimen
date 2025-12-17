@@ -95,13 +95,17 @@ You don't need to do a full phase in one go.
 - [x] **Test**: Dashboard shows meetings per organization
 
 ### Phase 4: Invite System
-- [ ] Create `roiheimen.meeting_invite` table (id, meeting_id, code, max_uses, uses_count, expires_at, created_by, created_at)
-- [ ] Create `roiheimen.meeting_participant` table (id, meeting_id, user_id, display_name, participant_num, is_organizer, joined_via, created_at)
-- [ ] Create meeting-scoped JWT type
-- [ ] Implement `create_invite_code(meeting_id, max_uses, expires_at)` function
-- [ ] Implement `validate_invite_code(code)` function
-- [ ] Implement `join_meeting(meeting_id, invite_code, display_name)` function
-- [ ] Implement `get_meeting_token(meeting_id)` function
+- [x] Create `roiheimen.meeting_invite` table (id, meeting_id, code, max_uses, uses_count, expires_at, created_by, created_at)
+- [x] Create `roiheimen.meeting_participant` table (id, meeting_id, user_id, display_name, participant_num, is_organizer, joined_via, created_at)
+- [x] Create meeting-scoped JWT type (uses existing jwt_token type)
+- [x] Implement `create_invite_code(meeting_id, max_uses, expires_at)` function
+- [x] Implement `validate_invite_code(code)` function
+- [x] Implement `join_meeting(meeting_id, invite_code, display_name)` function
+- [x] Implement `get_meeting_token(meeting_id)` function
+- [x] Implement `delete_invite_code(invite_id)` function
+- [x] Implement `get_meeting_invites(meeting_id)` function
+- [x] Implement `get_meeting_participants(meeting_id)` function
+- [x] Add RLS policies for meeting_invite and meeting_participant tables
 - [ ] Create `/bli-med.html` invite code entry page
 - [ ] Create `/i/{code}` direct invite link landing page
 - [ ] Create `invite-generator.js` component
@@ -250,9 +254,33 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 4: Invite System - next phase to implement
+- [ ] Phase 4: Invite System - database schema and functions complete, UI components next
 
-### Completed This Iteration (Meeting Settings & Theme Picker)
+### Completed This Iteration (Meeting Invite System - Database Schema)
+- [x] Created `roiheimen.meeting_invite` table with:
+  - id, meeting_id, code, max_uses, uses_count, expires_at, created_by, created_at
+  - Unique code index
+  - FK to meeting and user_account tables
+- [x] Created `roiheimen.meeting_participant` table with:
+  - id, meeting_id, user_id, display_name, participant_num, is_organizer, joined_via, created_at
+  - Unique constraints on (meeting_id, user_id) and (meeting_id, participant_num)
+  - FK to meeting, user_account, and meeting_invite tables
+- [x] Implemented invite functions:
+  - `create_invite_code(meeting_id, max_uses, expires_at)` - generates 8-char unique codes
+  - `validate_invite_code(code)` - validates code and returns meeting info
+  - `join_meeting(meeting_id, invite_code, display_name)` - joins user as participant
+  - `get_meeting_token(meeting_id)` - returns meeting-scoped JWT
+  - `delete_invite_code(invite_id)` - deletes an invite code
+  - `get_meeting_invites(meeting_id)` - lists all invites for a meeting
+  - `get_meeting_participants(meeting_id)` - lists all participants
+- [x] Added RLS policies for both tables:
+  - Org admins/owners can manage invites
+  - Participants and org members can view participants
+  - Users can add themselves as participants via join_meeting
+- [x] Created migration file `pkg/server/migrations/018-meeting-invites.sql`
+- [x] Updated `pkg/server/db.sql` with all new tables, functions, permissions, and RLS
+
+### Previous Session (Meeting Settings & Theme Picker)
 - [x] Created `meeting-settings.js` component with:
   - Edit meeting title
   - Display meeting URLs (queue, manage, gfx, screen, fullscreen)
