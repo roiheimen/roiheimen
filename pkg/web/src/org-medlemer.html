@@ -2,6 +2,7 @@
 <meta charset=utf8>
 <title>Medlemer | Roiheimen</title>
 <link rel=stylesheet href=style.css>
+<script type=module src=/comp/global-nav.js></script>
 <script type=module src=/comp/org-members-page.js></script>
 <style>
 .org-members-container {
@@ -11,12 +12,7 @@
 </style>
 
 <body>
-  <header>
-    <h1>
-      <span>roiheimen</span><br>
-      Medlemer
-    </h1>
-  </header>
+  <roi-global-nav></roi-global-nav>
   <section class="card org-members-container">
     <roi-org-members-page>
       <p>Lastar...</p>

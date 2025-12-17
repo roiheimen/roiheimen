@@ -2,6 +2,7 @@
 <meta charset=utf8>
 <title>Moteinnstillingar | Roiheimen</title>
 <link rel=stylesheet href=style.css>
+<script type=module src=/comp/global-nav.js></script>
 <script type=module src=/comp/meeting-settings-page.js></script>
 <style>
 .meeting-settings-container {
@@ -11,12 +12,7 @@
 </style>
 
 <body>
-  <header>
-    <h1>
-      <span>roiheimen</span><br>
-      Moteinnstillingar
-    </h1>
-  </header>
+  <roi-global-nav></roi-global-nav>
   <section class="card meeting-settings-container">
     <roi-meeting-settings-page>
       <p>Lastar...</p>

@@ -2,21 +2,29 @@
 <meta charset=utf8>
 <title>Bli med i mote | Roiheimen</title>
 <link rel=stylesheet href=style.css>
+<script type=module src=/comp/global-nav.js></script>
 <script type=module src=/db/state.js></script>
 <script type=module src=/comp/join-meeting.js></script>
 <style>
 .card.join {
   min-height: 200px;
 }
+.page-header {
+  text-align: center;
+  padding: 30px 20px 10px;
+}
+.page-header h1 {
+  font-size: 28px;
+  color: #333;
+  margin: 0;
+}
 </style>
 
 <body>
-  <header>
-    <h1>
-      <span>roiheimen</span><br>
-      Bli med i mote
-    </h1>
-  </header>
+  <roi-global-nav></roi-global-nav>
+  <div class="page-header">
+    <h1>Bli med i mote</h1>
+  </div>
   <section class="card sm join">
     <roi-join-meeting>
       <p>Skriv inn invitasjonskoden for a bli med i motet</p>

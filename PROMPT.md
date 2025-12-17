@@ -127,12 +127,12 @@ You don't need to do a full phase in one go.
 - [x] Update `manage.html` with new tabs (Deltakarar, Saker, Avstemmingar, Invitasjonar)
 - [x] Update `manage.html` participant management to use meeting_participant
 - [x] Verify `gfx.html`, `screen.html`, `fullscreen.html` work with new tables
-- [ ] Create global navigation component
-- [ ] Add org switcher dropdown
-- [ ] Add user menu (Profil, Logg ut)
+- [x] Create global navigation component
+- [x] Add org switcher dropdown
+- [x] Add user menu (Profil, Logg ut)
 - [ ] Add breadcrumb navigation
 - [ ] Add activity feed on dashboard
-- [ ] Update `index.html` to redirect to dashboard if logged in
+- [x] Update `index.html` to redirect to dashboard if logged in
 - [ ] Remove legacy `person_account` table (after confirming no use)
 - [ ] Remove legacy `authenticate(num, meeting_id, password)` function
 - [ ] Clean up old person table columns
@@ -256,7 +256,22 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Display Pages Tests)
+### Completed This Iteration (Global Navigation)
+- [x] Created `pkg/web/src/comp/global-nav.js` component with:
+  - Logo/brand link to home (/oversikt.html when logged in, / when not)
+  - Organization switcher dropdown showing all user's organizations
+  - Role badges (Eigar/Admin/Medlem) for each organization
+  - User menu dropdown with user email, Oversikt link, and Logg ut
+  - Click-outside handling to close dropdowns
+  - Responsive styling with CSS variables support
+  - Norwegian Nynorsk UI text
+- [x] Updated `oversikt.html` to use global-nav component
+- [x] Updated `org-innstillingar.html` to use global-nav component
+- [x] Updated `org/ny.html` to use global-nav component
+- [x] Updated `index.html` to redirect to /oversikt.html if user is logged in with user token
+- [x] All 25 organization tests pass
+
+### Completed Previous Iteration (Display Pages Tests)
 - [x] Created `e2e/tests/display-pages.spec.ts` test file with 7 tests:
   - gfx.html loads with meeting-scoped JWT
   - screen.html loads with meeting-scoped JWT

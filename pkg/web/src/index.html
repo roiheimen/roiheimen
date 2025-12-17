@@ -8,6 +8,7 @@
 <script type=module src=/comp/meetingList.js></script>
 <script type=module src=/comp/login.js></script>
 <script type=module src=/comp/title.js></script>
+<script type=module src=/comp/global-nav.js></script>
 <style>
 .card.login {
   min-height: 200px;
@@ -26,6 +27,23 @@
   font-size: 20px;
 }
 </style>
+<script>
+// Redirect to dashboard if logged in (new user system)
+(function() {
+  try {
+    var creds = JSON.parse(localStorage.getItem('creds') || '{}');
+    if (creds.jwt && !location.search.includes('logout')) {
+      // Decode JWT to check if it's a user token (has email claim)
+      var payload = JSON.parse(atob(creds.jwt.split('.')[1]));
+      if (payload.email) {
+        location.replace('/oversikt.html');
+      }
+    }
+  } catch (e) {
+    // Ignore errors - JWT might be malformed or old format
+  }
+})();
+</script>
 </head>
 <body data-externals>
   <header>
