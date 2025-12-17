@@ -105,7 +105,16 @@ sudo apt install postgresql-12-wal2json
 
 ## Testing the App
 
-To verify the app works:
+### Automated E2E Tests (Playwright)
+```bash
+yarn test:e2e          # Run all tests (auto-starts servers with test DB)
+yarn test:e2e:ui       # Interactive Playwright UI
+yarn test:e2e:debug    # Verbose debug output
+```
+
+Tests live in `e2e/tests/`. Add new `.spec.ts` files there.
+
+### Manual Testing
 1. Run `./test-app.sh` (or just `yarn start` if postgres is running)
 2. Use Chrome DevTools MCP to navigate to http://localhost:8080
 3. Click "Test" meeting, login with num=1000, password=test

@@ -54,7 +54,19 @@ SELECT * FROM pg_replication_slots;
 
 ## Testing
 
-### Quick start
+### Automated E2E Tests (Playwright)
+```bash
+yarn test:e2e          # Run all tests (auto-starts servers with test DB)
+yarn test:e2e:ui       # Interactive Playwright UI
+yarn test:e2e:debug    # Verbose debug output
+```
+
+Tests are in `e2e/tests/`. The fixture auto-starts:
+- Test database (`roiheimen_test`) via `scripts/setup-test-db.sh`
+- API server on port 3000
+- Web server on port 8080
+
+### Quick manual start
 ```bash
 ./test-app.sh
 # Open http://localhost:8080
@@ -70,7 +82,7 @@ SELECT * FROM pg_replication_slots;
 3. Open another browser, log in as participant (10)
 4. Add speeches and vote on referendums
 
-### Automated testing with Chrome DevTools MCP
+### Ad-hoc testing with Chrome DevTools MCP
 With Claude Code and chrome-devtools MCP connected:
 ```
 navigate to http://localhost:8080

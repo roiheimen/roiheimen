@@ -1,0 +1,18 @@
+# Ralph Orchestrator Configuration
+agent: auto
+prompt_file: PROMPT.md
+max_iterations: 100
+max_runtime: 14400
+verbose: false
+
+# Adapter configurations
+adapters:
+  claude:
+    enabled: true
+    timeout: 300
+  q:
+    enabled: true
+    timeout: 300
+  gemini:
+    enabled: true
+    timeout: 300
