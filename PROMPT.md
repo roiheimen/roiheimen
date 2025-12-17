@@ -265,9 +265,14 @@ APP_URL=https://roiheimen.example.com
   - Click-outside handling to close dropdowns
   - Responsive styling with CSS variables support
   - Norwegian Nynorsk UI text
-- [x] Updated `oversikt.html` to use global-nav component
-- [x] Updated `org-innstillingar.html` to use global-nav component
-- [x] Updated `org/ny.html` to use global-nav component
+- [x] Updated pages to use global-nav component:
+  - `oversikt.html` - dashboard page
+  - `org-innstillingar.html` - organization settings
+  - `org/ny.html` - create organization
+  - `org-medlemer.html` - organization members
+  - `mote-innstillingar.html` - meeting settings
+  - `meeting/ny.html` - create meeting
+  - `bli-med.html` - join meeting
 - [x] Updated `index.html` to redirect to /oversikt.html if user is logged in with user token
 - [x] All 25 organization tests pass
 
