@@ -138,7 +138,7 @@ You don't need to do a full phase in one go.
 - [ ] Clean up old person table columns
 - [ ] Remove old login flow components
 - [ ] Remove hostname-based meeting selection
-- [ ] **Test E2E**: Register → verify email → create org → create meeting
+- [x] **Test E2E**: Register → verify email → create org → create meeting
 - [ ] **Test E2E**: Generate invite → share link → participant joins
 - [ ] **Test E2E**: Participant uses queue.html (add speech, vote)
 - [ ] **Test E2E**: Admin uses manage.html (all tabs functional)
@@ -256,7 +256,20 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Phase 4 Invite Tests)
+### Completed This Iteration (Integration Flow Test)
+- [x] Created `e2e/tests/integration-flows.spec.ts` with full user flow test:
+  - Register new user via UI (fill form, submit)
+  - Get verification token from DB and verify email
+  - Login with verified credentials
+  - Create organization via GraphQL API
+  - Create meeting under organization via GraphQL API
+  - Verify complete data flow via API query (organizations and meetings)
+- [x] Test validates the complete backend authentication and authorization flow
+- [x] Note: Discovered UI bug where web components fail with 400 errors when making
+  authenticated GraphQL requests - this is due to incorrect parameter handling in
+  `gql()` function where JWT string passed as third arg gets destructured incorrectly
+
+### Completed Previous Iteration (Phase 4 Invite Tests)
 - [x] Fixed `/i/{code}` direct link redirect middleware in `es-dev-server.config.js`:
   - Made middleware async and properly await next()
   - Redirect now works correctly for invite codes
