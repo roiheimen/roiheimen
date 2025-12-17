@@ -1,28 +1,142 @@
 <!DOCTYPE html>
 <meta charset=utf8>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Registrer deg | Roiheimen</title>
 <link rel=stylesheet href=style.css>
 <script type=module src=/db/state.js></script>
 <script type=module src=/comp/signup.js></script>
 <style>
-.card.signup {
-  min-height: 200px;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+}
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+  animation: fadeIn 0.6s ease-out;
+}
+.auth-logo-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--roi-theme-main-color);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 12px rgba(43, 44, 58, 0.25);
+}
+.auth-logo-icon svg {
+  width: 32px;
+  height: 32px;
+  fill: white;
+}
+.auth-logo h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--roi-theme-main-color);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+.auth-logo p {
+  color: #64748b;
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+.auth-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 36px;
+  width: 100%;
+  max-width: 400px;
+  animation: fadeInUp 0.5s ease-out;
+}
+.auth-card h2 {
+  margin: 0 0 24px;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+}
+.auth-card .subtitle {
+  text-align: center;
+  color: #64748b;
+  margin: -16px 0 24px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  color: #64748b;
+  font-size: 0.9rem;
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+.auth-footer a {
+  color: var(--roi-theme-main-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 28px 24px;
+  }
+  .auth-logo h1 {
+    font-size: 1.875rem;
+  }
+  .auth-logo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .auth-logo-icon svg {
+    width: 28px;
+    height: 28px;
+  }
 }
 </style>
 
-<body>
-  <header>
-    <h1>
-      <span>roiheimen</span><br>
-      Registrer deg
-    </h1>
-  </header>
-  <section class="card sm signup">
-    <roi-signup>
-      <p>Opprett ein ny konto</p>
-    </roi-signup>
-  </section>
-  <section class="card sm" style="margin-top: 20px; text-align: center">
-    <p>Har du allereie ein konto? <a href="/">Logg inn</a></p>
-  </section>
+<body class="auth-page">
+  <div class="auth-logo">
+    <div class="auth-logo-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 13h-.68l-2 2h1.91L19 17H5l1.78-2h2.05l-2-2H6l-3 3v4c0 1.1.89 2 1.99 2H19a2 2 0 002-2v-4l-3-3zm-1-5.05l-4.95 4.95-3.54-3.54 4.95-4.95L17 7.95zm-4.24-5.66L6.39 8.66a.996.996 0 000 1.41l4.95 4.95c.39.39 1.02.39 1.41 0l6.36-6.36a.996.996 0 000-1.41L14.16 2.3a.975.975 0 00-1.4-.01z"/>
+      </svg>
+    </div>
+    <h1>Roiheimen</h1>
+    <p>Røystesystem for store møte</p>
+  </div>
+
+  <div class="auth-card">
+    <h2>Opprett konto</h2>
+    <roi-signup></roi-signup>
+  </div>
+
+  <p class="auth-footer">
+    Har du allereie ein konto? <a href="/">Logg inn</a>
+  </p>
 </body>
