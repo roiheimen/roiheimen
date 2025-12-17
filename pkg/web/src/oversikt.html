@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset=utf8>
+<title>Oversikt | Roiheimen</title>
+<link rel=stylesheet href=style.css>
+<script type=module src=/db/state.js></script>
+<script type=module src=/comp/dashboard.js></script>
+<style>
+.dashboard {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.dashboard h2 {
+  margin-top: 30px;
+}
+</style>
+
+<body>
+  <header>
+    <h1>
+      <span>roiheimen</span><br>
+      Oversikt
+    </h1>
+  </header>
+  <section class="card dashboard">
+    <roi-dashboard>
+      <p>Lastar...</p>
+    </roi-dashboard>
+  </section>
+</body>

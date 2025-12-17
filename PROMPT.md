@@ -45,25 +45,29 @@ You don't need to do a full phase in one go.
 - [x] **Test**: Account locks after 3 failed attempts, unlocks after 5 min
 - [x] **Test**: Request password reset, verify token in DB
 - [x] **Test**: Reset password with token, login with new password
+- [ ] **Test**: The old 'voting' tests using the num/code test should still work, you must either
+  rework the test (how it logs in), or make a way to use the old login in the app. Until the new
+  system can also do the 'voting' test. (This has been postponed, because we can make the new user
+  do the voting test later).
 
 ### Phase 2: Organizations
-- [ ] Create `roiheimen.organization` table (id, slug, name, config, created_at)
-- [ ] Create `roiheimen.organization_member` table (org_id, user_id, role, created_at)
-- [ ] Implement `create_organization(slug, name)` function
-- [ ] Implement `invite_to_organization(org_id, email, role)` function
-- [ ] Implement `update_organization(org_id, name, config)` function
-- [ ] Implement `remove_organization_member(org_id, user_id)` function
-- [ ] Implement `delete_organization(org_id)` function
-- [ ] Add RLS policies for organization tables
-- [ ] Create `/oversikt.html` dashboard page
+- [x] Create `roiheimen.organization` table (id, slug, name, config, created_at)
+- [x] Create `roiheimen.organization_member` table (org_id, user_id, role, created_at)
+- [x] Implement `create_organization(slug, name)` function
+- [x] Implement `invite_to_organization(org_id, email, role)` function
+- [x] Implement `update_organization(org_id, name, config)` function
+- [x] Implement `remove_organization_member(org_id, user_id)` function
+- [x] Implement `delete_organization(org_id)` function
+- [x] Add RLS policies for organization tables
+- [x] Create `/oversikt.html` dashboard page
 - [ ] Create `/org/ny.html` organization creation page
-- [ ] Create `dashboard.js` component
+- [x] Create `dashboard.js` component
 - [ ] Create `org-card.js` component
 - [ ] Create `org-create.js` component
 - [ ] Create `org-settings.js` component
 - [ ] Create `org-members.js` component
 - [ ] Add organizations Redux bundle to `state.js`
-- [ ] **Test**: Create organization, verify owner membership
+- [x] **Test**: Create organization, verify owner membership
 - [ ] **Test**: Update organization name/config
 - [ ] **Test**: Invite member by email, verify pending invite
 - [ ] **Test**: RLS: non-member cannot see org data
@@ -246,20 +250,38 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 2: Organizations
+- [ ] Phase 2: Organizations - UI components and remaining tests
 
 ### Completed This Session
-- [x] Created `e2e/tests/user-auth.spec.ts` with 12 comprehensive tests:
-  - User Registration tests: register new user with token in DB, weak password fails, mismatched passwords fails
-  - Email Verification tests: verify with valid token, invalid token fails
-  - User Login tests: verified user gets JWT, unverified user fails, wrong password fails
-  - Brute Force Protection tests: account locks after 3 failed attempts
-  - Password Reset tests: request creates token in DB, reset with token works, invalid token fails
-- [x] Fixed `login.js` GraphQL mutation to use correct field name `jwtToken` (not `userJwtToken`)
-- [x] Fixed `password-reset-request.js` GraphQL mutation to use `string` return type (not `boolean`)
-- [x] Fixed `graphql.js` to throw errors when GraphQL returns errors (even with partial data)
-- [x] All 12 Phase 1 auth tests passing
+- [x] Created `roiheimen.organization` table with slug, name, config
+- [x] Created `roiheimen.organization_member` table with role enum (owner, admin, member)
+- [x] Created `roiheimen.organization_invite` table for pending email invites
+- [x] Implemented `create_organization(slug, name)` function - creates org and adds creator as owner
+- [x] Implemented `update_organization(org_id, new_name, new_config)` function - admin/owner only
+- [x] Implemented `invite_to_organization(org_id, email, role)` function - generates invite token
+- [x] Implemented `accept_organization_invite(token)` function - joins user to org
+- [x] Implemented `remove_organization_member(org_id, user_id)` function - with role-based permissions
+- [x] Implemented `delete_organization(org_id)` function - owner only
+- [x] Implemented `my_organizations()` function - lists current user's orgs
+- [x] Implemented `get_organization_by_slug(slug)` function - renamed to avoid PostGraphile conflict
+- [x] Implemented `my_role_in_organization(org)` function - returns user's role
+- [x] Added RLS policies for organization, organization_member, organization_invite tables
+- [x] Added permissions grants for roiheimen_user role
+- [x] Created `pkg/server/migrations/015-organizations.sql` migration file
+- [x] Created `/oversikt.html` dashboard page
+- [x] Created `comp/dashboard.js` component with organization list
+- [x] Created `e2e/tests/organizations.spec.ts` test file with organization tests
+- [x] First organization test (create + verify owner) passing
+- [x] All 12 Phase 1 auth tests still passing
+
+### Previous Session
+- [x] Created `e2e/tests/user-auth.spec.ts` with 12 comprehensive tests
+- [x] Fixed `login.js` GraphQL mutation to use correct field name `jwtToken`
+- [x] Fixed `password-reset-request.js` GraphQL mutation
+- [x] Fixed `graphql.js` error handling
 
 ### Next Steps
-1. Begin Phase 2: Organizations - create database tables and functions
-2. Update old voting.spec.ts tests to work with new auth system (if needed)
+1. Continue Phase 2: Create UI components (org-card, org-create, org-settings, org-members)
+2. Fix remaining organization e2e tests (timing/proxy issues)
+3. Add organizations Redux bundle to state.js
+4. Create `/org/ny.html` organization creation page
