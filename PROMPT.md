@@ -126,7 +126,7 @@ You don't need to do a full phase in one go.
 - [x] Update `queue.html` to use meeting-scoped JWT
 - [x] Update `manage.html` with new tabs (Deltakarar, Saker, Avstemmingar, Invitasjonar)
 - [x] Update `manage.html` participant management to use meeting_participant
-- [ ] Verify `gfx.html`, `screen.html`, `fullscreen.html` work with new tables
+- [x] Verify `gfx.html`, `screen.html`, `fullscreen.html` work with new tables
 - [ ] Create global navigation component
 - [ ] Add org switcher dropdown
 - [ ] Add user menu (Profil, Logg ut)
@@ -142,9 +142,9 @@ You don't need to do a full phase in one go.
 - [ ] **Test E2E**: Generate invite → share link → participant joins
 - [ ] **Test E2E**: Participant uses queue.html (add speech, vote)
 - [ ] **Test E2E**: Admin uses manage.html (all tabs functional)
-- [ ] **Test**: gfx.html displays speaker list correctly
-- [ ] **Test**: screen.html shows votes/results
-- [ ] **Test**: fullscreen.html works for audience display
+- [x] **Test**: gfx.html displays speaker list correctly
+- [x] **Test**: screen.html shows votes/results
+- [x] **Test**: fullscreen.html works for audience display
 - [ ] **Test**: Org switcher navigates between organizations
 - [ ] **Test**: User menu logout clears session
 
@@ -256,7 +256,22 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (manage.html Deltakarar Tab)
+### Completed This Iteration (Display Pages Tests)
+- [x] Created `e2e/tests/display-pages.spec.ts` test file with 7 tests:
+  - gfx.html loads with meeting-scoped JWT
+  - screen.html loads with meeting-scoped JWT
+  - fullscreen.html loads with meeting-scoped JWT
+  - gfx.html displays sak title correctly
+  - screen.html shows content when sak exists
+  - fullscreen.html works for audience display
+  - display pages work with participant JWT (via invite)
+- [x] All 7 display page tests pass
+- [x] Verified display pages work with meeting_participant system:
+  - Users joining via invite get a person record (via bridge migration)
+  - JWT contains person_id for compatibility with legacy components
+  - gfx.html, screen.html, fullscreen.html all render correctly
+
+### Completed Previous Iteration (manage.html Deltakarar Tab)
 - [x] Created `pkg/web/src/comp/participant-list.js` component:
   - Fetches participants using `getMeetingParticipants` GraphQL mutation
   - Displays participant number, display name, role (Arrangor/Deltakar), and join date
