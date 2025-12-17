@@ -107,7 +107,7 @@ define("RoiMeetingCard", {
             : `${sakCount} saker`}
         </span>
         <div class="meeting-links">
-          <a href=${`/meeting-innstillingar.html?id=${meeting.id}`} class="meeting-link secondary">Innstillingar</a>
+          <a href=${`/mote-innstillingar.html?id=${meeting.id}`} class="meeting-link secondary">Innstillingar</a>
           <a href=${`/manage.html?id=${meeting.id}`} class="meeting-link">Administrer</a>
         </div>
       </div>

@@ -85,8 +85,8 @@ You don't need to do a full phase in one go.
 - [x] Create meeting creation wizard page (`/meeting/ny.html`)
 - [x] Create `meeting-create.js` component (simple form, not multi-step wizard)
 - [x] Create `meeting-card.js` component
-- [ ] Create `meeting-settings.js` component
-- [ ] Create `theme-picker.js` component
+- [x] Create `meeting-settings.js` component
+- [x] Create `theme-picker.js` component
 - [x] Update dashboard to show meetings grouped by organization
 - [x] **Test**: Create meeting under organization
 - [x] **Test**: Update meeting title/config
@@ -250,9 +250,33 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 3: Meeting Creation - meeting-settings.js and theme-picker.js remain
+- [ ] Phase 4: Invite System - next phase to implement
 
-### Completed This Session (Meeting Creation UI & Tests)
+### Completed This Iteration (Meeting Settings & Theme Picker)
+- [x] Created `meeting-settings.js` component with:
+  - Edit meeting title
+  - Display meeting URLs (queue, manage, gfx, screen, fullscreen)
+  - Speaker list settings (speechDisabled, speechInnleggDisabled)
+  - Voting settings (hideClosedReferendumResults, gfxIframeOnQueue, stableChoices)
+  - YouTube video ID configuration
+  - External CSS URL configuration
+  - Delete meeting functionality (owner only)
+  - Role-based permissions (admin/owner can edit)
+- [x] Created `meeting-settings-page.js` wrapper component:
+  - Loads meeting and organization data from URL parameter
+  - Navigation between settings and admin panel
+- [x] Created `/mote-innstillingar.html` page
+- [x] Created `theme-picker.js` component with:
+  - Color inputs for main theme colors (mainColor, mainColor2, fontColor, videoBg)
+  - Font configuration (font, headFont)
+  - Size configuration (headSize, voteHeaderSize, voteFontSize)
+  - Live preview of colors
+  - Reset to defaults functionality
+  - Collapsible UI to save space
+- [x] Updated `meeting-card.js` to link to settings page
+- [x] Integrated theme-picker into meeting-settings form
+
+### Previous Session (Meeting Creation UI & Tests)
 - [x] Created `meeting-create.js` component with:
   - Organization lookup from URL query parameter
   - Auto-generates meeting ID from title (Norwegian-friendly)
