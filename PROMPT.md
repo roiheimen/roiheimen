@@ -113,13 +113,13 @@ You don't need to do a full phase in one go.
 - [x] Create `join-meeting.js` component
 - [x] Create `qr-code.js` component
 - [x] Update `manage.html` with "Invitasjonar" tab
-- [ ] **Test**: Generate invite code, verify in DB
-- [ ] **Test**: Join meeting via invite code
-- [ ] **Test**: Join meeting via direct link /i/{code}
-- [ ] **Test**: Invite with max_uses limit enforced
-- [ ] **Test**: Expired invite code rejected
-- [ ] **Test**: Meeting-scoped JWT grants queue.html access
-- [ ] **Test**: QR code generates valid link
+- [x] **Test**: Generate invite code, verify in DB
+- [x] **Test**: Join meeting via invite code
+- [x] **Test**: Invite with max_uses limit enforced
+- [x] **Test**: Expired invite code rejected
+- [x] **Test**: Meeting-scoped JWT grants queue.html access
+- [ ] **Test**: Join meeting via direct link /i/{code} (skipped - needs /i/ route implementation)
+- [ ] **Test**: QR code generates valid link (skipped - needs manage.html integration)
 
 ### Phase 5: Integration & Polish
 - [ ] Update `queue.html` to work with new meeting_participant table
@@ -254,9 +254,23 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 4: Invite System - Invitasjonar tab added, tests next
+- [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (manage.html Invitasjonar Tab)
+### Completed This Iteration (Phase 4 Invite System Tests)
+- [x] Created `e2e/tests/meeting-invites.spec.ts` test file with 21 tests
+- [x] All 19 core invite tests pass (2 UI integration tests skipped for future work)
+- [x] Tests cover:
+  - **Meeting Invite Code Generation**: generate code, max_uses limit, expiry, non-admin blocked
+  - **Join Meeting via Invite Code**: join meeting, uses_count increment, duplicate join blocked
+  - **Invite Code Limits**: max_uses enforcement, expired code rejection
+  - **Meeting Token**: meeting-scoped JWT for participants, admin token for organizers, non-participant blocked
+  - **Invite Code Validation**: valid code returns meeting info, invalid/expired/exhausted codes return isValid=false
+  - **Invite Management**: list invites, delete invite, non-admin delete blocked
+- [x] Fixed `validate_invite_code` function to return `SETOF invite_validation_result` for proper GraphQL exposure
+- [x] Fixed `getMeetingInvites` test helper to use mutation (setof functions become mutations)
+- [x] Added `invite_validation_result` composite type for structured validation results
+
+### Completed Previous Iteration (manage.html Invitasjonar Tab)
 - [x] Updated `manage.js` to import invite-generator.js and invite-list.js components
 - [x] Added "Invitasjonar" tab button to MoreDialog tabs
 - [x] Added invitasjonar tab content with roi-invite-generator and roi-invite-list components

@@ -1419,15 +1419,19 @@ end;
 $$ language plpgsql security definer;
 comment on function roiheimen.create_invite_code(text, integer, timestamptz) is 'Creates an invite code for a meeting';
 
--- validate_invite_code: Validates an invite code and returns meeting info if valid
-create or replace function roiheimen.validate_invite_code(
-  p_code text
-) returns table (
+-- Type for validate_invite_code result
+create type roiheimen.invite_validation_result as (
   meeting_id text,
   meeting_title text,
   org_name text,
   is_valid boolean
-) as $$
+);
+comment on type roiheimen.invite_validation_result is 'Result of validating an invite code';
+
+-- validate_invite_code: Validates an invite code and returns meeting info if valid
+create or replace function roiheimen.validate_invite_code(
+  p_code text
+) returns setof roiheimen.invite_validation_result as $$
 declare
   invite roiheimen.meeting_invite;
 begin
@@ -1822,6 +1826,7 @@ grant usage on sequence roiheimen.meeting_participant_id_seq to roiheimen_user;
 
 -- Meeting invite function permissions
 grant execute on function roiheimen.create_invite_code(text, integer, timestamptz) to roiheimen_user;
+grant usage on type roiheimen.invite_validation_result to roiheimen_anonymous, roiheimen_user;
 grant execute on function roiheimen.validate_invite_code(text) to roiheimen_anonymous, roiheimen_user;
 grant execute on function roiheimen.join_meeting(text, text, text) to roiheimen_user;
 grant execute on function roiheimen.get_meeting_token(text) to roiheimen_user;
