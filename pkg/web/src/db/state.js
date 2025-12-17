@@ -133,33 +133,6 @@ const myself = {
       }
       if (!["/", "/login.html"].includes(location.pathname)) location.assign("/");
     },
-  doMyselfLogin:
-    (num, password) =>
-    async ({ dispatch, store }) => {
-      dispatch({ type: "MYSELF_LOGIN_STARTED" });
-      const gqlLogin = `
-      mutation Login($num: Int!, $mId: String!, $password: String!) {
-        authenticate(input: {num: $num, meetingId: $mId, password: $password}) {
-          jwtToken
-        }
-      }`;
-      try {
-        const res = await gql(gqlLogin, { num, mId: store.selectMeetingId(), password }, { jwt: false });
-        const {
-          authenticate: { jwtToken },
-        } = res;
-        if (!jwtToken) {
-          throw new Error("Feil nummer/passord");
-        }
-        creds.jwt = jwtToken;
-        save("creds");
-        dispatch({ type: "MYSELF_LOGIN_FINISHED" });
-        location.assign("/queue.html");
-      } catch (error) {
-        const payload = error.extra?.body?.errors?.map((e) => e.message) || ["" + error];
-        dispatch({ type: "MYSELF_LOGIN_FAILED", payload, error });
-      }
-    },
 
   selectMyself: (state) => state.myself.data,
   selectMyselfId: (state) => state.myself.data?.id,

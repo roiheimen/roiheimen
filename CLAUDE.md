@@ -15,8 +15,15 @@ Ignore `v2/` - it's an unfinished experiment with Graphile Starter.
 ```bash
 ./test-app.sh   # checks postgres, starts server
 # Open http://localhost:8080
-# Login: num=1000, password=test
 ```
+
+To use the app:
+1. Register a new user at `/registrer.html`
+2. Verify email (check database for token or use test endpoints)
+3. Login at `/login.html`
+4. Create an organization from `/oversikt.html`
+5. Create a meeting under the organization
+6. Generate invite codes for participants
 
 Database is already set up. Just need PostgreSQL running.
 
@@ -31,7 +38,11 @@ The UI is in Norwegian Nynorsk:
 
 ## Key Concepts
 
-**Users**: Regular participants (num < 1000) can vote and speak. Admins (num >= 1000) manage meetings.
+**Users**: Global user accounts with email/password. Users can create organizations and meetings.
+
+**Organizations**: Groups that can own meetings. Members can be owners, admins, or regular members.
+
+**Participants**: Users who join meetings via invite codes. They get a person record for voting/speaking.
 
 **Speech types**: `innleiing` (intro), `innlegg` (main), `replikk` (reply), `saksopplysing` (point of info)
 
@@ -116,8 +127,10 @@ Tests live in `e2e/tests/`. Add new `.spec.ts` files there.
 
 ### Manual Testing
 1. Run `./test-app.sh` (or just `yarn start` if postgres is running)
-2. Use Chrome DevTools MCP to navigate to http://localhost:8080
-3. Click "Test" meeting, login with num=1000, password=test
-4. Verify queue page shows speaker list with names like "Kong Harald"
+2. Navigate to http://localhost:8080
+3. Register a new user, verify email via database token
+4. Create an organization and meeting
+5. Generate an invite code for participants
+6. Test voting and speech queue functionality
 
-That's it. No setup needed - database is configured.
+The E2E tests provide good examples of the full workflow.

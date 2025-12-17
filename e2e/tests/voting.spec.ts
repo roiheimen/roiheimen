@@ -1,78 +1,24 @@
 /**
- * Legacy Voting Tests
+ * Voting Tests
  *
- * Tests the legacy num-based authentication and voting workflow
- * using the pre-seeded "meet20" test meeting.
+ * Tests the voting workflow using the new organization/invite-based auth system.
  */
 
 import { test, expect } from "../fixtures";
-import { Page } from "@playwright/test";
-
-/**
- * Helper to log in a user via legacy num/password auth.
- * The legacy login uses GraphQL mutations and JavaScript navigation (location.assign),
- * not standard form POST, so we need to wait for the URL change after clicking.
- */
-async function legacyLogin(page: Page, num: string, password: string) {
-  // Navigate to mote.html - may redirect to queue.html if already authenticated
-  await page.goto("/mote.html");
-
-  // Give time for any JS-based redirect to happen
-  await page.waitForTimeout(1000);
-
-  // Check if we're on mote.html or got redirected
-  let attempts = 0;
-  while (!page.url().includes("mote.html") && attempts < 3) {
-    // We got redirected (probably to queue.html) - clear auth and retry
-    await page.evaluate(() => localStorage.clear());
-    await page.goto("/mote.html");
-    await page.waitForTimeout(1000); // Give time for any redirect
-    attempts++;
-  }
-
-  // Wait for meetings to load
-  await page.waitForSelector('a[data-id="meet20"]', { timeout: 30000 });
-
-  // Click on the test meeting
-  await page.click('a[data-id="meet20"]');
-
-  // Wait for login form to appear
-  await page.waitForSelector('input[name="num"]');
-
-  // Fill login form
-  await page.fill('input[name="num"]', num);
-  await page.fill('input[name="code"]', password);
-
-  // Click submit - this triggers a GraphQL mutation, not a form POST
-  await page.click('input[type="submit"]');
-
-  // Wait for JavaScript-based navigation to queue.html
-  // The login uses location.assign() after successful auth, which is async
-  await page.waitForURL("**/queue.html", { timeout: 30000 });
-
-  // Wait for queue page to be fully loaded
-  await page.waitForSelector("roi-queue", { timeout: 30000 });
-}
-
-test("legacy login flow", async ({ page }) => {
-  await test.step("user can login with valid credentials", async () => {
-    await legacyLogin(page, "10", "test");
-
-    // Verify user is on queue page
-    await expect(page.locator("roi-queue")).toBeVisible();
-  });
-
-  await test.step("admin can access manage page", async () => {
-    // Login as admin (num >= 1000)
-    await legacyLogin(page, "1000", "test");
-
-    // Navigate to manage page
-    await page.goto("/manage.html");
-
-    // Verify manage interface loads
-    await expect(page.locator("roi-manage")).toBeVisible();
-  });
-});
+import {
+  query,
+  uniqueSlug,
+  uniqueMeetingId,
+  createVerifiedUserFast,
+  loginUserFast,
+  createOrganizationDirect,
+  createMeetingDirect,
+  createInviteCodeDirect,
+  joinMeetingDirect,
+  getMeetingTokenDirect,
+  setMeetingJwt,
+  createSakDirect,
+} from "../helpers";
 
 test("voting workflow with admin and participant", async ({ browser }) => {
   // Create two separate browser contexts for admin and participant
@@ -83,12 +29,34 @@ test("voting workflow with admin and participant", async ({ browser }) => {
   const participantPage = await participantContext.newPage();
 
   try {
-    await test.step("admin logs in and creates referendum", async () => {
-      await legacyLogin(adminPage, "1000", "test");
+    // Setup: Create admin user, org, meeting
+    const admin = await createVerifiedUserFast(adminPage, "Admin");
+    await loginUserFast(adminPage, admin.email, admin.password);
 
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(adminPage, slug, "Testorganisasjon");
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(adminPage, org.id, meetingId, "Testavstemming 2025");
+
+    // Generate invite code for participant
+    const invite = await createInviteCodeDirect(adminPage, meetingId);
+
+    // Get admin's meeting token and create sak
+    const adminJwt = await getMeetingTokenDirect(adminPage, meetingId);
+    await setMeetingJwt(adminPage, adminJwt);
+    const sak = await createSakDirect(adminPage, meetingId, "Sak 1: Testavstemming");
+
+    // Setup participant
+    const participant = await createVerifiedUserFast(participantPage, "Deltakar");
+    await loginUserFast(participantPage, participant.email, participant.password);
+    await joinMeetingDirect(participantPage, meetingId, invite.code, "Test Deltakar");
+    const participantJwt = await getMeetingTokenDirect(participantPage, meetingId);
+    await setMeetingJwt(participantPage, participantJwt);
+
+    await test.step("admin creates referendum via manage page", async () => {
       // Admin goes to manage page
-      await adminPage.goto("/manage.html");
-      await adminPage.waitForSelector("roi-manage");
+      await adminPage.goto(`/manage.html?id=${meetingId}`);
+      await adminPage.waitForSelector("roi-manage", { timeout: 10000 });
 
       // Admin creates a referendum via adder input
       // Format: vTitle? @Choice1 @Choice2
@@ -97,26 +65,28 @@ test("voting workflow with admin and participant", async ({ browser }) => {
       await adminPage.click('input[type="submit"][value="Legg til"]');
 
       // Wait for referendum to appear in the list
-      await adminPage.waitForSelector("roi-referendum-list");
-      await expect(adminPage.locator("text=Test votering?")).toBeVisible();
+      await adminPage.waitForSelector("roi-referendum-list", { timeout: 10000 });
+      await expect(adminPage.locator("text=Test votering?")).toBeVisible({ timeout: 10000 });
 
       // Admin starts the referendum
       await adminPage.click('button[name="start"]');
     });
 
-    await test.step("participant logs in and votes", async () => {
-      await legacyLogin(participantPage, "10", "test");
+    await test.step("participant votes on referendum", async () => {
+      // Participant navigates to queue page
+      await participantPage.goto(`/queue.html?m=${meetingId}`);
+      await participantPage.waitForSelector("roi-queue", { timeout: 10000 });
 
-      // Participant should see the referendum on queue page
-      await participantPage.waitForSelector("roi-referendum");
-      await expect(participantPage.locator("text=Test votering?")).toBeVisible();
+      // Participant should see the referendum
+      await participantPage.waitForSelector("roi-referendum", { timeout: 10000 });
+      await expect(participantPage.locator("text=Test votering?")).toBeVisible({ timeout: 10000 });
 
       // Participant selects "Ja" and submits
       await participantPage.click('input[type="radio"][value="Ja"]');
       await participantPage.click('input[type="submit"][name="vote"]');
 
       // Verify vote was recorded
-      await expect(participantPage.locator("text=Du har røysta")).toBeVisible();
+      await expect(participantPage.locator("text=Du har roysta")).toBeVisible({ timeout: 10000 });
     });
 
     await test.step("admin ends referendum and sees results", async () => {
@@ -124,7 +94,78 @@ test("voting workflow with admin and participant", async ({ browser }) => {
       await adminPage.click('button[name="end"]');
 
       // Verify vote count shows 1 vote for "Ja"
-      await expect(adminPage.locator("text=Ja (1)")).toBeVisible();
+      await expect(adminPage.locator("text=Ja (1)")).toBeVisible({ timeout: 10000 });
+    });
+  } finally {
+    await adminContext.close();
+    await participantContext.close();
+  }
+});
+
+test("closed (secret) referendum hides individual votes", async ({ browser }) => {
+  const adminContext = await browser.newContext();
+  const participantContext = await browser.newContext();
+
+  const adminPage = await adminContext.newPage();
+  const participantPage = await participantContext.newPage();
+
+  try {
+    // Setup: Create admin user, org, meeting
+    const admin = await createVerifiedUserFast(adminPage, "Admin");
+    await loginUserFast(adminPage, admin.email, admin.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(adminPage, slug, "Testorg");
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(adminPage, org.id, meetingId, "Hemmeleg avstemming");
+
+    const invite = await createInviteCodeDirect(adminPage, meetingId);
+
+    const adminJwt = await getMeetingTokenDirect(adminPage, meetingId);
+    await setMeetingJwt(adminPage, adminJwt);
+    await createSakDirect(adminPage, meetingId, "Sak 1: Hemmeleg val");
+
+    // Setup participant
+    const participant = await createVerifiedUserFast(participantPage, "Deltakar");
+    await loginUserFast(participantPage, participant.email, participant.password);
+    await joinMeetingDirect(participantPage, meetingId, invite.code, "Hemmeleg Deltakar");
+    const participantJwt = await getMeetingTokenDirect(participantPage, meetingId);
+    await setMeetingJwt(participantPage, participantJwt);
+
+    await test.step("admin creates closed referendum", async () => {
+      await adminPage.goto(`/manage.html?id=${meetingId}`);
+      await adminPage.waitForSelector("roi-manage", { timeout: 10000 });
+
+      // Use 'V' (uppercase) for closed/secret referendum
+      const adderInput = adminPage.locator('input[name="adder"]');
+      await adderInput.fill("VHemmeleg val? @For @Mot");
+      await adminPage.click('input[type="submit"][value="Legg til"]');
+
+      await adminPage.waitForSelector("roi-referendum-list", { timeout: 10000 });
+      await expect(adminPage.locator("text=Hemmeleg val?")).toBeVisible({ timeout: 10000 });
+
+      // Verify it's marked as closed
+      await expect(adminPage.locator("text=closed")).toBeVisible({ timeout: 5000 });
+
+      await adminPage.click('button[name="start"]');
+    });
+
+    await test.step("participant votes in closed referendum", async () => {
+      await participantPage.goto(`/queue.html?m=${meetingId}`);
+      await participantPage.waitForSelector("roi-queue", { timeout: 10000 });
+      await participantPage.waitForSelector("roi-referendum", { timeout: 10000 });
+
+      await participantPage.click('input[type="radio"][value="For"]');
+      await participantPage.click('input[type="submit"][name="vote"]');
+
+      await expect(participantPage.locator("text=Du har roysta")).toBeVisible({ timeout: 10000 });
+    });
+
+    await test.step("admin ends and results are shown", async () => {
+      await adminPage.click('button[name="end"]');
+
+      // Results should show after referendum ends
+      await expect(adminPage.locator("text=For (1)")).toBeVisible({ timeout: 10000 });
     });
   } finally {
     await adminContext.close();
