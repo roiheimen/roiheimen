@@ -66,7 +66,7 @@ You don't need to do a full phase in one go.
 - [x] Create `org-create.js` component
 - [x] Create `org-settings.js` component
 - [x] Create `org-members.js` component
-- [ ] Add organizations Redux bundle to `state.js`
+- [x] Add organizations Redux bundle to `state.js`
 - [x] **Test**: Create organization, verify owner membership
 - [x] **Test**: Update organization name/config
 - [x] **Test**: Invite member by email, verify pending invite
@@ -253,6 +253,12 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 2: Organizations - UI components and remaining tests
 
 ### Completed This Session
+- [x] Added organizations Redux bundle to `state.js` with:
+  - Actions: doOrganizationsFetch, doOrganizationCreate, doOrganizationUpdate, doOrganizationDelete, doOrganizationInvite, doOrganizationRemoveMember
+  - Selectors: selectOrganizations, selectOrganizationsFetched, selectOrganizationsFetching, selectOrganizationsError, selectOrganizationBySlug, selectOrganizationById
+  - Reactor: reactOrganizationsFetch - auto-fetches organizations when user is logged in
+  - State management: creating, updating, deleting flags for loading states
+  - Integration: Clears organization data on USER_AUTH_LOGOUT
 - [x] Created `org-members.js` component with:
   - Member list with name, email, role badges
   - Invite form for admins/owners

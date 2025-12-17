@@ -1219,6 +1219,226 @@ const emoji = {
     },
 };
 
+// organizations: Redux bundle for organization management
+// Handles fetching, creating, updating, and deleting organizations
+const organizations = {
+  name: "organizations",
+  reducer: (
+    state = {
+      fetched: false,
+      fetching: false,
+      data: [],
+      error: null,
+      creating: false,
+      updating: false,
+      deleting: false,
+    },
+    { type, payload, error }
+  ) => {
+    if (type === "ORGS_FETCH_STARTED") return { ...state, fetching: true, error: null };
+    if (type === "ORGS_FETCH_FINISHED") return { ...state, fetching: false, fetched: true, data: payload };
+    if (type === "ORGS_FETCH_FAILED") return { ...state, fetching: false, fetched: true, error: error || true };
+    if (type === "ORGS_CREATE_STARTED") return { ...state, creating: true, error: null };
+    if (type === "ORGS_CREATE_FINISHED") return { ...state, creating: false, data: [...state.data, payload] };
+    if (type === "ORGS_CREATE_FAILED") return { ...state, creating: false, error: error || true };
+    if (type === "ORGS_UPDATE_STARTED") return { ...state, updating: true, error: null };
+    if (type === "ORGS_UPDATE_FINISHED")
+      return { ...state, updating: false, data: state.data.map((o) => (o.id === payload.id ? { ...o, ...payload } : o)) };
+    if (type === "ORGS_UPDATE_FAILED") return { ...state, updating: false, error: error || true };
+    if (type === "ORGS_DELETE_STARTED") return { ...state, deleting: true, error: null };
+    if (type === "ORGS_DELETE_FINISHED") return { ...state, deleting: false, data: state.data.filter((o) => o.id !== payload) };
+    if (type === "ORGS_DELETE_FAILED") return { ...state, deleting: false, error: error || true };
+    if (type === "USER_AUTH_LOGOUT") return { ...state, fetched: false, data: [], error: null };
+    return state;
+  },
+
+  // Fetch user's organizations
+  doOrganizationsFetch:
+    () =>
+    async ({ dispatch }) => {
+      dispatch({ type: "ORGS_FETCH_STARTED" });
+      const query = `
+        query MyOrganizations {
+          myOrganizations {
+            nodes {
+              id
+              slug
+              name
+              config
+              createdAt
+              myRoleInOrganization
+            }
+          }
+        }
+      `;
+      try {
+        const res = await gql(query, {}, { timeout: 10000, retry: true });
+        dispatch({ type: "ORGS_FETCH_FINISHED", payload: res.myOrganizations?.nodes || [] });
+      } catch (error) {
+        dispatch({ type: "ORGS_FETCH_FAILED", error });
+      }
+    },
+
+  // Create a new organization
+  doOrganizationCreate:
+    (slug, name) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "ORGS_CREATE_STARTED" });
+      const mutation = `
+        mutation CreateOrganization($slug: String!, $name: String!) {
+          createOrganization(input: {slug: $slug, name: $name}) {
+            organization {
+              id
+              slug
+              name
+              config
+              createdAt
+              myRoleInOrganization
+            }
+          }
+        }
+      `;
+      try {
+        const res = await gql(mutation, { slug, name });
+        dispatch({ type: "ORGS_CREATE_FINISHED", payload: res.createOrganization.organization });
+        return res.createOrganization.organization;
+      } catch (error) {
+        dispatch({ type: "ORGS_CREATE_FAILED", error });
+        throw error;
+      }
+    },
+
+  // Update an organization
+  doOrganizationUpdate:
+    (orgId, newName, newConfig) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "ORGS_UPDATE_STARTED" });
+      const mutation = `
+        mutation UpdateOrganization($orgId: Int!, $newName: String, $newConfig: JSON) {
+          updateOrganization(input: {orgId: $orgId, newName: $newName, newConfig: $newConfig}) {
+            organization {
+              id
+              slug
+              name
+              config
+              createdAt
+              myRoleInOrganization
+            }
+          }
+        }
+      `;
+      try {
+        const res = await gql(mutation, { orgId, newName, newConfig });
+        dispatch({ type: "ORGS_UPDATE_FINISHED", payload: res.updateOrganization.organization });
+        return res.updateOrganization.organization;
+      } catch (error) {
+        dispatch({ type: "ORGS_UPDATE_FAILED", error });
+        throw error;
+      }
+    },
+
+  // Delete an organization
+  doOrganizationDelete:
+    (orgId) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "ORGS_DELETE_STARTED" });
+      const mutation = `
+        mutation DeleteOrganization($orgId: Int!) {
+          deleteOrganization(input: {orgId: $orgId}) {
+            boolean
+          }
+        }
+      `;
+      try {
+        await gql(mutation, { orgId });
+        dispatch({ type: "ORGS_DELETE_FINISHED", payload: orgId });
+      } catch (error) {
+        dispatch({ type: "ORGS_DELETE_FAILED", error });
+        throw error;
+      }
+    },
+
+  // Invite a member to an organization
+  doOrganizationInvite:
+    (orgId, email, role) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "ORGS_INVITE_STARTED" });
+      const mutation = `
+        mutation InviteToOrganization($orgId: Int!, $email: String!, $role: OrganizationRole!) {
+          inviteToOrganization(input: {orgId: $orgId, inviteEmail: $email, inviteRole: $role}) {
+            organizationInvite {
+              id
+              email
+              role
+              expiresAt
+            }
+          }
+        }
+      `;
+      try {
+        const res = await gql(mutation, { orgId, email, role });
+        dispatch({ type: "ORGS_INVITE_FINISHED", payload: res.inviteToOrganization.organizationInvite });
+        return res.inviteToOrganization.organizationInvite;
+      } catch (error) {
+        dispatch({ type: "ORGS_INVITE_FAILED", error });
+        throw error;
+      }
+    },
+
+  // Remove a member from an organization
+  doOrganizationRemoveMember:
+    (orgId, userId) =>
+    async ({ dispatch }) => {
+      dispatch({ type: "ORGS_REMOVE_MEMBER_STARTED" });
+      const mutation = `
+        mutation RemoveOrganizationMember($orgId: Int!, $userId: Int!) {
+          removeOrganizationMember(input: {orgId: $orgId, memberUserId: $userId}) {
+            boolean
+          }
+        }
+      `;
+      try {
+        await gql(mutation, { orgId, userId });
+        dispatch({ type: "ORGS_REMOVE_MEMBER_FINISHED", payload: { orgId, userId } });
+      } catch (error) {
+        dispatch({ type: "ORGS_REMOVE_MEMBER_FAILED", error });
+        throw error;
+      }
+    },
+
+  selectOrganizations: (state) => state.organizations.data,
+  selectOrganizationsFetched: (state) => state.organizations.fetched,
+  selectOrganizationsFetching: (state) => state.organizations.fetching,
+  selectOrganizationsError: (state) => state.organizations.error,
+  selectOrganizationsCreating: (state) => state.organizations.creating,
+  selectOrganizationsUpdating: (state) => state.organizations.updating,
+  selectOrganizationsDeleting: (state) => state.organizations.deleting,
+
+  // Get organization by slug
+  selectOrganizationBySlug: createSelector(
+    "selectOrganizations",
+    (organizations) => (slug) => organizations.find((o) => o.slug === slug)
+  ),
+
+  // Get organization by ID
+  selectOrganizationById: createSelector(
+    "selectOrganizations",
+    (organizations) => (id) => organizations.find((o) => o.id === id)
+  ),
+
+  // Auto-fetch organizations when user is logged in
+  reactOrganizationsFetch: createSelector(
+    "selectOrganizationsFetched",
+    "selectOrganizationsFetching",
+    "selectUserAuthLoggedIn",
+    (fetched, fetching, loggedIn) => {
+      if (loggedIn && !fetched && !fetching) {
+        return { actionCreator: "doOrganizationsFetch" };
+      }
+    }
+  ),
+};
+
 // userAuth: Redux bundle for new email-based user authentication
 // Handles currentUserAccount and user logout for the SaaS platform
 const userAuth = {
@@ -1346,6 +1566,7 @@ const store = composeBundles(
   whereby,
   emoji,
   userAuth,
+  organizations,
   errors
 )();
 window.store = store;
