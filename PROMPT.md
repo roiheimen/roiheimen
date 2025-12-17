@@ -60,10 +60,10 @@ You don't need to do a full phase in one go.
 - [x] Implement `delete_organization(org_id)` function
 - [x] Add RLS policies for organization tables
 - [x] Create `/oversikt.html` dashboard page
-- [ ] Create `/org/ny.html` organization creation page
+- [x] Create `/org/ny.html` organization creation page
 - [x] Create `dashboard.js` component
 - [ ] Create `org-card.js` component
-- [ ] Create `org-create.js` component
+- [x] Create `org-create.js` component
 - [ ] Create `org-settings.js` component
 - [ ] Create `org-members.js` component
 - [ ] Add organizations Redux bundle to `state.js`
@@ -253,6 +253,11 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 2: Organizations - UI components and remaining tests
 
 ### Completed This Session
+- [x] Created `/org/ny.html` organization creation page with `org-create.js` component
+- [x] Added 2 UI tests for organization creation (create via form, duplicate slug error)
+- [x] Fixed issue where SaaS pages (oversikt.html, org/ny.html) were loading state.js which triggered meeting-related auto-fetches causing logout with user JWT
+
+### Previous Session (continued)
 - [x] Created `roiheimen.organization` table with slug, name, config
 - [x] Created `roiheimen.organization_member` table with role enum (owner, admin, member)
 - [x] Created `roiheimen.organization_invite` table for pending email invites
@@ -281,7 +286,6 @@ APP_URL=https://roiheimen.example.com
 - [x] Fixed `graphql.js` error handling
 
 ### Next Steps
-1. Continue Phase 2: Create UI components (org-card, org-create, org-settings, org-members)
-2. Fix remaining organization e2e tests (timing/proxy issues)
-3. Add organizations Redux bundle to state.js
-4. Create `/org/ny.html` organization creation page
+1. Continue Phase 2: Create remaining UI components (org-card, org-settings, org-members)
+2. Add organizations Redux bundle to state.js
+3. Add remaining Phase 2 tests (Update org name/config, Dashboard shows orgs)

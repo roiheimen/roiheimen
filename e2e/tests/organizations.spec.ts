@@ -710,6 +710,90 @@ test.describe("Remove Member", () => {
   });
 });
 
+test.describe("Organization Creation UI", () => {
+  test("can create organization via UI form", async ({ page }) => {
+    // Create and login as verified user
+    const user = await createVerifiedUser(page, "Owner");
+    await loginUser(page, user.email, user.password);
+
+    // Verify we're logged in and have JWT in localStorage
+    const hasJwt = await page.evaluate(() => {
+      const creds = JSON.parse(localStorage.getItem("creds") || "{}");
+      return !!creds.jwt;
+    });
+    expect(hasJwt).toBe(true);
+
+    // Go to org creation page
+    await page.goto("/org/ny.html");
+
+    // Give a moment for the component to initialize
+    await page.waitForTimeout(500);
+
+    // Check if we're still on the org page (not redirected to login)
+    const url = page.url();
+    expect(url).toContain("/org/ny.html");
+
+    await page.waitForSelector("roi-org-create");
+
+    const slug = uniqueSlug();
+    const name = "Min Nye Organisasjon";
+
+    // Fill the form
+    await page.fill('input[name="name"]', name);
+    // Wait for auto-generated slug
+    await page.waitForTimeout(100);
+    // Override with our specific slug
+    await page.fill('input[name="slug"]', slug);
+
+    // Submit
+    await page.click('input[type="submit"]');
+
+    // Wait for success message
+    await page.waitForSelector(".success", { timeout: 10000 });
+
+    // Verify success message
+    const successText = await page.textContent(".success");
+    expect(successText).toContain("Organisasjonen er oppretta");
+    expect(successText).toContain(name);
+
+    // Verify in database
+    const dbOrg = await getOrganization(slug);
+    expect(dbOrg).toBeTruthy();
+    expect(dbOrg!.name).toBe(name);
+  });
+
+  test("shows error for duplicate slug", async ({ page }) => {
+    // Create and login as verified user
+    const user = await createVerifiedUser(page, "Owner");
+    await loginUser(page, user.email, user.password);
+
+    const slug = uniqueSlug();
+
+    // Create first organization via UI
+    await page.goto("/org/ny.html");
+    await page.waitForSelector("roi-org-create");
+    await page.fill('input[name="name"]', "First Org");
+    await page.fill('input[name="slug"]', slug);
+    await page.click('input[type="submit"]');
+    await page.waitForSelector(".success", { timeout: 10000 });
+
+    // Go back and try to create another with same slug
+    await page.goto("/org/ny.html");
+    await page.waitForSelector("roi-org-create form");  // Wait for fresh form
+
+    await page.fill('input[name="name"]', "Second Org");
+    await page.fill('input[name="slug"]', slug);
+
+    // Submit
+    await page.click('input[type="submit"]');
+
+    // Should show error about duplicate
+    await page.waitForSelector(".err", { timeout: 10000 });
+    const errorText = await page.textContent(".err");
+    expect(errorText).toContain("allereie");  // "Det finst allereie ein organisasjon..."
+  });
+});
+
 test.describe("Dashboard", () => {
   test("dashboard shows user's organizations", async ({ page }) => {
     // Create owner and two organizations
