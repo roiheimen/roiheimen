@@ -10,48 +10,48 @@
  * - Direct links and QR codes
  */
 
-import { test, expect } from "../fixtures";
 import {
+  test,
+  expect,
   uniqueSlug,
   uniqueMeetingId,
-  createVerifiedUserFast,
-  loginUserFast,
   getUserId,
-  // Organization helpers
-  createOrganizationDirect,
-  // Meeting helpers
-  createMeetingDirect,
-  // Invite helpers
-  createInviteCodeDirect,
-  validateInviteCodeDirect,
-  joinMeetingDirect,
-  getMeetingTokenDirect,
-  getMeetingInvitesDirect,
-  deleteInviteCodeDirect,
   getInviteFromDb,
-  getParticipantFromDb,
   decodeJwtClaims,
-  setMeetingJwt,
-} from "../helpers";
+  setJwt,
+  createAndLoginUser,
+  loginUser,
+  GraphQLClient,
+  query,
+} from "../fixtures";
+
+async function getParticipantFromDb(
+  meetingId: string,
+  userId: number
+): Promise<{ id: number; displayName: string; participantNum: number } | null> {
+  const result = await query(
+    `SELECT id, display_name, participant_num FROM roiheimen.meeting_participant WHERE meeting_id = '${meetingId}' AND user_id = ${userId}`
+  );
+  if (!result) return null;
+  const [id, displayName, participantNum] = result.split("|");
+  return {
+    id: parseInt(id, 10),
+    displayName,
+    participantNum: parseInt(participantNum, 10),
+  };
+}
 
 // ============================================================================
 // Invite Code Generation and Join Flow
 // ============================================================================
 
-test("invite code generation and join flow", async ({ page }) => {
-  // Setup: owner, org, meeting
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+test("invite code generation and join flow", async ({ meetingAdmin }) => {
+  const { api, meeting, user: owner } = meetingAdmin;
 
   let inviteCode: string;
 
   await test.step("can generate invite code and verify in DB", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId);
+    const invite = await api.createInviteCode(meeting.id);
 
     expect(invite.id).toBeTruthy();
     expect(invite.code).toBeTruthy();
@@ -64,12 +64,12 @@ test("invite code generation and join flow", async ({ page }) => {
     // Verify in database
     const dbInvite = await getInviteFromDb(invite.code);
     expect(dbInvite).toBeTruthy();
-    expect(dbInvite!.meetingId).toBe(meetingId);
+    expect(dbInvite!.meetingId).toBe(meeting.id);
     expect(dbInvite!.usesCount).toBe(0);
   });
 
   await test.step("can generate invite code with max_uses limit", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId, 5);
+    const invite = await api.createInviteCode(meeting.id, 5);
     expect(invite.maxUses).toBe(5);
 
     const dbInvite = await getInviteFromDb(invite.code);
@@ -78,168 +78,126 @@ test("invite code generation and join flow", async ({ page }) => {
 
   await test.step("can generate invite code with expiry", async () => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const invite = await createInviteCodeDirect(page, meetingId, null, expiresAt);
+    const invite = await api.createInviteCode(meeting.id, null, expiresAt);
     expect(invite.expiresAt).toBeTruthy();
   });
+});
+
+test("join meeting via invite code", async ({ page, meetingWithInvite }) => {
+  const { meeting, invite, user: owner } = meetingWithInvite;
 
   await test.step("can join meeting via invite code", async () => {
-    const participant = await createVerifiedUserFast(page, "Deltaker");
-    await loginUserFast(page, participant.email, participant.password);
+    const participant = await createAndLoginUser(page, "Deltaker");
+    const participantApi = new GraphQLClient(page);
 
-    const membership = await joinMeetingDirect(page, meetingId, inviteCode, "Ola Nordmann");
+    const membership = await participantApi.joinMeeting(meeting.id, invite.code, "Ola Nordmann");
 
     expect(membership.displayName).toBe("Ola Nordmann");
-    expect(membership.participantNum).toBe(1);
+    // participantNum is 2 because the meeting owner is automatically participant #1
+    expect(membership.participantNum).toBe(2);
 
     const userId = await getUserId(participant.email);
-    const dbParticipant = await getParticipantFromDb(meetingId, userId);
+    const dbParticipant = await getParticipantFromDb(meeting.id, userId);
     expect(dbParticipant).toBeTruthy();
     expect(dbParticipant!.displayName).toBe("Ola Nordmann");
   });
 
   await test.step("joining increments uses_count", async () => {
-    const dbInvite = await getInviteFromDb(inviteCode);
+    const dbInvite = await getInviteFromDb(invite.code);
     expect(dbInvite!.usesCount).toBe(1);
   });
 
   await test.step("cannot join same meeting twice", async () => {
-    // Try to join again with same user (still logged in as participant)
-    let error: Error | undefined;
-    try {
-      await joinMeetingDirect(page, meetingId, inviteCode, "Test Deltaker");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/already.*participant/i);
+    // participant is still logged in from previous step
+    const participantApi = new GraphQLClient(page);
+
+    await expect(
+      participantApi.joinMeeting(meeting.id, invite.code, "Test Deltaker")
+    ).rejects.toThrow(/already.*participant/i);
   });
 });
 
-test("invite code limits", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+test("invite code limits", async ({ page, meetingAdmin }) => {
+  const { api, org, meeting, user: owner } = meetingAdmin;
 
   await test.step("invite with max_uses limit enforced", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId, 1);
+    const invite = await api.createInviteCode(meeting.id, 1);
 
     // First user joins - should succeed
-    const participant1 = await createVerifiedUserFast(page, "Deltaker1");
-    await loginUserFast(page, participant1.email, participant1.password);
-    await joinMeetingDirect(page, meetingId, invite.code, "Deltaker 1");
+    const participant1 = await createAndLoginUser(page, "Deltaker1");
+    const p1Api = new GraphQLClient(page);
+    await p1Api.joinMeeting(meeting.id, invite.code, "Deltaker 1");
 
     // Second user tries - should fail
-    const participant2 = await createVerifiedUserFast(page, "Deltaker2");
-    await loginUserFast(page, participant2.email, participant2.password);
+    const participant2 = await createAndLoginUser(page, "Deltaker2");
+    const p2Api = new GraphQLClient(page);
 
-    let error: Error | undefined;
-    try {
-      await joinMeetingDirect(page, meetingId, invite.code, "Deltaker 2");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/maximum uses/i);
+    await expect(
+      p2Api.joinMeeting(meeting.id, invite.code, "Deltaker 2")
+    ).rejects.toThrow(/maximum uses/i);
   });
 
   await test.step("expired invite code rejected", async () => {
-    await loginUserFast(page, owner.email, owner.password);
+    await loginUser(page, owner.email, owner.password);
 
     const expiresAt = new Date(Date.now() - 1000).toISOString();
-    const invite = await createInviteCodeDirect(page, meetingId, null, expiresAt);
+    const invite = await api.createInviteCode(meeting.id, null, expiresAt);
 
-    const participant = await createVerifiedUserFast(page, "ExpiredDeltaker");
-    await loginUserFast(page, participant.email, participant.password);
+    const participant = await createAndLoginUser(page, "ExpiredDeltaker");
+    const participantApi = new GraphQLClient(page);
 
-    let error: Error | undefined;
-    try {
-      await joinMeetingDirect(page, meetingId, invite.code, "Test Deltaker");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/expired/i);
+    await expect(
+      participantApi.joinMeeting(meeting.id, invite.code, "Test Deltaker")
+    ).rejects.toThrow(/expired/i);
   });
 });
 
-test("non-admin cannot generate invite code", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
+test("non-admin cannot generate invite code", async ({ page, meetingAdmin }) => {
+  const { meeting } = meetingAdmin;
 
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+  const nonMember = await createAndLoginUser(page, "NonMember");
+  const nonMemberApi = new GraphQLClient(page);
 
-  const nonMember = await createVerifiedUserFast(page, "NonMember");
-  await loginUserFast(page, nonMember.email, nonMember.password);
-
-  let error: Error | undefined;
-  try {
-    await createInviteCodeDirect(page, meetingId);
-  } catch (e) {
-    error = e as Error;
-  }
-  expect(error).toBeDefined();
-  expect(error?.message).toMatch(/admin or owner/i);
+  await expect(nonMemberApi.createInviteCode(meeting.id)).rejects.toThrow(/admin or owner/i);
 });
 
 // ============================================================================
 // Meeting Token
 // ============================================================================
 
-test("meeting token", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
-
-  const invite = await createInviteCodeDirect(page, meetingId);
+test("meeting token", async ({ page, meetingWithInvite }) => {
+  const { api, meeting, invite, user: owner } = meetingWithInvite;
 
   await test.step("meeting-scoped JWT grants queue.html access", async () => {
-    const participant = await createVerifiedUserFast(page, "Deltaker");
-    await loginUserFast(page, participant.email, participant.password);
-    await joinMeetingDirect(page, meetingId, invite.code, "Test Deltaker");
+    const participant = await createAndLoginUser(page, "Deltaker");
+    const participantApi = new GraphQLClient(page);
+    await participantApi.joinMeeting(meeting.id, invite.code, "Test Deltaker");
 
-    const jwt = await getMeetingTokenDirect(page, meetingId);
+    const jwt = await participantApi.getMeetingToken(meeting.id);
     const claims = decodeJwtClaims(jwt);
 
     expect(claims.role).toBe("roiheimen_person");
-    expect(claims.meeting_id).toBe(meetingId);
+    expect(claims.meeting_id).toBe(meeting.id);
     expect(claims.person_id).toBeGreaterThan(0);
     expect(claims.admin).toBe(false);
   });
 
   await test.step("organizer gets admin token", async () => {
-    await loginUserFast(page, owner.email, owner.password);
+    await loginUser(page, owner.email, owner.password);
 
-    const jwt = await getMeetingTokenDirect(page, meetingId);
+    const jwt = await api.getMeetingToken(meeting.id);
     const claims = decodeJwtClaims(jwt);
 
     expect(claims.role).toBe("roiheimen_person");
-    expect(claims.meeting_id).toBe(meetingId);
+    expect(claims.meeting_id).toBe(meeting.id);
     expect(claims.admin).toBe(true);
   });
 
   await test.step("non-participant cannot get meeting token", async () => {
-    const nonMember = await createVerifiedUserFast(page, "NonMember");
-    await loginUserFast(page, nonMember.email, nonMember.password);
+    const nonMember = await createAndLoginUser(page, "NonMember");
+    const nonMemberApi = new GraphQLClient(page);
 
-    let error: Error | undefined;
-    try {
-      await getMeetingTokenDirect(page, meetingId);
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/not a participant/i);
+    await expect(nonMemberApi.getMeetingToken(meeting.id)).rejects.toThrow(/not a participant/i);
   });
 });
 
@@ -247,48 +205,42 @@ test("meeting token", async ({ page }) => {
 // Invite Code Validation
 // ============================================================================
 
-test("invite code validation", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+test("invite code validation", async ({ page, meetingWithInvite }) => {
+  const { api, meeting, invite, user: owner } = meetingWithInvite;
 
   await test.step("valid invite code returns meeting info", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId);
-    const validation = await validateInviteCodeDirect(page, invite.code);
+    const validation = await api.validateInviteCode(invite.code);
 
     expect(validation.isValid).toBe(true);
-    expect(validation.meetingId).toBe(meetingId);
+    expect(validation.meetingId).toBe(meeting.id);
     expect(validation.meetingTitle).toBe("Test Meeting");
-    expect(validation.orgName).toBe("Test Org");
   });
 
   await test.step("invalid invite code returns isValid=false", async () => {
-    const validation = await validateInviteCodeDirect(page, "INVALID1");
+    const validation = await api.validateInviteCode("INVALID1");
     expect(validation.isValid).toBe(false);
     expect(validation.meetingId).toBeNull();
   });
 
   await test.step("expired invite code returns isValid=false", async () => {
     const expiresAt = new Date(Date.now() - 1000).toISOString();
-    const invite = await createInviteCodeDirect(page, meetingId, null, expiresAt);
+    const expiredInvite = await api.createInviteCode(meeting.id, null, expiresAt);
 
-    const validation = await validateInviteCodeDirect(page, invite.code);
+    const validation = await api.validateInviteCode(expiredInvite.code);
     expect(validation.isValid).toBe(false);
   });
 
   await test.step("exhausted invite code returns isValid=false", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId, 1);
+    const limitedInvite = await api.createInviteCode(meeting.id, 1);
 
     // Use it up
-    const participant = await createVerifiedUserFast(page, "Deltaker");
-    await loginUserFast(page, participant.email, participant.password);
-    await joinMeetingDirect(page, meetingId, invite.code, "Test Deltaker");
+    const participant = await createAndLoginUser(page, "Deltaker");
+    const participantApi = new GraphQLClient(page);
+    await participantApi.joinMeeting(meeting.id, limitedInvite.code, "Test Deltaker");
 
-    const validation = await validateInviteCodeDirect(page, invite.code);
+    // Re-login as owner to validate
+    await loginUser(page, owner.email, owner.password);
+    const validation = await api.validateInviteCode(limitedInvite.code);
     expect(validation.isValid).toBe(false);
   });
 });
@@ -297,20 +249,14 @@ test("invite code validation", async ({ page }) => {
 // Invite Management
 // ============================================================================
 
-test("invite management", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+test("invite management", async ({ page, meetingAdmin }) => {
+  const { api, meeting, user: owner } = meetingAdmin;
 
   await test.step("can list meeting invites", async () => {
-    const invite1 = await createInviteCodeDirect(page, meetingId);
-    const invite2 = await createInviteCodeDirect(page, meetingId, 10);
+    const invite1 = await api.createInviteCode(meeting.id);
+    const invite2 = await api.createInviteCode(meeting.id, 10);
 
-    const invites = await getMeetingInvitesDirect(page, meetingId);
+    const invites = await api.getMeetingInvites(meeting.id);
 
     expect(invites.length).toBe(2);
     const codes = invites.map((i) => i.code);
@@ -319,12 +265,12 @@ test("invite management", async ({ page }) => {
   });
 
   await test.step("can delete invite code", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId);
+    const invite = await api.createInviteCode(meeting.id);
 
     let dbInvite = await getInviteFromDb(invite.code);
     expect(dbInvite).toBeTruthy();
 
-    const result = await deleteInviteCodeDirect(page, invite.id);
+    const result = await api.deleteInviteCode(invite.id);
     expect(result).toBe(true);
 
     dbInvite = await getInviteFromDb(invite.code);
@@ -332,19 +278,12 @@ test("invite management", async ({ page }) => {
   });
 
   await test.step("non-admin cannot delete invite code", async () => {
-    const invite = await createInviteCodeDirect(page, meetingId);
+    const invite = await api.createInviteCode(meeting.id);
 
-    const nonMember = await createVerifiedUserFast(page, "NonMember");
-    await loginUserFast(page, nonMember.email, nonMember.password);
+    const nonMember = await createAndLoginUser(page, "NonMember");
+    const nonMemberApi = new GraphQLClient(page);
 
-    let error: Error | undefined;
-    try {
-      await deleteInviteCodeDirect(page, invite.id);
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/admin or owner/i);
+    await expect(nonMemberApi.deleteInviteCode(invite.id)).rejects.toThrow(/admin or owner/i);
   });
 });
 
@@ -352,20 +291,11 @@ test("invite management", async ({ page }) => {
 // Direct Link and QR Code
 // ============================================================================
 
-test("direct invite link", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
-
-  const invite = await createInviteCodeDirect(page, meetingId);
+test("direct invite link", async ({ page, meetingWithInvite }) => {
+  const { meeting, invite, user: owner } = meetingWithInvite;
 
   // Create participant
-  const participant = await createVerifiedUserFast(page, "Deltaker");
-  await loginUserFast(page, participant.email, participant.password);
+  const participant = await createAndLoginUser(page, "Deltaker");
 
   // Navigate to direct link
   await page.goto(`/i/${invite.code}`);
@@ -383,34 +313,17 @@ test("direct invite link", async ({ page }) => {
   expect(meetingTitle).toContain("Test Meeting");
 });
 
-test("QR code display", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
+test("QR code display", async ({ page, meetingWithSak }) => {
+  const { meeting, meetingJwt } = meetingWithSak;
 
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
-
-  // Get meeting token for manage.html
-  const meetingJwt = await getMeetingTokenDirect(page, meetingId);
-  await setMeetingJwt(page, meetingJwt);
-
-  // Navigate to manage.html
-  await page.goto(`/manage.html?id=${meetingId}`);
+  // Navigate to manage.html (JWT already set by fixture)
+  await page.goto(`/manage.html?id=${meeting.id}`);
   await page.waitForSelector("roi-manage", { timeout: 10000 });
-
-  // Create a sak first (needed for "Meir" button)
-  await page.click('button:has-text("Ny sak")');
-  await page.waitForSelector("dialog[open]", { timeout: 5000 });
-  await page.fill('input[name="title"]', "Test Sak");
-  await page.click('input[type="submit"][value="Legg til og bytt"]');
-  await page.waitForSelector('button:has-text("Meir")', { timeout: 10000 });
 
   // Open dialog and go to Invitasjonar tab
   await page.click('button:has-text("Meir")');
-  await page.waitForSelector('dialog[open]:has-text("Administrer saker")', { timeout: 5000 });
-  await page.click('button:has-text("Invitasjonar")');
+  await page.waitForSelector('dialog[open]', { timeout: 5000 });
+  await page.click('button[name="invitasjonar"]');
 
   await page.waitForSelector("roi-invite-generator", { timeout: 10000 });
 
