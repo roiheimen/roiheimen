@@ -1,87 +1,48 @@
+/**
+ * Integration Flow Tests
+ *
+ * Tests the complete user journey through the UI:
+ * Register → Verify → Create Org → Create Meeting
+ *
+ * This test deliberately uses UI interactions (not fast helpers)
+ * to verify the actual user experience works end-to-end.
+ */
+
 import { test, expect } from "../fixtures";
-import { Page } from "@playwright/test";
-import { exec } from "child_process";
-import { promisify } from "util";
+import {
+  query,
+  uniqueEmail,
+  uniqueSlug,
+  getVerificationToken,
+} from "../helpers";
 
-const execAsync = promisify(exec);
+test("complete new user flow via UI", async ({ page }) => {
+  const email = uniqueEmail();
+  const name = "Ny Brukar";
+  const password = "testpassord123";
 
-/**
- * Helper to run SQL queries against the test database
- */
-async function query(sql: string): Promise<string> {
-  const { stdout } = await execAsync(
-    `PSQLRC=/dev/null psql -d roiheimen_test -t -A -F'|' -c "${sql.replace(/"/g, '\\"')}"`,
-    { env: { ...process.env, PGOPTIONS: "-c client_min_messages=warning" } }
-  );
-  const lines = stdout
-    .trim()
-    .split("\n")
-    .filter(
-      (line) =>
-        line &&
-        !line.startsWith("Pager") &&
-        !line.startsWith("Expanded") &&
-        !line.startsWith("Null")
-    );
-  return lines[0] || "";
-}
+  // Helper to set up route interception for legacy auth system
+  async function interceptLegacyAuth() {
+    await page.route("**/graphql", async (route, request) => {
+      const postData = request.postData() || "";
+      if (postData.includes("StartInfo") || postData.includes("currentPerson")) {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: {
+              meetings: { nodes: [] },
+              currentPerson: null,
+            },
+          }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+  }
 
-/**
- * Helper to generate unique test emails
- */
-function uniqueEmail(): string {
-  return `test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
-}
-
-/**
- * Helper to generate unique org slugs
- */
-function uniqueSlug(): string {
-  return `test-org-${Date.now()}-${Math.random().toString(36).slice(2)}`.toLowerCase();
-}
-
-/**
- * Helper to get verification token from database for an email
- */
-async function getVerificationToken(email: string): Promise<string | null> {
-  const result = await query(`
-    SELECT ev.token FROM roiheimen_private.email_verification ev
-    JOIN roiheimen.user_account ua ON ev.user_id = ua.id
-    WHERE lower(ua.email) = lower('${email}')
-    AND ev.used_at IS NULL
-    ORDER BY ev.created_at DESC LIMIT 1
-  `);
-  return result || null;
-}
-
-test.describe("Full User Flow: Register → Verify → Create Org → Create Meeting", () => {
-  test("complete new user flow via UI", async ({ page }) => {
-    const email = uniqueEmail();
-    const name = "Ny Brukar";
-    const password = "testpassord123";
-
-    // Helper to set up route interception for legacy auth system
-    async function interceptLegacyAuth() {
-      await page.route("**/graphql", async (route, request) => {
-        const postData = request.postData() || "";
-        if (postData.includes("StartInfo") || postData.includes("currentPerson")) {
-          await route.fulfill({
-            status: 200,
-            contentType: "application/json",
-            body: JSON.stringify({
-              data: {
-                meetings: { nodes: [] },
-                currentPerson: null,
-              },
-            }),
-          });
-        } else {
-          await route.continue();
-        }
-      });
-    }
-
-    // 1. REGISTER: Navigate to registration page
+  await test.step("register new user via UI", async () => {
     await interceptLegacyAuth();
     await page.goto("/registrer.html");
     await page.waitForSelector("roi-signup");
@@ -99,8 +60,10 @@ test.describe("Full User Flow: Register → Verify → Create Org → Create Mee
     await page.waitForSelector(".success", { timeout: 10000 });
     const registrationSuccess = await page.textContent(".success");
     expect(registrationSuccess).toContain("Registreringa var vellukka");
+  });
 
-    // 2. VERIFY EMAIL: Get token from database and verify
+  await test.step("verify email via UI", async () => {
+    // Get token from database
     const verificationToken = await getVerificationToken(email);
     expect(verificationToken).toBeTruthy();
     expect(verificationToken!.length).toBe(14); // 7 random bytes = 14 hex chars
@@ -113,8 +76,9 @@ test.describe("Full User Flow: Register → Verify → Create Org → Create Mee
 
     // Remove route interception for login and subsequent steps
     await page.unroute("**/graphql");
+  });
 
-    // 3. LOGIN: Navigate to login page and authenticate
+  await test.step("login via UI", async () => {
     await page.goto("/login.html");
     await page.waitForSelector("roi-login");
 
@@ -136,11 +100,16 @@ test.describe("Full User Flow: Register → Verify → Create Org → Create Mee
       return !!creds.jwt;
     });
     expect(hasJwt).toBe(true);
+  });
 
-    // 4. CREATE ORGANIZATION via API (faster and more reliable for test setup)
-    const orgSlug = uniqueSlug();
-    const orgName = "Min Nye Organisasjon";
+  // Variables for org/meeting creation
+  let orgId: number;
+  const orgSlug = uniqueSlug();
+  const orgName = "Min Nye Organisasjon";
+  const meetingTitle = "Nytt Landsmote 2025";
+  const meetingId = `landsmote-${Date.now()}`.substring(0, 31);
 
+  await test.step("create organization via API", async () => {
     const orgResult = await page.evaluate(
       async ({ slug, name }) => {
         const jwt = JSON.parse(localStorage.getItem("creds") || "{}").jwt;
@@ -174,18 +143,16 @@ test.describe("Full User Flow: Register → Verify → Create Org → Create Mee
     const createdOrg = orgResult.data.createOrganization.organization;
     expect(createdOrg.slug).toBe(orgSlug);
     expect(createdOrg.name).toBe(orgName);
-    const orgId = createdOrg.id;
+    orgId = createdOrg.id;
 
     // Verify organization in database
     const dbOrg = await query(
       `SELECT id, name, slug FROM roiheimen.organization WHERE slug = '${orgSlug}'`
     );
     expect(dbOrg).toBeTruthy();
+  });
 
-    // 5. CREATE MEETING via API (same approach as organization - more reliable for E2E test)
-    const meetingTitle = "Nytt Landsmote 2025";
-    const meetingId = `landsmote-${Date.now()}`.substring(0, 31);
-
+  await test.step("create meeting via API", async () => {
     const meetingResult = await page.evaluate(
       async ({ orgId, meetingId, title }) => {
         const jwt = JSON.parse(localStorage.getItem("creds") || "{}").jwt;
@@ -229,9 +196,9 @@ test.describe("Full User Flow: Register → Verify → Create Org → Create Mee
     const [dbMeetingId, dbMeetingTitle, dbOrgIdFromMeeting] = dbMeeting.split("|");
     expect(dbMeetingTitle).toBe(meetingTitle);
     expect(parseInt(dbOrgIdFromMeeting, 10)).toBe(orgId);
+  });
 
-    // 6. VERIFY DASHBOARD: Check data via API to confirm full flow worked
-    // Note: UI components have a bug with gql() parameter handling that needs fixing
+  await test.step("verify dashboard shows org and meeting", async () => {
     const dashboardData = await page.evaluate(async () => {
       const jwt = JSON.parse(localStorage.getItem("creds") || "{}").jwt;
       const response = await fetch("http://localhost:3000/graphql", {

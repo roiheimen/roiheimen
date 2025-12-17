@@ -19,3 +19,8 @@ pkg/server/db_*.sql
 
 # Unfinished experiment (noted in CLAUDE.md)
 v2/
+
+# Playwright
+playwright/.auth/
+test-results/
+playwright-report/

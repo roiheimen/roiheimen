@@ -1,11 +1,28 @@
+/**
+ * Legacy Voting Tests
+ *
+ * Tests the legacy num-based authentication and voting workflow
+ * using the pre-seeded "meet20" test meeting.
+ */
+
 import { test, expect } from "../fixtures";
 import { Page } from "@playwright/test";
 
 /**
- * Helper to log in a user
+ * Helper to log in a user via legacy num/password auth
+ * This is specific to the legacy system and uses pre-seeded meet20 meeting
  */
-async function login(page: Page, num: string, password: string) {
+async function legacyLogin(page: Page, num: string, password: string) {
+  // Navigate to home page first
   await page.goto("/");
+
+  // Clear localStorage and wait for redirect if any
+  await page.evaluate(() => localStorage.clear());
+
+  // If we got redirected away from home (due to existing JWT), go back
+  if (!page.url().endsWith("/") && !page.url().includes("/?")) {
+    await page.goto("/");
+  }
 
   // Wait for meetings to load and click on "Test" meeting (meet20)
   await page.waitForSelector('a[data-id="meet20"]');
@@ -28,16 +45,17 @@ async function login(page: Page, num: string, password: string) {
   await page.waitForSelector("roi-queue");
 }
 
-test.describe("Login flow", () => {
-  test("user can login with valid credentials", async ({ page }) => {
-    await login(page, "10", "test");
+test("legacy login flow", async ({ page }) => {
+  await test.step("user can login with valid credentials", async () => {
+    await legacyLogin(page, "10", "test");
 
     // Verify user is on queue page
     await expect(page.locator("roi-queue")).toBeVisible();
   });
 
-  test("admin can access manage page", async ({ page }) => {
-    await login(page, "1000", "test");
+  await test.step("admin can access manage page", async () => {
+    // Login as admin (num >= 1000)
+    await legacyLogin(page, "1000", "test");
 
     // Navigate to manage page
     await page.goto("/manage.html");
@@ -47,24 +65,23 @@ test.describe("Login flow", () => {
   });
 });
 
-test.describe("Voting workflow", () => {
-  test("admin creates referendum and participant votes", async ({ browser }) => {
-    // Create two separate browser contexts for admin and participant
-    const adminContext = await browser.newContext();
-    const participantContext = await browser.newContext();
+test("voting workflow with admin and participant", async ({ browser }) => {
+  // Create two separate browser contexts for admin and participant
+  const adminContext = await browser.newContext();
+  const participantContext = await browser.newContext();
 
-    const adminPage = await adminContext.newPage();
-    const participantPage = await participantContext.newPage();
+  const adminPage = await adminContext.newPage();
+  const participantPage = await participantContext.newPage();
 
-    try {
-      // Step 1: Admin logs in
-      await login(adminPage, "1000", "test");
+  try {
+    await test.step("admin logs in and creates referendum", async () => {
+      await legacyLogin(adminPage, "1000", "test");
 
-      // Step 2: Admin goes to manage page
+      // Admin goes to manage page
       await adminPage.goto("/manage.html");
       await adminPage.waitForSelector("roi-manage");
 
-      // Step 3: Admin creates a referendum via adder input
+      // Admin creates a referendum via adder input
       // Format: vTitle? @Choice1 @Choice2
       const adderInput = adminPage.locator('input[name="adder"]');
       await adderInput.fill("vTest votering? @Ja @Nei @Avhaldande");
@@ -74,33 +91,34 @@ test.describe("Voting workflow", () => {
       await adminPage.waitForSelector("roi-referendum-list");
       await expect(adminPage.locator("text=Test votering?")).toBeVisible();
 
-      // Step 4: Admin starts the referendum
+      // Admin starts the referendum
       await adminPage.click('button[name="start"]');
+    });
 
-      // Step 5: Participant logs in
-      await login(participantPage, "10", "test");
+    await test.step("participant logs in and votes", async () => {
+      await legacyLogin(participantPage, "10", "test");
 
-      // Step 6: Participant should see the referendum on queue page
+      // Participant should see the referendum on queue page
       await participantPage.waitForSelector("roi-referendum");
-      await expect(
-        participantPage.locator("text=Test votering?")
-      ).toBeVisible();
+      await expect(participantPage.locator("text=Test votering?")).toBeVisible();
 
-      // Step 7: Participant selects "Ja" and submits
+      // Participant selects "Ja" and submits
       await participantPage.click('input[type="radio"][value="Ja"]');
       await participantPage.click('input[type="submit"][name="vote"]');
 
-      // Step 8: Verify vote was recorded
+      // Verify vote was recorded
       await expect(participantPage.locator("text=Du har røysta")).toBeVisible();
+    });
 
-      // Step 9: Admin ends the referendum
+    await test.step("admin ends referendum and sees results", async () => {
+      // Admin ends the referendum
       await adminPage.click('button[name="end"]');
 
-      // Step 10: Verify vote count shows 1 vote for "Ja"
+      // Verify vote count shows 1 vote for "Ja"
       await expect(adminPage.locator("text=Ja (1)")).toBeVisible();
-    } finally {
-      await adminContext.close();
-      await participantContext.close();
-    }
-  });
+    });
+  } finally {
+    await adminContext.close();
+    await participantContext.close();
+  }
 });
