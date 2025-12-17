@@ -7,6 +7,8 @@ import { gql } from "../lib/graphql.js";
 import "./speechesList.js";
 import "./personList.js";
 import "./referendumList.js";
+import "./invite-generator.js";
+import "./invite-list.js";
 
 const gqlAllOpenSaks = `
   query AllOpenSaks {
@@ -537,6 +539,16 @@ const MoreDialog = {
       background: var(--roi-theme-main-color);
       color: var(--roi-theme-main-color2);
     }
+    ${self} .invitasjonar-tab {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-width: 600px;
+    }
+    ${self} .invitasjonar-tab roi-invite-generator,
+    ${self} .invitasjonar-tab roi-invite-list {
+      width: 100%;
+    }
     `;
   },
   onerr() {
@@ -581,7 +593,7 @@ const MoreDialog = {
   },
   render({ useStore, useSel }) {
     this.store = useStore();
-    const { saks, sakId } = useSel("saks", "sakId");
+    const { saks, sakId, meetingId } = useSel("saks", "sakId", "meetingId");
     this.html`
       <h1>Administrer saker</h1>
       <ul class=tabs>
@@ -594,6 +606,7 @@ const MoreDialog = {
     }>Sjå eller slett saker</button>
         <li><button onclick=${this} name=finished class=${this.tab === "finished" && "active"}>Ferdige saker</button>
         <li><button onclick=${this} name=stats class=${this.tab === "stats" && "active"}>Statistikk</button>
+        <li><button onclick=${this} name=invitasjonar class=${this.tab === "invitasjonar" && "active"}>Invitasjonar</button>
       </ul>
       <form name=${this.tab}>
         ${
@@ -637,6 +650,12 @@ Som dette :)"
             showsak: html` <ShowSaker /> `,
             finished: html` <FinishedSaker /> `,
             stats: html` <ShowStats /> `,
+            invitasjonar: html`
+              <div class="invitasjonar-tab">
+                <roi-invite-generator meeting-id=${meetingId}></roi-invite-generator>
+                <roi-invite-list meeting-id=${meetingId}></roi-invite-list>
+              </div>
+            `,
           }[this.tab]
         }
       </form>

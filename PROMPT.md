@@ -112,7 +112,7 @@ You don't need to do a full phase in one go.
 - [x] Create `invite-list.js` component
 - [x] Create `join-meeting.js` component
 - [x] Create `qr-code.js` component
-- [ ] Update `manage.html` with "Invitasjonar" tab
+- [x] Update `manage.html` with "Invitasjonar" tab
 - [ ] **Test**: Generate invite code, verify in DB
 - [ ] **Test**: Join meeting via invite code
 - [ ] **Test**: Join meeting via direct link /i/{code}
@@ -254,9 +254,16 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 4: Invite System - QR code component complete, manage.html tab next
+- [ ] Phase 4: Invite System - Invitasjonar tab added, tests next
 
-### Completed This Iteration (QR Code Component)
+### Completed This Iteration (manage.html Invitasjonar Tab)
+- [x] Updated `manage.js` to import invite-generator.js and invite-list.js components
+- [x] Added "Invitasjonar" tab button to MoreDialog tabs
+- [x] Added invitasjonar tab content with roi-invite-generator and roi-invite-list components
+- [x] Added CSS styling for the invitasjonar tab layout
+- [x] Tab passes meetingId from useSel to invite components
+
+### Completed Previous Iteration (QR Code Component)
 - [x] Created `qr-code.js` component with:
   - Pure client-side QR code generation using canvas
   - Custom QR Code class implementing Reed-Solomon error correction
