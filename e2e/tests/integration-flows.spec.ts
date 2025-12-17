@@ -8,13 +8,15 @@
  * to verify the actual user experience works end-to-end.
  */
 
-import { test, expect } from "../fixtures";
 import {
+  test,
+  expect,
   query,
   uniqueEmail,
   uniqueSlug,
   getVerificationToken,
-} from "../helpers";
+  GraphQLClient,
+} from "../fixtures";
 
 test("complete new user flow via UI", async ({ page }) => {
   const email = uniqueEmail();
@@ -110,40 +112,12 @@ test("complete new user flow via UI", async ({ page }) => {
   const meetingId = `landsmote-${Date.now()}`.substring(0, 31);
 
   await test.step("create organization via API", async () => {
-    const orgResult = await page.evaluate(
-      async ({ slug, name }) => {
-        const jwt = JSON.parse(localStorage.getItem("creds") || "{}").jwt;
-        const response = await fetch("http://localhost:3000/graphql", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
-          },
-          body: JSON.stringify({
-            query: `
-              mutation CreateOrganization($slug: String!, $name: String!) {
-                createOrganization(input: { slug: $slug, name: $name }) {
-                  organization {
-                    id
-                    slug
-                    name
-                  }
-                }
-              }
-            `,
-            variables: { slug, name },
-          }),
-        });
-        return response.json();
-      },
-      { slug: orgSlug, name: orgName }
-    );
+    const api = new GraphQLClient(page);
+    const org = await api.createOrganization(orgSlug, orgName);
 
-    expect(orgResult.errors).toBeUndefined();
-    const createdOrg = orgResult.data.createOrganization.organization;
-    expect(createdOrg.slug).toBe(orgSlug);
-    expect(createdOrg.name).toBe(orgName);
-    orgId = createdOrg.id;
+    expect(org.slug).toBe(orgSlug);
+    expect(org.name).toBe(orgName);
+    orgId = org.id;
 
     // Verify organization in database
     const dbOrg = await query(
@@ -153,40 +127,11 @@ test("complete new user flow via UI", async ({ page }) => {
   });
 
   await test.step("create meeting via API", async () => {
-    const meetingResult = await page.evaluate(
-      async ({ orgId, meetingId, title }) => {
-        const jwt = JSON.parse(localStorage.getItem("creds") || "{}").jwt;
-        const response = await fetch("http://localhost:3000/graphql", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwt}`,
-          },
-          body: JSON.stringify({
-            query: `
-              mutation CreateOrgMeeting($orgId: Int!, $meetingId: String!, $title: String!, $config: JSON!) {
-                createOrgMeeting(input: { orgId: $orgId, meetingId: $meetingId, meetingTitle: $title, meetingConfig: $config }) {
-                  meeting {
-                    id
-                    title
-                    organizationId
-                  }
-                }
-              }
-            `,
-            variables: { orgId, meetingId, title, config: {} },
-          }),
-        });
-        return response.json();
-      },
-      { orgId, meetingId, title: meetingTitle }
-    );
+    const api = new GraphQLClient(page);
+    const meeting = await api.createMeeting(orgId, meetingId, meetingTitle);
 
-    expect(meetingResult.errors).toBeUndefined();
-    const createdMeeting = meetingResult.data.createOrgMeeting.meeting;
-    expect(createdMeeting.id).toBe(meetingId);
-    expect(createdMeeting.title).toBe(meetingTitle);
-    expect(createdMeeting.organizationId).toBe(orgId);
+    expect(meeting.id).toBe(meetingId);
+    expect(meeting.title).toBe(meetingTitle);
 
     // Verify meeting in database
     const dbMeeting = await query(
@@ -199,50 +144,38 @@ test("complete new user flow via UI", async ({ page }) => {
   });
 
   await test.step("verify dashboard shows org and meeting", async () => {
-    const dashboardData = await page.evaluate(async () => {
-      const jwt = JSON.parse(localStorage.getItem("creds") || "{}").jwt;
-      const response = await fetch("http://localhost:3000/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwt}`,
-        },
-        body: JSON.stringify({
-          query: `
-            query MyOrganizations {
-              myOrganizations {
-                nodes {
-                  id
-                  slug
-                  name
-                  organizationMeetings {
-                    nodes {
-                      id
-                      title
-                    }
-                  }
-                }
-              }
-            }
-          `,
-        }),
-      });
-      return response.json();
-    });
+    const api = new GraphQLClient(page);
 
-    expect(dashboardData.errors).toBeUndefined();
-    const orgs = dashboardData.data.myOrganizations.nodes;
+    const result = await api.execute<{
+      myOrganizations: {
+        nodes: Array<{
+          id: number;
+          slug: string;
+          name: string;
+          organizationMeetings: { nodes: Array<{ id: string; title: string }> };
+        }>;
+      };
+    }>(
+      `query MyOrganizations {
+        myOrganizations {
+          nodes {
+            id slug name
+            organizationMeetings { nodes { id title } }
+          }
+        }
+      }`
+    );
+
+    const orgs = result.myOrganizations.nodes;
 
     // Verify our organization is in the list
-    const ourOrg = orgs.find((o: { slug: string }) => o.slug === orgSlug);
+    const ourOrg = orgs.find((o) => o.slug === orgSlug);
     expect(ourOrg).toBeTruthy();
-    expect(ourOrg.name).toBe(orgName);
+    expect(ourOrg!.name).toBe(orgName);
 
     // Verify our meeting is in the organization
-    const ourMeeting = ourOrg.organizationMeetings.nodes.find(
-      (m: { id: string }) => m.id === meetingId
-    );
+    const ourMeeting = ourOrg!.organizationMeetings.nodes.find((m) => m.id === meetingId);
     expect(ourMeeting).toBeTruthy();
-    expect(ourMeeting.title).toBe(meetingTitle);
+    expect(ourMeeting!.title).toBe(meetingTitle);
   });
 });

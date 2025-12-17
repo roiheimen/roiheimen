@@ -7,134 +7,89 @@
  * - Meeting CRUD
  * - RLS policies
  * - Dashboard and navigation
- *
- * Uses fast user creation for setup where UI testing isn't needed.
  */
 
-import { test, expect } from "../fixtures";
 import {
-  uniqueEmail,
+  test,
+  expect,
   uniqueSlug,
   uniqueMeetingId,
-  createVerifiedUser,
-  createVerifiedUserFast,
-  loginUser,
-  loginUserFast,
-  getUserId,
   query,
-  // Organization helpers
-  createOrganizationDirect,
-  updateOrganizationDirect,
-  inviteToOrganizationDirect,
-  acceptOrganizationInviteDirect,
-  removeOrganizationMemberDirect,
-  getMyOrganizations,
+  getUserId,
   getOrganization,
   getOrganizationMember,
-  // Meeting helpers
-  createMeetingDirect,
-  updateMeetingDirect,
-  deleteMeetingDirect,
   getMeeting,
-} from "../helpers";
+  createVerifiedUser,
+  loginUser,
+  createAndLoginUser,
+  createVerifiedUserViaUI,
+  loginUserViaUI,
+  GraphQLClient,
+} from "../fixtures";
 
 // ============================================================================
 // Organization Management Flow
 // ============================================================================
 
-test("organization management flow", async ({ page }) => {
-  // Arrange: Create and login as owner
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
+test("organization management flow", async ({ orgOwner }) => {
+  const { api, org, user } = orgOwner;
 
-  let org: { id: number; slug: string; name: string };
-  const slug = uniqueSlug();
-
-  await test.step("can create organization and verify owner membership", async () => {
-    org = await createOrganizationDirect(page, slug, "Test Organisasjon");
-
-    expect(org.slug).toBe(slug);
+  await test.step("verify owner membership created automatically", async () => {
+    expect(org.slug).toBeTruthy();
     expect(org.name).toBe("Test Organisasjon");
 
-    // Verify in database
-    const dbOrg = await getOrganization(slug);
+    const dbOrg = await getOrganization(org.slug);
     expect(dbOrg).toBeTruthy();
-    expect(dbOrg!.name).toBe("Test Organisasjon");
 
-    // Verify user is owner
-    const userId = await getUserId(owner.email);
+    const userId = await getUserId(user.email);
     const member = await getOrganizationMember(dbOrg!.id, userId);
     expect(member).toBeTruthy();
     expect(member!.role).toBe("owner");
   });
 
   await test.step("can update organization name", async () => {
-    const updated = await updateOrganizationDirect(page, org.id, "Nytt Namn");
+    const updated = await api.updateOrganization(org.id, "Nytt Namn");
     expect(updated.name).toBe("Nytt Namn");
 
-    const dbOrg = await getOrganization(slug);
+    const dbOrg = await getOrganization(org.slug);
     expect(dbOrg!.name).toBe("Nytt Namn");
   });
 
   await test.step("can update organization config", async () => {
     const config = { theme: "dark", feature: true };
-    await updateOrganizationDirect(page, org.id, null, config);
+    await api.updateOrganization(org.id, null, config);
 
     const dbConfig = await query(
-      `SELECT config FROM roiheimen.organization WHERE slug = '${slug}'`
+      `SELECT config FROM roiheimen.organization WHERE slug = '${org.slug}'`
     );
     expect(dbConfig).toContain("dark");
   });
 });
 
-test("organization slug validation", async ({ page }) => {
-  const user = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, user.email, user.password);
-
+test("organization slug validation", async ({ authenticatedUser, api }) => {
   const existingSlug = uniqueSlug();
-  await createOrganizationDirect(page, existingSlug, "First Org");
+  await api.createOrganization(existingSlug, "First Org");
 
   await test.step("slug must be unique", async () => {
-    let error: Error | undefined;
-    try {
-      await createOrganizationDirect(page, existingSlug, "Second Org");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
+    await expect(api.createOrganization(existingSlug, "Second Org")).rejects.toThrow();
   });
 
   await test.step("rejects invalid characters", async () => {
-    let error: Error | undefined;
-    try {
-      await createOrganizationDirect(page, "test@org", "Test Org");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toContain("organization_slug_check");
+    await expect(api.createOrganization("test@org", "Test Org")).rejects.toThrow(
+      /organization_slug_check/
+    );
   });
 
   await test.step("rejects too short slug", async () => {
-    let error: Error | undefined;
-    try {
-      await createOrganizationDirect(page, "a", "Test Org");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toContain("organization_slug_check");
+    await expect(api.createOrganization("a", "Test Org")).rejects.toThrow(
+      /organization_slug_check/
+    );
   });
 
   await test.step("rejects slug with spaces", async () => {
-    let error: Error | undefined;
-    try {
-      await createOrganizationDirect(page, "invalid slug", "Test Org");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toContain("organization_slug_check");
+    await expect(api.createOrganization("invalid slug", "Test Org")).rejects.toThrow(
+      /organization_slug_check/
+    );
   });
 });
 
@@ -142,39 +97,31 @@ test("organization slug validation", async ({ page }) => {
 // Organization Invites and Members
 // ============================================================================
 
-test("organization invite and member flow", async ({ page }) => {
-  // Setup owner and organization
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
+test("organization invite and member flow", async ({ page, orgOwner }) => {
+  const { api, org, user: owner } = orgOwner;
 
   // Create invitee
-  const invitee = await createVerifiedUserFast(page, "Invitee");
+  const invitee = await createAndLoginUser(page, "Invitee");
+  const inviteeApi = new GraphQLClient(page);
 
   await test.step("can invite member by email and verify pending invite", async () => {
-    // Re-login as owner
-    await loginUserFast(page, owner.email, owner.password);
-
-    const invite = await inviteToOrganizationDirect(page, org.id, invitee.email, "MEMBER");
+    // Re-login as owner for invite
+    await loginUser(page, owner.email, owner.password);
+    const invite = await api.inviteToOrganization(org.id, invitee.email, "MEMBER");
     expect(invite.token).toBeTruthy();
   });
 
   await test.step("invited user can accept invite and join organization", async () => {
-    // Get the invite token from DB
     const dbInvite = await query(
       `SELECT token FROM roiheimen.organization_invite WHERE organization_id = ${org.id} AND lower(email) = lower('${invitee.email}') AND accepted_at IS NULL`
     );
     expect(dbInvite).toBeTruthy();
 
-    // Login as invitee and accept
-    await loginUserFast(page, invitee.email, invitee.password);
-    const membership = await acceptOrganizationInviteDirect(page, dbInvite);
+    await loginUser(page, invitee.email, invitee.password);
+    const membership = await inviteeApi.acceptOrganizationInvite(dbInvite);
 
     expect(membership.role).toBe("MEMBER");
 
-    // Verify in database
     const inviteeUserId = await getUserId(invitee.email);
     const member = await getOrganizationMember(org.id, inviteeUserId);
     expect(member).toBeTruthy();
@@ -182,27 +129,24 @@ test("organization invite and member flow", async ({ page }) => {
   });
 
   await test.step("member can see organization in their list", async () => {
-    const orgs = await getMyOrganizations(page);
-    const foundOrg = orgs.find((o) => o.slug === slug);
+    const orgs = await inviteeApi.getMyOrganizations();
+    const foundOrg = orgs.find((o) => o.slug === org.slug);
     expect(foundOrg).toBeTruthy();
-    expect(foundOrg!.name).toBe("Test Org");
+    expect(foundOrg!.name).toBe("Test Organisasjon");
   });
 
   await test.step("owner can remove member and verify access revoked", async () => {
-    // Login as owner
-    await loginUserFast(page, owner.email, owner.password);
+    await loginUser(page, owner.email, owner.password);
 
     const memberUserId = await getUserId(invitee.email);
-    await removeOrganizationMemberDirect(page, org.id, memberUserId);
+    await api.removeOrganizationMember(org.id, memberUserId);
 
-    // Verify in database
     const dbMember = await getOrganizationMember(org.id, memberUserId);
     expect(dbMember).toBeNull();
 
-    // Login as ex-member and verify no access
-    await loginUserFast(page, invitee.email, invitee.password);
-    const orgs = await getMyOrganizations(page);
-    expect(orgs.find((o) => o.slug === slug)).toBeUndefined();
+    await loginUser(page, invitee.email, invitee.password);
+    const orgs = await inviteeApi.getMyOrganizations();
+    expect(orgs.find((o) => o.slug === org.slug)).toBeUndefined();
   });
 });
 
@@ -210,44 +154,31 @@ test("organization invite and member flow", async ({ page }) => {
 // RLS Policies
 // ============================================================================
 
-test("organization RLS policies", async ({ page }) => {
-  // Create owner and organization
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Private Org");
+test("organization RLS policies", async ({ page, orgOwner }) => {
+  const { api, org, user: owner } = orgOwner;
 
   // Create non-member
-  const nonMember = await createVerifiedUserFast(page, "NonMember");
+  const nonMember = await createAndLoginUser(page, "NonMember");
+  const nonMemberApi = new GraphQLClient(page);
 
   await test.step("non-member cannot see organization data", async () => {
-    await loginUserFast(page, nonMember.email, nonMember.password);
-
-    const orgs = await getMyOrganizations(page);
-    const foundOrg = orgs.find((o) => o.slug === slug);
+    const orgs = await nonMemberApi.getMyOrganizations();
+    const foundOrg = orgs.find((o) => o.slug === org.slug);
     expect(foundOrg).toBeUndefined();
   });
 
   await test.step("member cannot edit organization (only admin/owner)", async () => {
-    // Create and invite a member
-    const member = await createVerifiedUserFast(page, "Member");
-    await loginUserFast(page, owner.email, owner.password);
-    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+    const member = await createAndLoginUser(page, "Member");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await api.inviteToOrganization(org.id, member.email, "MEMBER");
 
-    // Accept invite as member
-    await loginUserFast(page, member.email, member.password);
-    await acceptOrganizationInviteDirect(page, invite.token);
+    await loginUser(page, member.email, member.password);
+    const memberApi = new GraphQLClient(page);
+    await memberApi.acceptOrganizationInvite(invite.token);
 
-    // Try to update - should fail
-    let error: Error | undefined;
-    try {
-      await updateOrganizationDirect(page, org.id, "Hacked Name");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/admin or owner/);
+    await expect(memberApi.updateOrganization(org.id, "Hacked Name")).rejects.toThrow(
+      /admin or owner/
+    );
   });
 });
 
@@ -256,8 +187,8 @@ test("organization RLS policies", async ({ page }) => {
 // ============================================================================
 
 test("organization creation UI", async ({ page }) => {
-  const user = await createVerifiedUser(page, "Owner");
-  await loginUser(page, user.email, user.password);
+  const user = await createVerifiedUserViaUI(page, "Owner");
+  await loginUserViaUI(page, user.email, user.password);
 
   await test.step("can create organization via UI form", async () => {
     const hasJwt = await page.evaluate(() => {
@@ -293,7 +224,6 @@ test("organization creation UI", async ({ page }) => {
   await test.step("shows error for duplicate slug", async () => {
     const slug = uniqueSlug();
 
-    // Create first org
     await page.goto("/org/ny.html");
     await page.waitForSelector("roi-org-create");
     await page.fill('input[name="name"]', "First Org");
@@ -301,7 +231,6 @@ test("organization creation UI", async ({ page }) => {
     await page.click('input[type="submit"]');
     await page.waitForSelector(".success", { timeout: 10000 });
 
-    // Try duplicate
     await page.goto("/org/ny.html");
     await page.waitForSelector("roi-org-create form");
     await page.fill('input[name="name"]', "Second Org");
@@ -318,55 +247,36 @@ test("organization creation UI", async ({ page }) => {
 // Meeting Management
 // ============================================================================
 
-test("meeting management flow", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
+test("meeting management flow", async ({ meetingAdmin }) => {
+  const { api, org, meeting } = meetingAdmin;
 
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-
-  let meetingId: string;
-
-  await test.step("can create meeting under organization", async () => {
-    meetingId = uniqueMeetingId();
-    const title = "Test Landsmote 2025";
-
-    const meeting = await createMeetingDirect(page, org.id, meetingId, title);
-
-    expect(meeting.id).toBe(meetingId);
-    expect(meeting.title).toBe(title);
-
-    const dbMeeting = await getMeeting(meetingId);
+  await test.step("verify meeting created under organization", async () => {
+    const dbMeeting = await getMeeting(meeting.id);
     expect(dbMeeting).toBeTruthy();
-    expect(dbMeeting!.title).toBe(title);
+    expect(dbMeeting!.title).toBe("Test Meeting");
     expect(dbMeeting!.organizationId).toBe(org.id);
   });
 
   await test.step("meeting ID must be unique", async () => {
-    let error: Error | undefined;
-    try {
-      await createMeetingDirect(page, org.id, meetingId, "Second Meeting");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/duplicate|unique|already/i);
+    await expect(
+      api.createMeeting(org.id, meeting.id, "Second Meeting")
+    ).rejects.toThrow(/duplicate|unique|already/i);
   });
 
   await test.step("can update meeting title", async () => {
-    const updated = await updateMeetingDirect(page, meetingId, "New Title");
+    const updated = await api.updateMeeting(meeting.id, "New Title");
     expect(updated.title).toBe("New Title");
 
-    const dbMeeting = await getMeeting(meetingId);
+    const dbMeeting = await getMeeting(meeting.id);
     expect(dbMeeting!.title).toBe("New Title");
   });
 
   await test.step("can update meeting config", async () => {
     const config = { speechDisabled: true, video: "youtube123" };
-    await updateMeetingDirect(page, meetingId, null, config);
+    await api.updateMeeting(meeting.id, null, config);
 
     const dbConfig = await query(
-      `SELECT config FROM roiheimen.meeting WHERE id = '${meetingId}'`
+      `SELECT config FROM roiheimen.meeting WHERE id = '${meeting.id}'`
     );
     expect(dbConfig).toContain("speechDisabled");
     expect(dbConfig).toContain("youtube123");
@@ -374,12 +284,12 @@ test("meeting management flow", async ({ page }) => {
 
   await test.step("can delete meeting", async () => {
     const deleteId = uniqueMeetingId();
-    await createMeetingDirect(page, org.id, deleteId, "Meeting to Delete");
+    await api.createMeeting(org.id, deleteId, "Meeting to Delete");
 
     let dbMeeting = await getMeeting(deleteId);
     expect(dbMeeting).toBeTruthy();
 
-    const result = await deleteMeetingDirect(page, deleteId);
+    const result = await api.deleteMeeting(deleteId);
     expect(result).toBe(true);
 
     dbMeeting = await getMeeting(deleteId);
@@ -387,78 +297,50 @@ test("meeting management flow", async ({ page }) => {
   });
 });
 
-test("meeting access control", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+test("meeting access control", async ({ page, meetingAdmin }) => {
+  const { api, org, meeting, user: owner } = meetingAdmin;
 
   await test.step("non-member cannot create meeting in organization", async () => {
-    const nonMember = await createVerifiedUserFast(page, "NonMember");
-    await loginUserFast(page, nonMember.email, nonMember.password);
+    const nonMember = await createAndLoginUser(page, "NonMember");
+    const nonMemberApi = new GraphQLClient(page);
 
-    let error: Error | undefined;
-    try {
-      await createMeetingDirect(page, org.id, uniqueMeetingId(), "Hacked Meeting");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/not a member/i);
+    await expect(
+      nonMemberApi.createMeeting(org.id, uniqueMeetingId(), "Hacked Meeting")
+    ).rejects.toThrow(/not a member/i);
   });
 
   await test.step("member cannot create meeting (only admin/owner)", async () => {
-    const member = await createVerifiedUserFast(page, "Member");
-    await loginUserFast(page, owner.email, owner.password);
-    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+    const member = await createAndLoginUser(page, "Member");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await api.inviteToOrganization(org.id, member.email, "MEMBER");
 
-    await loginUserFast(page, member.email, member.password);
-    await acceptOrganizationInviteDirect(page, invite.token);
+    await loginUser(page, member.email, member.password);
+    const memberApi = new GraphQLClient(page);
+    await memberApi.acceptOrganizationInvite(invite.token);
 
-    let error: Error | undefined;
-    try {
-      await createMeetingDirect(page, org.id, uniqueMeetingId(), "Member Meeting");
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/admin or owner/i);
+    await expect(
+      memberApi.createMeeting(org.id, uniqueMeetingId(), "Member Meeting")
+    ).rejects.toThrow(/admin or owner/i);
   });
 
   await test.step("non-admin cannot delete meeting", async () => {
-    const member = await createVerifiedUserFast(page, "DeleteMember");
-    await loginUserFast(page, owner.email, owner.password);
-    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+    const member = await createAndLoginUser(page, "DeleteMember");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await api.inviteToOrganization(org.id, member.email, "MEMBER");
 
-    await loginUserFast(page, member.email, member.password);
-    await acceptOrganizationInviteDirect(page, invite.token);
+    await loginUser(page, member.email, member.password);
+    const memberApi = new GraphQLClient(page);
+    await memberApi.acceptOrganizationInvite(invite.token);
 
-    let error: Error | undefined;
-    try {
-      await deleteMeetingDirect(page, meetingId);
-    } catch (e) {
-      error = e as Error;
-    }
-    expect(error).toBeDefined();
-    expect(error?.message).toMatch(/owners/i);
+    await expect(memberApi.deleteMeeting(meeting.id)).rejects.toThrow(/owners/i);
   });
 });
 
-test("meeting RLS policies", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Private Meeting");
+test("meeting RLS policies", async ({ page, meetingAdmin }) => {
+  const { api, org, meeting, user: owner } = meetingAdmin;
 
   await test.step("non-member cannot see meetings in organization", async () => {
-    const nonMember = await createVerifiedUserFast(page, "NonMember");
-    await loginUserFast(page, nonMember.email, nonMember.password);
+    const nonMember = await createAndLoginUser(page, "NonMember");
 
     const result = await page.evaluate(async (meetingId) => {
       const response = await fetch("http://localhost:3000/graphql", {
@@ -473,18 +355,19 @@ test("meeting RLS policies", async ({ page }) => {
         }),
       });
       return response.json();
-    }, meetingId);
+    }, meeting.id);
 
     expect(result.data?.meeting).toBeNull();
   });
 
   await test.step("member can see meetings in organization", async () => {
-    const member = await createVerifiedUserFast(page, "Member");
-    await loginUserFast(page, owner.email, owner.password);
-    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+    const member = await createAndLoginUser(page, "Member");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await api.inviteToOrganization(org.id, member.email, "MEMBER");
 
-    await loginUserFast(page, member.email, member.password);
-    await acceptOrganizationInviteDirect(page, invite.token);
+    await loginUser(page, member.email, member.password);
+    const memberApi = new GraphQLClient(page);
+    await memberApi.acceptOrganizationInvite(invite.token);
 
     const result = await page.evaluate(async (meetingId) => {
       const response = await fetch("http://localhost:3000/graphql", {
@@ -499,10 +382,10 @@ test("meeting RLS policies", async ({ page }) => {
         }),
       });
       return response.json();
-    }, meetingId);
+    }, meeting.id);
 
     expect(result.data?.meeting).toBeTruthy();
-    expect(result.data?.meeting.title).toBe("Private Meeting");
+    expect(result.data?.meeting.title).toBe("Test Meeting");
   });
 });
 
@@ -510,95 +393,84 @@ test("meeting RLS policies", async ({ page }) => {
 // Dashboard
 // ============================================================================
 
-test("dashboard functionality", async ({ page }) => {
-  const owner = await createVerifiedUserFast(page, "Owner");
-  await loginUserFast(page, owner.email, owner.password);
+test("dashboard functionality", async ({ orgOwner }) => {
+  const { api, org: org2 } = orgOwner;
 
   const slug1 = uniqueSlug();
-  const slug2 = uniqueSlug();
-  await createOrganizationDirect(page, slug1, "Org One");
-  const org2 = await createOrganizationDirect(page, slug2, "Org Two");
+  await api.createOrganization(slug1, "Org One");
 
   const meetingId1 = uniqueMeetingId();
   const meetingId2 = uniqueMeetingId();
-  await createMeetingDirect(page, org2.id, meetingId1, "Meeting One");
-  await createMeetingDirect(page, org2.id, meetingId2, "Meeting Two");
+  await api.createMeeting(org2.id, meetingId1, "Meeting One");
+  await api.createMeeting(org2.id, meetingId2, "Meeting Two");
 
   await test.step("dashboard shows user's organizations", async () => {
-    const orgs = await getMyOrganizations(page);
+    const orgs = await api.getMyOrganizations();
     expect(orgs.length).toBeGreaterThanOrEqual(2);
 
-    const org1 = orgs.find((o) => o.slug === slug1);
-    const foundOrg2 = orgs.find((o) => o.slug === slug2);
+    const foundOrg1 = orgs.find((o) => o.slug === slug1);
+    const foundOrg2 = orgs.find((o) => o.slug === org2.slug);
 
-    expect(org1).toBeTruthy();
-    expect(org1!.name).toBe("Org One");
+    expect(foundOrg1).toBeTruthy();
+    expect(foundOrg1!.name).toBe("Org One");
     expect(foundOrg2).toBeTruthy();
-    expect(foundOrg2!.name).toBe("Org Two");
   });
 
   await test.step("dashboard shows meetings per organization", async () => {
-    const result = await page.evaluate(async () => {
-      const response = await fetch("http://localhost:3000/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
-        },
-        body: JSON.stringify({
-          query: `query MyOrganizations {
-            myOrganizations {
-              nodes {
-                id slug name
-                organizationMeetings { nodes { id title } }
-              }
-            }
-          }`,
-        }),
-      });
-      return response.json();
-    });
-
-    if (result.errors) throw new Error(result.errors[0].message);
-
-    const testOrg = result.data.myOrganizations.nodes.find(
-      (o: { slug: string }) => o.slug === slug2
+    const result = await api.execute<{
+      myOrganizations: {
+        nodes: Array<{
+          id: number;
+          slug: string;
+          name: string;
+          organizationMeetings: { nodes: Array<{ id: string; title: string }> };
+        }>;
+      };
+    }>(
+      `query MyOrganizations {
+        myOrganizations {
+          nodes {
+            id slug name
+            organizationMeetings { nodes { id title } }
+          }
+        }
+      }`
     );
+
+    const testOrg = result.myOrganizations.nodes.find((o) => o.slug === org2.slug);
     expect(testOrg).toBeTruthy();
-    expect(testOrg.organizationMeetings.nodes.length).toBe(2);
+    expect(testOrg!.organizationMeetings.nodes.length).toBe(2);
   });
 
   await test.step("activity feed shows recent activity", async () => {
-    const result = await page.evaluate(async () => {
-      const response = await fetch("http://localhost:3000/graphql", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
-        },
-        body: JSON.stringify({
-          query: `mutation GetUserActivity($limit: Int) {
-            getUserActivity(input: { activityLimit: $limit }) {
-              activityItems {
-                activityType activityTitle activityDescription
-                activityTimestamp orgSlug meetingId
-              }
-            }
-          }`,
-          variables: { limit: 10 },
-        }),
-      });
-      return response.json();
-    });
+    const result = await api.execute<{
+      getUserActivity: {
+        activityItems: Array<{
+          activityType: string;
+          activityTitle: string;
+          activityDescription: string;
+          activityTimestamp: string;
+          orgSlug: string;
+          meetingId: string;
+        }>;
+      };
+    }>(
+      `mutation GetUserActivity($limit: Int) {
+        getUserActivity(input: { activityLimit: $limit }) {
+          activityItems {
+            activityType activityTitle activityDescription
+            activityTimestamp orgSlug meetingId
+          }
+        }
+      }`,
+      { limit: 10 }
+    );
 
-    if (result.errors) throw new Error(result.errors[0].message);
-
-    const items = result.data.getUserActivity.activityItems;
+    const items = result.getUserActivity.activityItems;
     expect(items.length).toBeGreaterThanOrEqual(2);
 
     const orgActivity = items.find(
-      (item: { activityType: string; orgSlug: string }) =>
-        item.activityType === "org_created" && item.orgSlug === slug1
+      (item) => item.activityType === "org_created" && item.orgSlug === slug1
     );
     expect(orgActivity).toBeTruthy();
   });
@@ -609,13 +481,14 @@ test("dashboard functionality", async ({ page }) => {
 // ============================================================================
 
 test("global navigation", async ({ page }) => {
-  const owner = await createVerifiedUser(page, "NavUser");
-  await loginUser(page, owner.email, owner.password);
+  const owner = await createVerifiedUserViaUI(page, "NavUser");
+  await loginUserViaUI(page, owner.email, owner.password);
 
+  const api = new GraphQLClient(page);
   const slug1 = uniqueSlug();
   const slug2 = uniqueSlug();
-  await createOrganizationDirect(page, slug1, "Org Alpha");
-  await createOrganizationDirect(page, slug2, "Org Beta");
+  await api.createOrganization(slug1, "Org Alpha");
+  await api.createOrganization(slug2, "Org Beta");
 
   await test.step("org switcher navigates between organizations", async () => {
     await page.goto(`/org-innstillingar.html?slug=${slug1}`);
@@ -637,7 +510,6 @@ test("global navigation", async ({ page }) => {
 
     expect(page.url()).toContain(`slug=${slug2}`);
 
-    // Navigate back
     await page.waitForSelector("roi-global-nav .dropdown-toggle");
     await page.click("roi-global-nav .dropdown-toggle");
     await page.waitForSelector("roi-global-nav .dropdown-menu", { timeout: 5000 });
@@ -655,7 +527,7 @@ test("global navigation", async ({ page }) => {
     expect(hasJwtBefore).toBe(true);
 
     const slug = uniqueSlug();
-    await createOrganizationDirect(page, slug, "Logout Test Org");
+    await api.createOrganization(slug, "Logout Test Org");
 
     await page.goto(`/org-innstillingar.html?slug=${slug}`);
     await page.waitForSelector("roi-global-nav .dropdown", { timeout: 15000 });

@@ -12,16 +12,25 @@
  * since they're testing those specific flows.
  */
 
-import { test, expect } from "../fixtures";
 import {
+  test,
+  expect,
   query,
   uniqueEmail,
-  registerUser,
   getVerificationToken,
   getPasswordResetToken,
   isEmailVerified,
-  getFailedAttempts,
-} from "../helpers";
+  registerUserViaUI,
+} from "../fixtures";
+
+async function getFailedAttempts(email: string): Promise<number> {
+  const result = await query(`
+    SELECT uc.failed_attempts FROM roiheimen_private.user_credentials uc
+    JOIN roiheimen.user_account ua ON uc.user_id = ua.id
+    WHERE lower(ua.email) = lower('${email}')
+  `);
+  return parseInt(result || "0", 10);
+}
 
 test.describe("User Registration", () => {
   test("registration flow", async ({ page }) => {
@@ -30,7 +39,7 @@ test.describe("User Registration", () => {
       const name = "Test Brukar";
       const password = "testpassord123";
 
-      await registerUser(page, name, email, password);
+      await registerUserViaUI(page, name, email, password);
 
       // Verify token exists in database
       const token = await getVerificationToken(email);
@@ -85,7 +94,7 @@ test.describe("Email Verification", () => {
     const password = "testpassord123";
 
     await test.step("register user for verification test", async () => {
-      await registerUser(page, name, email, password);
+      await registerUserViaUI(page, name, email, password);
     });
 
     await test.step("can verify email using token from DB", async () => {
@@ -117,7 +126,7 @@ test.describe("User Login", () => {
     const password = "testpassord123";
 
     await test.step("register and verify user", async () => {
-      await registerUser(page, name, email, password);
+      await registerUserViaUI(page, name, email, password);
       const token = await getVerificationToken(email);
       await page.goto(`/stadfest-epost.html?token=${token}`);
       await page.waitForSelector(".success");
@@ -148,7 +157,7 @@ test.describe("User Login", () => {
     const name = "Test Brukar";
     const password = "testpassord123";
 
-    await registerUser(page, name, email, password);
+    await registerUserViaUI(page, name, email, password);
 
     await page.goto("/login.html");
     await page.waitForSelector("roi-login");
@@ -167,7 +176,7 @@ test.describe("User Login", () => {
     const password = "testpassord123";
 
     // Register and verify user
-    await registerUser(page, name, email, password);
+    await registerUserViaUI(page, name, email, password);
     const token = await getVerificationToken(email);
     await page.goto(`/stadfest-epost.html?token=${token}`);
     await page.waitForSelector(".success");
@@ -192,7 +201,7 @@ test.describe("Brute Force Protection", () => {
     const password = "testpassord123";
 
     await test.step("register and verify user", async () => {
-      await registerUser(page, name, email, password);
+      await registerUserViaUI(page, name, email, password);
       const token = await getVerificationToken(email);
       await page.goto(`/stadfest-epost.html?token=${token}`);
       await page.waitForSelector(".success");
@@ -238,7 +247,7 @@ test.describe("Password Reset", () => {
     const newPassword = "nyttpassord456";
 
     await test.step("register and verify user", async () => {
-      await registerUser(page, name, email, oldPassword);
+      await registerUserViaUI(page, name, email, oldPassword);
       const verifyToken = await getVerificationToken(email);
       await page.goto(`/stadfest-epost.html?token=${verifyToken}`);
       await page.waitForSelector(".success");

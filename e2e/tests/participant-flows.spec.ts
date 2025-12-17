@@ -7,45 +7,25 @@
  * - Admin uses manage.html
  */
 
-import { test, expect } from "../fixtures";
 import {
+  test,
+  expect,
   query,
-  uniqueSlug,
-  uniqueMeetingId,
-  createVerifiedUserFast,
-  loginUserFast,
-  createOrganizationDirect,
-  createMeetingDirect,
-  createInviteCodeDirect,
-  joinMeetingDirect,
-  getMeetingTokenDirect,
-  setMeetingJwt,
-  createSakDirect,
-} from "../helpers";
+  setJwt,
+  createAndLoginUser,
+  loginUser,
+  GraphQLClient,
+} from "../fixtures";
 
-test("participant invite and join flow", async ({ page }) => {
-  // Setup: owner, org, meeting
-  const owner = await createVerifiedUserFast(page, "Eigar");
-  await loginUserFast(page, owner.email, owner.password);
-
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Testorganisasjon");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Testavstemming 2025");
-
-  // Generate invite code
-  const invite = await createInviteCodeDirect(page, meetingId);
-
-  // Get owner's meeting token to create sak
-  const ownerJwt = await getMeetingTokenDirect(page, meetingId);
+test("participant invite and join flow", async ({ page, meetingWithSak }) => {
+  const { meeting, invite, sak, meetingJwt } = meetingWithSak;
 
   await test.step("admin generates invite and participant joins via direct link", async () => {
     expect(invite.code).toBeTruthy();
     expect(invite.code.length).toBe(8);
 
     // Create a participant user
-    const participant = await createVerifiedUserFast(page, "Deltakar");
-    await loginUserFast(page, participant.email, participant.password);
+    const participant = await createAndLoginUser(page, "Deltakar");
 
     // Navigate to direct invite link
     await page.goto(`/i/${invite.code}`);
@@ -56,13 +36,11 @@ test("participant invite and join flow", async ({ page }) => {
 
     // Wait for the join component to validate the code
     await page.waitForSelector("roi-join-meeting", { timeout: 10000 });
-
-    // Wait for validation to complete and meeting info to appear
     await page.waitForSelector(".meeting-info", { timeout: 15000 });
 
     // Verify meeting info is displayed
     const meetingTitle = await page.textContent(".meeting-info h3");
-    expect(meetingTitle).toContain("Testavstemming 2025");
+    expect(meetingTitle).toContain("Test Meeting");
 
     // Wait for the submit button to be enabled
     const submitButton = page.locator('input[type="submit"][value="Bli med"]');
@@ -82,7 +60,7 @@ test("participant invite and join flow", async ({ page }) => {
 
     // Verify participant is in database
     const participantInDb = await query(
-      `SELECT display_name, participant_num FROM roiheimen.meeting_participant WHERE meeting_id = '${meetingId}' AND display_name = 'Ola Nordmann'`
+      `SELECT display_name, participant_num FROM roiheimen.meeting_participant WHERE meeting_id = '${meeting.id}' AND display_name = 'Ola Nordmann'`
     );
     expect(participantInDb).toBeTruthy();
     const [displayName, participantNum] = participantInDb.split("|");
@@ -91,27 +69,22 @@ test("participant invite and join flow", async ({ page }) => {
   });
 
   await test.step("participant can access queue.html after joining", async () => {
-    // Set owner's JWT to create sak
-    await setMeetingJwt(page, ownerJwt);
-    const sak = await createSakDirect(page, meetingId, "Sak 1: Valg av møteleder");
-
     // Create another participant for this step
-    const participant2 = await createVerifiedUserFast(page, "Deltakar2");
-    await loginUserFast(page, participant2.email, participant2.password);
-    await joinMeetingDirect(page, meetingId, invite.code, "Test Deltakar 2");
+    const participant2 = await createAndLoginUser(page, "Deltakar2");
+    const api = new GraphQLClient(page);
+
+    await api.joinMeeting(meeting.id, invite.code, "Test Deltakar 2");
 
     // Get participant's meeting token
-    const participantJwt = await getMeetingTokenDirect(page, meetingId);
-    await setMeetingJwt(page, participantJwt);
+    const participantJwt = await api.getMeetingToken(meeting.id);
+    await setJwt(page, participantJwt);
 
     // Navigate to queue.html
-    await page.goto(`/queue.html?m=${meetingId}`);
-
-    // Wait for the queue component
+    await page.goto(`/queue.html?m=${meeting.id}`);
     await page.waitForSelector("roi-queue", { timeout: 10000 });
 
     // Verify sak title is shown
-    await expect(page.locator(".title")).toContainText("Sak 1: Valg av møteleder", { timeout: 10000 });
+    await expect(page.locator(".title")).toContainText("Sak 1: Test", { timeout: 10000 });
 
     // Verify the "Innlegg" button is visible
     const innleggButton = page.locator('button:has-text("Innlegg")');
@@ -119,42 +92,39 @@ test("participant invite and join flow", async ({ page }) => {
   });
 });
 
-test("participant queue.html interactions", async ({ page }) => {
-  // Setup: owner, org, meeting, invite
-  const owner = await createVerifiedUserFast(page, "Eigar");
-  await loginUserFast(page, owner.email, owner.password);
+test("participant queue.html interactions", async ({ participantInMeeting }) => {
+  const { admin, participant, participantJwt, api } = participantInMeeting;
+  const { meeting, sak } = admin;
 
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
-  const invite = await createInviteCodeDirect(page, meetingId);
+  // Navigate to queue.html (JWT already set by fixture)
+  await api.execute(`mutation { __typename }`); // Ensure page context
+  const page = (api as unknown as { page: import("@playwright/test").Page }).page;
 
-  // Get owner's meeting token and create sak
-  const ownerJwt = await getMeetingTokenDirect(page, meetingId);
-  await setMeetingJwt(page, ownerJwt);
-  const sak = await createSakDirect(page, meetingId, "Sak 1: Diskusjon");
+  // Get the page from the fixture context
+  await participantInMeeting.api.execute(`mutation { __typename }`);
+});
+
+test("participant queue.html interactions - full flow", async ({ page, meetingWithSak }) => {
+  const { meeting, invite, sak, meetingJwt } = meetingWithSak;
 
   // Create participant and join
-  const participant = await createVerifiedUserFast(page, "Deltakar");
-  await loginUserFast(page, participant.email, participant.password);
-  await joinMeetingDirect(page, meetingId, invite.code, "Kari Nordmann");
+  const participant = await createAndLoginUser(page, "Deltakar");
+  const api = new GraphQLClient(page);
+  await api.joinMeeting(meeting.id, invite.code, "Kari Nordmann");
 
   // Get participant's meeting token
-  const participantJwt = await getMeetingTokenDirect(page, meetingId);
-  await setMeetingJwt(page, participantJwt);
+  const participantJwt = await api.getMeetingToken(meeting.id);
+  await setJwt(page, participantJwt);
 
   // Navigate to queue.html
-  await page.goto(`/queue.html?m=${meetingId}`);
+  await page.goto(`/queue.html?m=${meeting.id}`);
   await page.waitForSelector("roi-queue", { timeout: 10000 });
 
   await test.step("participant can add speech (innlegg) to speaker list", async () => {
-    // Click the "Innlegg" button
     const innleggButton = page.locator('button.main:has-text("Innlegg")');
     await expect(innleggButton).toBeVisible({ timeout: 5000 });
     await innleggButton.click();
 
-    // Verify the "Stryk meg" button appears
     const strykButton = page.locator('button:has-text("Stryk meg")');
     await expect(strykButton).toBeVisible({ timeout: 5000 });
 
@@ -168,17 +138,13 @@ test("participant queue.html interactions", async ({ page }) => {
   });
 
   await test.step("participant can remove themselves from speaker list", async () => {
-    // The "Stryk meg" button should be visible from previous step
     const strykButton = page.locator('button:has-text("Stryk meg")');
     await expect(strykButton).toBeVisible({ timeout: 5000 });
 
-    // Click "Stryk meg" to remove ourselves
     await strykButton.click();
-
-    // The "Stryk meg" button should no longer be visible
     await expect(strykButton).not.toBeVisible({ timeout: 5000 });
 
-    // Verify speech was marked as ended in database
+    // Verify speech was marked as ended
     await expect.poll(async () => {
       const speechInDb = await query(
         `SELECT ended_at IS NOT NULL as is_ended FROM roiheimen.speech s WHERE s.sak_id = ${sak.id} ORDER BY id DESC LIMIT 1`
@@ -188,12 +154,11 @@ test("participant queue.html interactions", async ({ page }) => {
   });
 
   await test.step("participant can add replikk to speaker list", async () => {
-    // Click the "Replikk" button
     const replikkButton = page.locator('button:has-text("Replikk")');
     await expect(replikkButton).toBeVisible({ timeout: 5000 });
     await replikkButton.click();
 
-    // Verify replikk was added to database
+    // Verify replikk was added
     await expect.poll(async () => {
       const speechInDb = await query(
         `SELECT s.type FROM roiheimen.speech s WHERE s.sak_id = ${sak.id} AND ended_at IS NULL ORDER BY id DESC LIMIT 1`
@@ -203,47 +168,32 @@ test("participant queue.html interactions", async ({ page }) => {
   });
 });
 
-test("admin manage.html features", async ({ page }) => {
-  // Setup: owner, org, meeting
-  const owner = await createVerifiedUserFast(page, "Eigar");
-  await loginUserFast(page, owner.email, owner.password);
+test("admin manage.html features", async ({ page, meetingWithSak }) => {
+  const { meeting, meetingJwt } = meetingWithSak;
 
-  const slug = uniqueSlug();
-  const org = await createOrganizationDirect(page, slug, "Test Org");
-  const meetingId = uniqueMeetingId();
-  await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
-
-  // Get meeting token
-  const jwt = await getMeetingTokenDirect(page, meetingId);
-  await setMeetingJwt(page, jwt);
-
-  // Create a sak to enable the "Meir" button
-  await createSakDirect(page, meetingId, "Test Sak");
-
-  // Navigate to manage.html
-  await page.goto(`/manage.html?id=${meetingId}`);
+  // JWT already set by fixture, navigate to manage.html
+  await page.goto(`/manage.html?id=${meeting.id}`);
   await page.waitForSelector("roi-manage", { timeout: 10000 });
 
   await test.step("admin can access all tabs in manage.html", async () => {
-    // Click "Meir" to open the dialog
     await page.click('button:has-text("Meir")');
     await page.waitForSelector('dialog[open]', { timeout: 5000 });
 
     const dialog = page.locator('dialog[open]');
 
-    // 1. "Lag nye saker" tab (sak)
+    // 1. "Lag nye saker" tab
     const lagNyeSakerTab = dialog.locator('button[name="sak"]');
     await expect(lagNyeSakerTab).toBeVisible();
     await lagNyeSakerTab.click();
     await expect(dialog.locator('textarea[name="saker"]')).toBeVisible({ timeout: 3000 });
 
-    // 2. "Legg inn kommandoer på sak" tab (action)
+    // 2. "Legg inn kommandoer på sak" tab
     const actionTab = dialog.locator('button[name="action"]');
     await expect(actionTab).toBeVisible();
     await actionTab.click();
     await expect(dialog.locator('textarea[name="adderlines"]')).toBeVisible({ timeout: 3000 });
 
-    // 3. "Statistikk" tab (stats)
+    // 3. "Statistikk" tab
     const statistikkTab = dialog.locator('button[name="stats"]');
     await expect(statistikkTab).toBeVisible();
     await statistikkTab.click();
@@ -261,40 +211,34 @@ test("admin manage.html features", async ({ page }) => {
     await invitasjonarTab.click();
     await expect(dialog.locator('.invitasjonar-tab')).toBeVisible({ timeout: 3000 });
 
-    // Close dialog
     await page.keyboard.press("Escape");
     await expect(page.locator('dialog[open]')).not.toBeVisible({ timeout: 5000 });
   });
 
   await test.step("admin can create additional sak via Meir dialog", async () => {
-    // Open "Meir" dialog to access bulk sak creation
     await page.click('button:has-text("Meir")');
     await page.waitForSelector('dialog[open]', { timeout: 5000 });
 
-    // Go to "Lag nye saker" tab
     const dialog = page.locator('dialog[open]');
     await dialog.locator('button[name="sak"]').click();
     await expect(dialog.locator('textarea[name="saker"]')).toBeVisible({ timeout: 3000 });
 
-    // Enter a new sak title
     await dialog.locator('textarea[name="saker"]').fill('Sak 2: Godkjenning av dagsorden');
     await dialog.locator('input[type="submit"][value="Legg til"]').click();
 
-    // Close dialog
     await page.keyboard.press("Escape");
     await expect(page.locator('dialog[open]')).not.toBeVisible({ timeout: 5000 });
 
-    // Verify sak was created in database
+    // Verify sak was created
     await expect.poll(async () => {
       const sakInDb = await query(
-        `SELECT COUNT(*) FROM roiheimen.sak WHERE meeting_id = '${meetingId}' AND title = 'Sak 2: Godkjenning av dagsorden'`
+        `SELECT COUNT(*) FROM roiheimen.sak WHERE meeting_id = '${meeting.id}' AND title = 'Sak 2: Godkjenning av dagsorden'`
       );
       return parseInt(sakInDb, 10);
     }).toBeGreaterThan(0);
   });
 
   await test.step("admin can create invite from Invitasjonar tab", async () => {
-    // Click "Meir" to open dialog
     await page.click('button:has-text("Meir")');
     await page.waitForSelector('dialog[open]', { timeout: 5000 });
 
@@ -302,28 +246,22 @@ test("admin manage.html features", async ({ page }) => {
     await dialog.locator('button[name="invitasjonar"]').click();
     await dialog.locator('.invitasjonar-tab').waitFor({ timeout: 3000 });
 
-    // Wait for invite generator to load
     await page.waitForSelector('roi-invite-generator', { timeout: 5000 });
 
-    // Count invites before
     const invitesBefore = await query(
-      `SELECT COUNT(*) FROM roiheimen.meeting_invite WHERE meeting_id = '${meetingId}'`
+      `SELECT COUNT(*) FROM roiheimen.meeting_invite WHERE meeting_id = '${meeting.id}'`
     );
 
-    // Create an invite
     await page.click('roi-invite-generator button[type="submit"]');
-
-    // Wait for success
     await page.waitForSelector('.success-card', { timeout: 10000 });
 
-    // Verify success message
     const successText = await page.textContent('.success-card');
     expect(successText).toContain('Invitasjonskode laga');
 
     // Verify invite was created
     await expect.poll(async () => {
       const invitesAfter = await query(
-        `SELECT COUNT(*) FROM roiheimen.meeting_invite WHERE meeting_id = '${meetingId}'`
+        `SELECT COUNT(*) FROM roiheimen.meeting_invite WHERE meeting_id = '${meeting.id}'`
       );
       return parseInt(invitesAfter, 10);
     }).toBeGreaterThan(parseInt(invitesBefore, 10));

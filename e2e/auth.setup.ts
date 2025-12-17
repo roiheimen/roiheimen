@@ -9,8 +9,7 @@
  * without specific resource ownership requirements.
  */
 
-import { test as setup, expect } from "./fixtures";
-import { createVerifiedUserFast, loginUserFast } from "./helpers";
+import { test as setup, expect, createVerifiedUser, loginUser } from "./fixtures";
 
 const authFile = "playwright/.auth/user.json";
 
@@ -19,10 +18,10 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/");
 
   // Create a verified user using fast API method
-  const user = await createVerifiedUserFast(page, "SharedAuth");
+  const user = await createVerifiedUser(page, "SharedAuth");
 
   // Login using fast method
-  await loginUserFast(page, user.email, user.password);
+  await loginUser(page, user.email, user.password);
 
   // Verify login worked
   const hasJwt = await page.evaluate(() => {
