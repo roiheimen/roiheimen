@@ -64,7 +64,7 @@ You don't need to do a full phase in one go.
 - [x] Create `dashboard.js` component
 - [x] Create `org-card.js` component
 - [x] Create `org-create.js` component
-- [ ] Create `org-settings.js` component
+- [x] Create `org-settings.js` component
 - [ ] Create `org-members.js` component
 - [ ] Add organizations Redux bundle to `state.js`
 - [x] **Test**: Create organization, verify owner membership
@@ -253,6 +253,20 @@ APP_URL=https://roiheimen.example.com
 - [ ] Phase 2: Organizations - UI components and remaining tests
 
 ### Completed This Session
+- [x] Created `org-settings.js` component with:
+  - Organization name editing (admin/owner only)
+  - Read-only slug display
+  - Save changes functionality with GraphQL mutation
+  - Danger zone with delete organization (owner only)
+  - Proper Norwegian Nynorsk UI text
+- [x] Created `org-settings-page.js` wrapper component that:
+  - Loads organization by slug from query parameter
+  - Handles loading/error states
+  - Provides navigation between org pages
+- [x] Created `/org-innstillingar.html` page
+- [x] Updated `org-card.js` to link to the new settings page
+
+### Previous Session (org-card)
 - [x] Created `org-card.js` component showing org name, slug, role badge (eigar/admin/medlem) and meeting count
 - [x] Updated `dashboard.js` to use the new org-card component
 - [x] Updated dashboard GraphQL query to fetch `myRoleInOrganization` field

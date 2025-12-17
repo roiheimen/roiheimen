@@ -108,7 +108,7 @@ define("RoiOrgCard", {
             ? "1 møte"
             : `${meetingCount} møte`}
         </span>
-        <a href=${`/org/${org.slug}/`} class="org-link">Opna →</a>
+        <a href=${`/org-innstillingar.html?slug=${org.slug}`} class="org-link">Opna →</a>
       </div>
     `;
   },
