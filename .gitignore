@@ -21,6 +21,6 @@ pkg/server/db_*.sql
 v2/
 
 # Playwright
-playwright/.auth/
+e2e/.playwright-auth/
 test-results/
 playwright-report/

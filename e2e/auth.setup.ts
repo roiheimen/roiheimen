@@ -11,7 +11,7 @@
 
 import { test as setup, expect, createVerifiedUser, loginUser } from "./fixtures";
 
-const authFile = "playwright/.auth/user.json";
+const authFile = ".playwright-auth/user.json";
 
 setup("authenticate", async ({ page }) => {
   // Navigate to app first to establish browser context for fetch requests

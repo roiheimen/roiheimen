@@ -31,7 +31,7 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         // Note: storageState commented out since most tests create their own users
         // Uncomment if you have tests that benefit from pre-authenticated state:
-        // storageState: "playwright/.auth/user.json",
+        // storageState: ".playwright-auth/user.json",
       },
       dependencies: ["setup"],
     },
