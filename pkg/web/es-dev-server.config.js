@@ -1,14 +1,15 @@
 const proxy = require("koa-http2-proxy");
 
 // Middleware to handle /i/{code} invite links
-function inviteRedirect(ctx, next) {
+async function inviteRedirect(ctx, next) {
   const match = ctx.url.match(/^\/i\/([A-Za-z0-9]+)$/);
   if (match) {
     const code = match[1];
     ctx.redirect(`/bli-med.html?code=${code}`);
+    // Don't call next() - we're done with a redirect
     return;
   }
-  return next();
+  await next();
 }
 
 module.exports = {

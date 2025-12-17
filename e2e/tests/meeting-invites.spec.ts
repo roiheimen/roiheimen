@@ -1022,8 +1022,7 @@ test.describe("Invite Management", () => {
 });
 
 test.describe("Direct Invite Link", () => {
-  test.skip("join meeting via direct link /i/{code}", async ({ page }) => {
-    // TODO: Requires /i/{code} redirect routing to be implemented
+  test("join meeting via direct link /i/{code}", async ({ page }) => {
     const owner = await createVerifiedUser(page, "Owner");
     await loginUser(page, owner.email, owner.password);
 
@@ -1039,11 +1038,13 @@ test.describe("Direct Invite Link", () => {
     const participant = await createVerifiedUser(page, "Deltaker");
     await loginUser(page, participant.email, participant.password);
 
-    // Navigate to direct link
+    // Navigate to direct link (should redirect to bli-med.html)
     await page.goto(`/i/${invite.code}`);
 
-    // Should redirect to bli-med.html with code pre-filled
-    await page.waitForURL(`**/bli-med.html?code=${invite.code}`, { timeout: 10000 });
+    // Check that we got redirected to bli-med.html
+    const url = page.url();
+    expect(url).toContain("bli-med.html");
+    expect(url).toContain(`code=${invite.code}`);
 
     // The join-meeting component should validate and show meeting info
     await page.waitForSelector("roi-join-meeting", { timeout: 10000 });
@@ -1058,8 +1059,7 @@ test.describe("Direct Invite Link", () => {
 });
 
 test.describe("QR Code", () => {
-  test.skip("QR code generates valid link", async ({ page }) => {
-    // TODO: Requires manage.html to work with new meeting-scoped JWT system
+  test("QR code generates valid link", async ({ page }) => {
     const owner = await createVerifiedUser(page, "Owner");
     await loginUser(page, owner.email, owner.password);
 
@@ -1069,13 +1069,28 @@ test.describe("QR Code", () => {
     const meetingId = uniqueMeetingId();
     await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
 
-    // Navigate to manage.html and open invite tab
+    // Get meeting token (owner is org member, so they get admin token)
+    const meetingJwt = await getMeetingTokenDirect(page, meetingId);
+
+    // Store the meeting JWT in localStorage so manage.html can use it
+    await page.evaluate((jwt) => {
+      localStorage.setItem("creds", JSON.stringify({ jwt }));
+    }, meetingJwt);
+
+    // Navigate to manage.html
     await page.goto(`/manage.html?id=${meetingId}`);
     await page.waitForSelector("roi-manage", { timeout: 10000 });
 
+    // First create a sak (agenda item) - the "Meir" button only appears when there's an active sak
+    await page.click('button:has-text("Ny sak")');
+    await page.waitForSelector('dialog[open]', { timeout: 5000 });
+    await page.fill('input[name="title"]', 'Test Sak');
+    await page.click('input[type="submit"][value="Legg til og bytt"]');
+    await page.waitForSelector('button:has-text("Meir")', { timeout: 10000 });
+
     // Click the More button to open dialog
     await page.click('button:has-text("Meir")');
-    await page.waitForSelector("#more-dialog", { timeout: 5000 });
+    await page.waitForSelector('dialog[open]:has-text("Administrer saker")', { timeout: 5000 });
 
     // Click on Invitasjonar tab
     await page.click('button:has-text("Invitasjonar")');
@@ -1085,7 +1100,7 @@ test.describe("QR Code", () => {
 
     // Create an invite first
     await page.click('roi-invite-generator button[type="submit"]');
-    await page.waitForSelector(".success-screen", { timeout: 10000 });
+    await page.waitForSelector(".success-card", { timeout: 10000 });
 
     // Click show QR code button
     await page.click('button:has-text("Vis QR-kode")');

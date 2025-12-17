@@ -141,10 +141,10 @@ define("RoiJoinMeeting", {
     this.state.error = null;
     this.render();
 
-    const query = `
-      query ValidateInvite($code: String!) {
-        validateInviteCode(pCode: $code) {
-          nodes {
+    const mutation = `
+      mutation ValidateInvite($code: String!) {
+        validateInviteCode(input: { pCode: $code }) {
+          inviteValidationResults {
             meetingId
             meetingTitle
             orgName
@@ -155,8 +155,8 @@ define("RoiJoinMeeting", {
     `;
 
     try {
-      const data = await gql(query, { code }, { jwt: false });
-      const result = data?.validateInviteCode?.nodes?.[0];
+      const data = await gql(mutation, { code }, { jwt: false });
+      const result = data?.validateInviteCode?.inviteValidationResults?.[0];
 
       this.state.loading = false;
 

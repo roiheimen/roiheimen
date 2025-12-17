@@ -118,8 +118,8 @@ You don't need to do a full phase in one go.
 - [x] **Test**: Invite with max_uses limit enforced
 - [x] **Test**: Expired invite code rejected
 - [x] **Test**: Meeting-scoped JWT grants queue.html access
-- [ ] **Test**: Join meeting via direct link /i/{code} (skipped - needs /i/ route implementation)
-- [ ] **Test**: QR code generates valid link (skipped - needs manage.html integration)
+- [x] **Test**: Join meeting via direct link /i/{code}
+- [x] **Test**: QR code generates valid link
 
 ### Phase 5: Integration & Polish
 - [x] Update `queue.html` to work with new meeting_participant table
@@ -256,7 +256,26 @@ APP_URL=https://roiheimen.example.com
 ### In Progress
 - [ ] Phase 5: Integration & Polish
 
-### Completed This Iteration (Legacy Login Component)
+### Completed This Iteration (Phase 4 Invite Tests)
+- [x] Fixed `/i/{code}` direct link redirect middleware in `es-dev-server.config.js`:
+  - Made middleware async and properly await next()
+  - Redirect now works correctly for invite codes
+- [x] Fixed `join-meeting.js` validateInviteCode call:
+  - Changed from Query to Mutation format to match PostGraphile's setof function handling
+  - Updated response path from `nodes[0]` to `inviteValidationResults[0]`
+- [x] Removed unnecessary `state.js` import from `bli-med.html`:
+  - This was causing redirect to `/` due to legacy meeting bundle triggering errors
+- [x] Unskipped and fixed direct invite link test:
+  - Test now navigates to `/i/{code}` and verifies redirect to `bli-med.html`
+  - Validates invite code and shows meeting info
+- [x] Unskipped and fixed QR code test:
+  - Added `getMeetingTokenDirect` call to get meeting JWT for manage.html
+  - Added sak creation step (needed to show "Meir" button)
+  - Fixed dialog and button selectors for actual UI elements
+  - Test creates invite, shows QR code, and verifies canvas content
+- [x] All 68 E2E tests now pass (was 66 with 2 skipped)
+
+### Completed Previous Iteration (Legacy Login Component)
 - [x] Created `pkg/web/src/comp/legacy-login.js` component with:
   - Num/code (password) login form for meeting-specific authentication
   - Uses the legacy `authenticate(num, meeting_id, password)` function via `doMyselfLogin`
