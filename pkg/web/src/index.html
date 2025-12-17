@@ -1,39 +1,24 @@
 <!DOCTYPE html>
 <head>
 <meta charset=utf8>
-<title>Roiheimen</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roiheimen - Taleliste og avroysting for demokratiske mote</title>
+<meta name="description" content="Roiheimen gjer det enkelt a halda styr pa talelista og gjennomfora avroysting pa mote. Brukt av MDG, Noregs Mallag og mange fleire.">
 <link rel=stylesheet href=style.css>
-<script type=module src=/db/state.js></script>
-<script type=module src=/lib/boot.js></script>
-<script type=module src=/comp/meetingList.js></script>
-<script type=module src=/comp/legacy-login.js></script>
-<script type=module src=/comp/title.js></script>
-<script type=module src=/comp/global-nav.js></script>
+<script type=module src=/comp/landing-page.js></script>
 <style>
-.card.login {
-  min-height: 200px;
-}
-.feil {
-  min-height: 300px;
-  background-color: red;
-  color: white;
-  font-size: 24px;
-}
-.warn {
-  margin: 20px;
-  padding: 10px;
-  background-color: yellow;
-  color: black;
-  font-size: 20px;
+body {
+  background: #fefbf8;
+  margin: 0;
+  padding: 0;
 }
 </style>
 <script>
-// Redirect to dashboard if logged in (new user system)
+// Redirect to dashboard if logged in with user account
 (function() {
   try {
     var creds = JSON.parse(localStorage.getItem('creds') || '{}');
     if (creds.jwt && !location.search.includes('logout')) {
-      // Decode JWT to check if it's a user token (has email claim)
       var payload = JSON.parse(atob(creds.jwt.split('.')[1]));
       if (payload.email) {
         location.replace('/oversikt.html');
@@ -45,51 +30,6 @@
 })();
 </script>
 </head>
-<body data-externals>
-  <header>
-    <h1 is=roi-title>
-      <span>roiheimen</span><br>
-      &ndash;
-    </h1>
-  </header>
-  <div class=feil style="display: none">
-    <p>Nettleseren din er diverre ikkje støtta, du bør ha ein nyare versjon
-    av Chrome eller Firefox for at det skal fungera best. Og i mange
-    tilfelle i det heile teke. (Dette inkluderer andre moderne netlesarar,
-    som Vivaldi, Brave og Opera).
-    <p><code class=feilextra></code>
-  </div>
-  <div class=warn style="display: none">
-    Dette systemet fungerer best i nyaste Chrome og Firefox på datamaskin. På mobil gjeld det same
-    for Android, medan for Iphone må du bruka Safari i det tilfellet.
-  </div>
-  <section class="card sm">
-    <roi-meeting-list>
-      <p></p>
-    </roi-meeting-list>
-  </section>
+<body>
+  <roi-landing-page></roi-landing-page>
 </body>
-
-<script>
-  var ua, m, num;
-  try {
-    ua = navigator.userAgent;
-    if (ua.indexOf("Chrome/") != -1) {
-      num = +/Chrome\/(\d+)/.exec(ua)[1];
-      if (num < 80) {
-        throw new Error("Din Chrome er for gamal, må vera versjon 80 eller nyare");
-      }
-    }
-    else if (ua.indexOf("Firefox/") != -1) {
-      num = +/Firefox\/(\d+)/.exec(ua)[1];
-      if (num < 75) {
-        throw new Error("Din Firefox er for gamal, må vera versjon 75 eller nyare");
-      }
-    } else {
-      document.querySelector(".warn").style.display = "block";
-    }
-  } catch (e) {
-    document.querySelector(".feil").style.display = "block";
-    document.querySelector(".feilextra").innerHTML = ""+e.message;
-  }
-</script>
