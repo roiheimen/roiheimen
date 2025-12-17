@@ -1161,8 +1161,9 @@ end;
 $$ language plpgsql stable security definer;
 comment on function roiheimen.get_organization_members(integer) is 'Returns all members of an organization with their user info';
 
--- create_meeting: Create a new meeting under an organization
-create or replace function roiheimen.create_meeting(
+-- create_org_meeting: Create a new meeting under an organization
+-- Note: Named 'create_org_meeting' to avoid conflict with PostGraphile's auto-generated 'createMeeting' mutation
+create or replace function roiheimen.create_org_meeting(
   org_id integer,
   meeting_id text,
   meeting_title text,
@@ -1210,10 +1211,11 @@ begin
   return new_meeting;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.create_meeting(integer, text, text, jsonb) is 'Creates a new meeting under an organization';
+comment on function roiheimen.create_org_meeting(integer, text, text, jsonb) is 'Creates a new meeting under an organization';
 
--- update_meeting: Update a meeting's title and/or config
-create or replace function roiheimen.update_meeting(
+-- update_org_meeting: Update a meeting's title and/or config
+-- Note: Named 'update_org_meeting' to avoid conflict with PostGraphile's auto-generated 'updateMeeting' mutation
+create or replace function roiheimen.update_org_meeting(
   meeting_id text,
   new_title text default null,
   new_config jsonb default null
@@ -1264,10 +1266,11 @@ begin
   return updated_meeting;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.update_meeting(text, text, jsonb) is 'Updates a meeting title and/or config';
+comment on function roiheimen.update_org_meeting(text, text, jsonb) is 'Updates a meeting title and/or config';
 
--- delete_meeting: Delete a meeting (owner only)
-create or replace function roiheimen.delete_meeting(
+-- delete_org_meeting: Delete a meeting (owner only)
+-- Note: Named 'delete_org_meeting' to avoid conflict with PostGraphile's auto-generated 'deleteMeeting' mutation
+create or replace function roiheimen.delete_org_meeting(
   meeting_id text
 ) returns boolean as $$
 declare
@@ -1309,9 +1312,11 @@ begin
   return true;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.delete_meeting(text) is 'Deletes a meeting (owner only)';
+comment on function roiheimen.delete_org_meeting(text) is 'Deletes a meeting (owner only)';
 
 -- organization_meetings: Get all meetings for an organization
+-- Note: We use @fieldName organizationMeetings in the comment to avoid naming conflict
+-- with the automatic 'meetings' field from the FK relation
 create or replace function roiheimen.organization_meetings(
   org roiheimen.organization
 ) returns setof roiheimen.meeting as $$
@@ -1320,7 +1325,7 @@ create or replace function roiheimen.organization_meetings(
     where m.organization_id = org.id
     order by m.created_at desc;
 $$ language sql stable;
-comment on function roiheimen.organization_meetings(roiheimen.organization) is 'Returns all meetings belonging to an organization';
+comment on function roiheimen.organization_meetings(roiheimen.organization) is E'@fieldName organizationMeetings\nReturns all meetings belonging to an organization';
 
 -- Permissions
 
@@ -1415,9 +1420,9 @@ grant select on table roiheimen.meeting to roiheimen_user;
 grant insert, update, delete on table roiheimen.meeting to roiheimen_user;
 
 -- Meeting function permissions
-grant execute on function roiheimen.create_meeting(integer, text, text, jsonb) to roiheimen_user;
-grant execute on function roiheimen.update_meeting(text, text, jsonb) to roiheimen_user;
-grant execute on function roiheimen.delete_meeting(text) to roiheimen_user;
+grant execute on function roiheimen.create_org_meeting(integer, text, text, jsonb) to roiheimen_user;
+grant execute on function roiheimen.update_org_meeting(text, text, jsonb) to roiheimen_user;
+grant execute on function roiheimen.delete_org_meeting(text) to roiheimen_user;
 grant execute on function roiheimen.organization_meetings(roiheimen.organization) to roiheimen_user;
 
 -- Row lewel security policy
@@ -1429,18 +1434,25 @@ alter table roiheimen.test enable row level security;
 alter table roiheimen.referendum enable row level security;
 alter table roiheimen.vote enable row level security;
 
-create policy select_meeting on roiheimen.meeting for select using (true);
+-- Legacy meeting policy: anyone can see meetings without an organization_id
+-- (for backward compatibility with legacy meeting-based auth)
+create policy select_meeting_legacy on roiheimen.meeting
+  for select to roiheimen_anonymous, roiheimen_person
+  using (organization_id is null);
 
 -- Meeting RLS policies for organization-based access (roiheimen_user role)
 -- Select: org members can view meetings in their orgs
+-- Also allow viewing legacy meetings (org_id is null)
+-- Uses helper function to avoid RLS recursion with organization_member table
 create policy select_meeting_org on roiheimen.meeting
   for select to roiheimen_user
   using (
-    organization_id is not null and exists (
+    organization_id is null  -- Legacy meetings visible to authenticated users
+    OR (organization_id is not null and exists (
       select 1 from roiheimen.organization_member om
       where om.organization_id = roiheimen.meeting.organization_id
         and om.user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer
-    )
+    ))
   );
 
 -- Insert: org admins/owners can insert meetings
@@ -1622,14 +1634,26 @@ create policy select_organization on roiheimen.organization
     )
   );
 
--- Organization members: can view members of orgs you're in
+-- Organization members: users can see all members of organizations they belong to
+-- We use a security definer helper function to avoid RLS recursion
+create or replace function roiheimen_private.user_is_org_member(org_id integer, uid integer)
+returns boolean as $$
+  select exists (
+    select 1 from roiheimen.organization_member
+    where organization_id = org_id and user_id = uid
+  );
+$$ language sql stable security definer;
+
+-- Grant execute on helper function to roiheimen_user (requires schema usage)
+grant usage on schema roiheimen_private to roiheimen_user;
+grant execute on function roiheimen_private.user_is_org_member(integer, integer) to roiheimen_user;
+
 create policy select_organization_member on roiheimen.organization_member
   for select to roiheimen_user
   using (
-    exists (
-      select 1 from roiheimen.organization_member om
-      where om.organization_id = organization_id
-        and om.user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer
+    roiheimen_private.user_is_org_member(
+      organization_id,
+      nullif(current_setting('jwt.claims.user_id', true), '')::integer
     )
   );
 

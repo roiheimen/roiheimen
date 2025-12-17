@@ -66,7 +66,8 @@ create policy delete_meeting_org on roiheimen.meeting
   );
 
 -- Function to create a meeting under an organization
-create or replace function roiheimen.create_meeting(
+-- Note: Named 'create_org_meeting' to avoid conflict with PostGraphile's auto-generated 'createMeeting' mutation
+create or replace function roiheimen.create_org_meeting(
   org_id integer,
   meeting_id text,
   meeting_title text,
@@ -114,10 +115,11 @@ begin
   return new_meeting;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.create_meeting(integer, text, text, jsonb) is 'Creates a new meeting under an organization';
+comment on function roiheimen.create_org_meeting(integer, text, text, jsonb) is 'Creates a new meeting under an organization';
 
 -- Function to update a meeting
-create or replace function roiheimen.update_meeting(
+-- Note: Named 'update_org_meeting' to avoid conflict with PostGraphile's auto-generated 'updateMeeting' mutation
+create or replace function roiheimen.update_org_meeting(
   meeting_id text,
   new_title text default null,
   new_config jsonb default null
@@ -168,10 +170,11 @@ begin
   return updated_meeting;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.update_meeting(text, text, jsonb) is 'Updates a meeting title and/or config';
+comment on function roiheimen.update_org_meeting(text, text, jsonb) is 'Updates a meeting title and/or config';
 
 -- Function to delete a meeting
-create or replace function roiheimen.delete_meeting(
+-- Note: Named 'delete_org_meeting' to avoid conflict with PostGraphile's auto-generated 'deleteMeeting' mutation
+create or replace function roiheimen.delete_org_meeting(
   meeting_id text
 ) returns boolean as $$
 declare
@@ -213,9 +216,11 @@ begin
   return true;
 end;
 $$ language plpgsql security definer;
-comment on function roiheimen.delete_meeting(text) is 'Deletes a meeting (owner only)';
+comment on function roiheimen.delete_org_meeting(text) is 'Deletes a meeting (owner only)';
 
 -- Function to get meetings for an organization
+-- Note: We use @fieldName organizationMeetings in the comment to avoid naming conflict
+-- with the automatic 'meetings' field from the FK relation
 create or replace function roiheimen.organization_meetings(
   org roiheimen.organization
 ) returns setof roiheimen.meeting as $$
@@ -224,10 +229,10 @@ create or replace function roiheimen.organization_meetings(
     where m.organization_id = org.id
     order by m.created_at desc;
 $$ language sql stable;
-comment on function roiheimen.organization_meetings(roiheimen.organization) is 'Returns all meetings belonging to an organization';
+comment on function roiheimen.organization_meetings(roiheimen.organization) is E'@fieldName organizationMeetings\nReturns all meetings belonging to an organization';
 
 -- Grant execute permissions
-grant execute on function roiheimen.create_meeting(integer, text, text, jsonb) to roiheimen_user;
-grant execute on function roiheimen.update_meeting(text, text, jsonb) to roiheimen_user;
-grant execute on function roiheimen.delete_meeting(text) to roiheimen_user;
+grant execute on function roiheimen.create_org_meeting(integer, text, text, jsonb) to roiheimen_user;
+grant execute on function roiheimen.update_org_meeting(text, text, jsonb) to roiheimen_user;
+grant execute on function roiheimen.delete_org_meeting(text) to roiheimen_user;
 grant execute on function roiheimen.organization_meetings(roiheimen.organization) to roiheimen_user;

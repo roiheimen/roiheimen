@@ -874,4 +874,513 @@ test.describe("Dashboard", () => {
     expect(org2).toBeTruthy();
     expect(org2!.name).toBe("Org Two");
   });
+
+  test("dashboard shows meetings per organization", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    // Create org
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Org With Meetings");
+
+    // Create two meetings under this org
+    const meetingId1 = `test-${Date.now()}-1`;
+    const meetingId2 = `test-${Date.now()}-2`;
+    await createMeetingDirect(page, org.id, meetingId1, "Meeting One");
+    await createMeetingDirect(page, org.id, meetingId2, "Meeting Two");
+
+    // Query organizations with meetings
+    const result = await page.evaluate(async () => {
+      const response = await fetch("http://localhost:3000/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+        },
+        body: JSON.stringify({
+          query: `
+            query MyOrganizations {
+              myOrganizations {
+                nodes {
+                  id
+                  slug
+                  name
+                  organizationMeetings {
+                    nodes {
+                      id
+                      title
+                    }
+                  }
+                }
+              }
+            }
+          `,
+        }),
+      });
+      return response.json();
+    });
+
+    if (result.errors) {
+      throw new Error(result.errors[0].message);
+    }
+
+    const testOrg = result.data.myOrganizations.nodes.find(
+      (o: { slug: string }) => o.slug === slug
+    );
+    expect(testOrg).toBeTruthy();
+    expect(testOrg.organizationMeetings.nodes.length).toBe(2);
+
+    const m1 = testOrg.organizationMeetings.nodes.find(
+      (m: { id: string }) => m.id === meetingId1
+    );
+    const m2 = testOrg.organizationMeetings.nodes.find(
+      (m: { id: string }) => m.id === meetingId2
+    );
+    expect(m1).toBeTruthy();
+    expect(m1.title).toBe("Meeting One");
+    expect(m2).toBeTruthy();
+    expect(m2.title).toBe("Meeting Two");
+  });
+});
+
+/**
+ * Helper to generate unique meeting IDs (max 31 chars)
+ */
+function uniqueMeetingId(): string {
+  // Use shorter format to stay under 31 char limit
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).slice(2, 7);
+  return `m-${timestamp}-${random}`.toLowerCase();
+}
+
+/**
+ * Helper to create meeting via GraphQL
+ */
+async function createMeetingDirect(
+  page: Page,
+  orgId: number,
+  meetingId: string,
+  title: string,
+  config: object = {}
+): Promise<{ id: string; title: string }> {
+  const result = await page.evaluate(
+    async ({ orgId, meetingId, title, config }) => {
+      const response = await fetch("http://localhost:3000/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+        },
+        body: JSON.stringify({
+          query: `
+            mutation CreateOrgMeeting($orgId: Int!, $meetingId: String!, $title: String!, $config: JSON!) {
+              createOrgMeeting(input: { orgId: $orgId, meetingId: $meetingId, meetingTitle: $title, meetingConfig: $config }) {
+                meeting {
+                  id
+                  title
+                }
+              }
+            }
+          `,
+          variables: { orgId, meetingId, title, config },
+        }),
+      });
+      if (!response.ok) {
+        return { error: `HTTP ${response.status}: ${await response.text()}` };
+      }
+      return response.json();
+    },
+    { orgId, meetingId, title, config }
+  );
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
+  return result.data.createOrgMeeting.meeting;
+}
+
+/**
+ * Helper to update meeting via GraphQL
+ */
+async function updateMeetingDirect(
+  page: Page,
+  meetingId: string,
+  newTitle: string | null,
+  newConfig: object | null = null
+): Promise<{ id: string; title: string }> {
+  const result = await page.evaluate(
+    async ({ meetingId, newTitle, newConfig }) => {
+      const response = await fetch("http://localhost:3000/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+        },
+        body: JSON.stringify({
+          query: `
+            mutation UpdateOrgMeeting($meetingId: String!, $newTitle: String, $newConfig: JSON) {
+              updateOrgMeeting(input: { meetingId: $meetingId, newTitle: $newTitle, newConfig: $newConfig }) {
+                meeting {
+                  id
+                  title
+                  config
+                }
+              }
+            }
+          `,
+          variables: { meetingId, newTitle, newConfig },
+        }),
+      });
+      if (!response.ok) {
+        return { error: `HTTP ${response.status}: ${await response.text()}` };
+      }
+      return response.json();
+    },
+    { meetingId, newTitle, newConfig }
+  );
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
+  return result.data.updateOrgMeeting.meeting;
+}
+
+/**
+ * Helper to delete meeting via GraphQL
+ */
+async function deleteMeetingDirect(page: Page, meetingId: string): Promise<boolean> {
+  const result = await page.evaluate(async (meetingId) => {
+    const response = await fetch("http://localhost:3000/graphql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+      },
+      body: JSON.stringify({
+        query: `
+          mutation DeleteOrgMeeting($meetingId: String!) {
+            deleteOrgMeeting(input: { meetingId: $meetingId }) {
+              boolean
+            }
+          }
+        `,
+        variables: { meetingId },
+      }),
+    });
+    if (!response.ok) {
+      return { error: `HTTP ${response.status}: ${await response.text()}` };
+    }
+    return response.json();
+  }, meetingId);
+
+  if (result.error) {
+    throw new Error(result.error);
+  }
+  if (result.errors) {
+    throw new Error(result.errors[0].message);
+  }
+  return result.data.deleteOrgMeeting.boolean;
+}
+
+/**
+ * Helper to get meeting from database
+ */
+async function getMeeting(
+  meetingId: string
+): Promise<{ id: string; title: string; organizationId: number } | null> {
+  const result = await query(
+    `SELECT id, title, organization_id FROM roiheimen.meeting WHERE id = '${meetingId}'`
+  );
+  if (!result) return null;
+  const [id, title, orgId] = result.split("|");
+  return { id, title, organizationId: parseInt(orgId, 10) };
+}
+
+test.describe("Meeting Creation", () => {
+  test("can create meeting under organization", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    const title = "Test Landsmote 2025";
+
+    const meeting = await createMeetingDirect(page, org.id, meetingId, title);
+
+    expect(meeting.id).toBe(meetingId);
+    expect(meeting.title).toBe(title);
+
+    // Verify in database
+    const dbMeeting = await getMeeting(meetingId);
+    expect(dbMeeting).toBeTruthy();
+    expect(dbMeeting!.title).toBe(title);
+    expect(dbMeeting!.organizationId).toBe(org.id);
+  });
+
+  test("meeting ID must be unique", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+
+    // Create first meeting
+    await createMeetingDirect(page, org.id, meetingId, "First Meeting");
+
+    // Try to create another with same ID - should fail
+    let error: Error | undefined;
+    try {
+      await createMeetingDirect(page, org.id, meetingId, "Second Meeting");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toMatch(/duplicate|unique|already/i);
+  });
+
+  test("non-member cannot create meeting in organization", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    // Create another user who is not a member
+    const nonMember = await createVerifiedUser(page, "NonMember");
+    await loginUser(page, nonMember.email, nonMember.password);
+
+    // Try to create meeting - should fail
+    let error: Error | undefined;
+    try {
+      await createMeetingDirect(page, org.id, uniqueMeetingId(), "Hacked Meeting");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toMatch(/not a member/i);
+  });
+
+  test("member cannot create meeting (only admin/owner)", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    // Create and invite a member
+    const member = await createVerifiedUser(page, "Member");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+
+    // Accept invite as member
+    await loginUser(page, member.email, member.password);
+    await acceptOrganizationInviteDirect(page, invite.token);
+
+    // Try to create meeting - should fail because member (not admin/owner)
+    let error: Error | undefined;
+    try {
+      await createMeetingDirect(page, org.id, uniqueMeetingId(), "Member Meeting");
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    expect(error?.message).toMatch(/admin or owner/i);
+  });
+});
+
+test.describe("Meeting Update", () => {
+  test("owner can update meeting title", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Original Title");
+
+    const updated = await updateMeetingDirect(page, meetingId, "New Title");
+    expect(updated.title).toBe("New Title");
+
+    // Verify in database
+    const dbMeeting = await getMeeting(meetingId);
+    expect(dbMeeting!.title).toBe("New Title");
+  });
+
+  test("owner can update meeting config", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+
+    const config = { speechDisabled: true, video: "youtube123" };
+    await updateMeetingDirect(page, meetingId, null, config);
+
+    // Verify in database
+    const dbConfig = await query(
+      `SELECT config FROM roiheimen.meeting WHERE id = '${meetingId}'`
+    );
+    expect(dbConfig).toContain("speechDisabled");
+    expect(dbConfig).toContain("youtube123");
+  });
+});
+
+test.describe("Meeting Delete", () => {
+  test("owner can delete meeting", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Meeting to Delete");
+
+    // Verify it exists
+    let dbMeeting = await getMeeting(meetingId);
+    expect(dbMeeting).toBeTruthy();
+
+    // Delete it
+    const result = await deleteMeetingDirect(page, meetingId);
+    expect(result).toBe(true);
+
+    // Verify it's gone
+    dbMeeting = await getMeeting(meetingId);
+    expect(dbMeeting).toBeNull();
+  });
+
+  test("non-admin cannot delete meeting", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Test Meeting");
+
+    // Create and invite a member
+    const member = await createVerifiedUser(page, "Member");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+
+    // Accept invite as member
+    await loginUser(page, member.email, member.password);
+    await acceptOrganizationInviteDirect(page, invite.token);
+
+    // Try to delete - should fail
+    let error: Error | undefined;
+    try {
+      await deleteMeetingDirect(page, meetingId);
+    } catch (e) {
+      error = e as Error;
+    }
+    expect(error).toBeDefined();
+    // Only owners can delete meetings, so error message mentions "owners"
+    expect(error?.message).toMatch(/owners/i);
+  });
+});
+
+test.describe("Meeting RLS", () => {
+  test("non-member cannot see meetings in organization", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Private Meeting");
+
+    // Create another user who is not a member
+    const nonMember = await createVerifiedUser(page, "NonMember");
+    await loginUser(page, nonMember.email, nonMember.password);
+
+    // Try to query the meeting directly
+    const result = await page.evaluate(async (meetingId) => {
+      const response = await fetch("http://localhost:3000/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+        },
+        body: JSON.stringify({
+          query: `
+            query GetMeeting($id: String!) {
+              meeting(id: $id) {
+                id
+                title
+              }
+            }
+          `,
+          variables: { id: meetingId },
+        }),
+      });
+      return response.json();
+    }, meetingId);
+
+    // Should not find the meeting (RLS should hide it)
+    expect(result.data?.meeting).toBeNull();
+  });
+
+  test("member can see meetings in organization", async ({ page }) => {
+    const owner = await createVerifiedUser(page, "Owner");
+    await loginUser(page, owner.email, owner.password);
+
+    const slug = uniqueSlug();
+    const org = await createOrganizationDirect(page, slug, "Test Org");
+
+    const meetingId = uniqueMeetingId();
+    await createMeetingDirect(page, org.id, meetingId, "Team Meeting");
+
+    // Create and invite a member
+    const member = await createVerifiedUser(page, "Member");
+    await loginUser(page, owner.email, owner.password);
+    const invite = await inviteToOrganizationDirect(page, org.id, member.email, "MEMBER");
+
+    // Accept invite as member
+    await loginUser(page, member.email, member.password);
+    await acceptOrganizationInviteDirect(page, invite.token);
+
+    // Query the meeting
+    const result = await page.evaluate(async (meetingId) => {
+      const response = await fetch("http://localhost:3000/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("creds") || "{}").jwt}`,
+        },
+        body: JSON.stringify({
+          query: `
+            query GetMeeting($id: String!) {
+              meeting(id: $id) {
+                id
+                title
+              }
+            }
+          `,
+          variables: { id: meetingId },
+        }),
+      });
+      return response.json();
+    }, meetingId);
+
+    // Should find the meeting
+    expect(result.data?.meeting).toBeTruthy();
+    expect(result.data?.meeting.title).toBe("Team Meeting");
+  });
 });

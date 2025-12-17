@@ -82,17 +82,17 @@ You don't need to do a full phase in one go.
 - [x] Implement `update_meeting(meeting_id, title, config)` function
 - [x] Implement `delete_meeting(meeting_id)` function
 - [x] Add RLS policies for meeting-org relationship
-- [ ] Create meeting creation wizard page
-- [ ] Create `meeting-create.js` component (multi-step wizard)
+- [x] Create meeting creation wizard page (`/meeting/ny.html`)
+- [x] Create `meeting-create.js` component (simple form, not multi-step wizard)
 - [x] Create `meeting-card.js` component
 - [ ] Create `meeting-settings.js` component
 - [ ] Create `theme-picker.js` component
 - [x] Update dashboard to show meetings grouped by organization
-- [ ] **Test**: Create meeting under organization
-- [ ] **Test**: Update meeting title/config
-- [ ] **Test**: RLS: only org members can see/edit meeting
-- [ ] **Test**: Delete meeting, verify cascade behavior
-- [ ] **Test**: Dashboard shows meetings per organization
+- [x] **Test**: Create meeting under organization
+- [x] **Test**: Update meeting title/config
+- [x] **Test**: RLS: only org members can see/edit meeting
+- [x] **Test**: Delete meeting, verify cascade behavior
+- [x] **Test**: Dashboard shows meetings per organization
 
 ### Phase 4: Invite System
 - [ ] Create `roiheimen.meeting_invite` table (id, meeting_id, code, max_uses, uses_count, expires_at, created_by, created_at)
@@ -250,9 +250,34 @@ APP_URL=https://roiheimen.example.com
   - Validates token from URL and enforces 8-char minimum
 
 ### In Progress
-- [ ] Phase 3: Meeting Creation - UI components next
+- [ ] Phase 3: Meeting Creation - meeting-settings.js and theme-picker.js remain
 
-### Completed This Session (Meeting UI Components)
+### Completed This Session (Meeting Creation UI & Tests)
+- [x] Created `meeting-create.js` component with:
+  - Organization lookup from URL query parameter
+  - Auto-generates meeting ID from title (Norwegian-friendly)
+  - Validates meeting ID format (lowercase, numbers, hyphens)
+  - Creates meeting via `createOrgMeeting` GraphQL mutation
+  - Success screen with links to admin panel and dashboard
+- [x] Created `/meeting/ny.html` page
+- [x] Fixed function naming conflicts with PostGraphile:
+  - Renamed `create_meeting` → `create_org_meeting`
+  - Renamed `update_meeting` → `update_org_meeting`
+  - Renamed `delete_meeting` → `delete_org_meeting`
+  - Renamed `organization_meetings` field to `organizationMeetings` via smart comment
+- [x] Fixed RLS policies for meeting table:
+  - Legacy meetings (no org_id) visible to legacy auth roles
+  - Org meetings only visible to org members
+  - Fixed infinite recursion in organization_member RLS policy
+  - Added `user_is_org_member` helper function in roiheimen_private schema
+- [x] Added comprehensive E2E tests (11 new tests, all passing):
+  - Meeting Creation: create, unique ID, non-member blocked, member blocked
+  - Meeting Update: title update, config update
+  - Meeting Delete: owner can delete, non-admin blocked
+  - Meeting RLS: non-member cannot see, member can see
+  - Dashboard: shows meetings per organization
+
+### Previous Session (Meeting UI Components)
 - [x] Created `meeting-card.js` component with:
   - Display for meeting title, ID, creation date
   - Sak (agenda item) count
@@ -263,7 +288,7 @@ APP_URL=https://roiheimen.example.com
   - "Nytt mote" (new meeting) button for admins/owners
   - GraphQL query includes organizationMeetings with saks count
 
-### Completed Previous Session (Meeting-Org Schema)
+### Previous Session (Meeting-Org Schema)
 - [x] Created migration `017-meeting-organization.sql` with:
   - `organization_id` column on `meeting` table (FK to `organization`)
   - `created_by` column on `meeting` table (FK to `user_account`)
@@ -360,9 +385,10 @@ APP_URL=https://roiheimen.example.com
 - [x] Fixed `graphql.js` error handling
 
 ### Next Steps
-1. Begin Phase 3: Meeting Creation
-   - Add `organization_id` column to `meeting` table
-   - Add `created_by` column to `meeting` table
-   - Implement meeting creation/update/delete functions
-2. Create meeting-related UI components (meeting-create, meeting-card, meeting-settings)
-3. Update dashboard to show meetings grouped by organization
+1. Complete Phase 3: Meeting Creation
+   - Create `meeting-settings.js` component
+   - Create `theme-picker.js` component
+2. Begin Phase 4: Invite System
+   - Create meeting invite tables
+   - Implement invite code generation and validation
+3. Integration & Polish (Phase 5)
