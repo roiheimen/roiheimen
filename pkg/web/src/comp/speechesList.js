@@ -9,21 +9,60 @@ export default define("RoiSpeechesList", {
   style(self) {
     return `
     ${self} {
-      display: flex;
-      justify-content: center;
+      display: block;
+    }
+    ${self} table {
+      width: 100%;
+    }
+    ${self} th {
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    ${self} td {
+      padding: 10px;
+    }
+    ${self} tr {
+      border-bottom: 1px solid #e5e5e5;
     }
     ${self} .status-started {
       background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2);
-      font-size: 140%;
+      color: var(--roi-theme-main-color2, white);
+      font-size: 1.1rem;
     }
-    ${self} .status-ended { text-decoration: line-through; color: #666; }
-    ${self} .status-cancelled { text-decoration: line-through; color: #875; }
+    ${self} .status-ended {
+      color: #999;
+      text-decoration: line-through;
+    }
+    ${self} .status-cancelled {
+      color: #b45309;
+      text-decoration: line-through;
+      background: #fffbeb;
+    }
     ${self} .simple .status-cancelled { display: none }
-    ${self} .color tr { color: var(--roi-theme-font-color)}
-    ${self} .color .is-prev { background-color: #eee }
-    ${self} .color .is-current { background-color: #cea }
-    ${self} .color .is-next { background-color: #ffa }
+    ${self} .color .is-prev { background: #f5f5f5; }
+    ${self} .color .is-current { background: #c6f6d5; }
+    ${self} .color .is-next { background: #fef9c3; }
+    ${self} button {
+      background: #f5f5f5;
+      color: #444;
+      border: 1px solid #ccc;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    ${self} button:hover {
+      background: #eee;
+    }
+    ${self} .status-started button {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border-color: rgba(255,255,255,0.4);
+    }
     `;
   },
   render({ useSel, useState, useStore }) {

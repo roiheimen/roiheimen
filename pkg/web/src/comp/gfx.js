@@ -141,48 +141,51 @@ define("RoiGfxVote", {
     return `
       ${self} .refbox {
         display: block;
-
         transform: translateY(0);
         opacity: 1;
         will-change: transform opacity;
-
-        color: white;
-        /* border: 2px solid #d94b8e; */
-        padding: 10px 10px 5vh;
-        border-radius: 2px;
-        background: white;
-
+        padding: 8px;
         font-size: var(--roi-vote-font-size, 10pt);
         font-weight: 600;
         line-height: 1;
       }
       ${self} h2 {
-        background: #d94b8e;
+        background: var(--roi-theme-main-color, #2b2c3a);
+        color: white;
         display: inline-block;
-        margin: 3px;
-        padding: 2px 6px;
+        margin: 0 0 8px;
+        padding: 4px 8px;
         font-size: var(--roi-vote-header-size, revert);
+      }
+      ${self} .ppl {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
       }
       ${self} .vote {
         display: inline-block;
-        margin: 2px;
-        padding: 2px 3px;
-        font-weight: 400;
+        padding: 3px 5px;
+        font-weight: 500;
+        color: #666;
       }
       ${self} .type-CLOSED .vote {
-        margin: 2px 0;
+        width: 16px;
+        height: 16px;
+        padding: 0;
       }
       ${self} .voted {
-        background-color: #333;
+        background: #444;
+        color: white;
       }
       ${self} .voted.yes {
-        background-color: #6A9325;
+        background: #38a169;
       }
       ${self} .voted.no {
-        background-color: #d94b8e;
+        background: #e53e3e;
       }
       ${self} .not_voted {
-        background-color: #ccc;
+        background: #e5e5e5;
+        color: #999;
       }
     `;
   },
