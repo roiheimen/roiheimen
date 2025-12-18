@@ -1,39 +1,27 @@
 <!DOCTYPE html>
+<html lang="nn">
 <head>
-<meta charset=utf8>
-<title>Roiheimen</title>
-<link rel=stylesheet href=style.css>
-<script type=module src=/db/state.js></script>
-<script type=module src=/lib/boot.js></script>
-<script type=module src=/comp/meetingList.js></script>
-<script type=module src=/comp/legacy-login.js></script>
-<script type=module src=/comp/title.js></script>
-<script type=module src=/comp/global-nav.js></script>
-<style>
-.card.login {
-  min-height: 200px;
-}
-.feil {
-  min-height: 300px;
-  background-color: red;
-  color: white;
-  font-size: 24px;
-}
-.warn {
-  margin: 20px;
-  padding: 10px;
-  background-color: yellow;
-  color: black;
-  font-size: 20px;
-}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roiheimen - Taleliste og avrøysting for demokratiske møte</title>
+<meta name="description" content="Roiheimen gjer det enkelt å halda styr på talelista og gjennomføra avrøysting på møte.">
+<link rel="stylesheet" href="landing.css">
 <script>
-// Redirect to dashboard if logged in (new user system)
+// Redirect based on URL parameters and auth state
 (function() {
   try {
+    // Check for ?m= parameter (legacy meeting link)
+    var params = new URLSearchParams(location.search);
+    var meetingId = params.get('m');
+    if (meetingId) {
+      // Redirect to legacy meeting login page
+      location.replace('/mote.html?m=' + encodeURIComponent(meetingId));
+      return;
+    }
+
+    // Redirect to dashboard if logged in with user account
     var creds = JSON.parse(localStorage.getItem('creds') || '{}');
     if (creds.jwt && !location.search.includes('logout')) {
-      // Decode JWT to check if it's a user token (has email claim)
       var payload = JSON.parse(atob(creds.jwt.split('.')[1]));
       if (payload.email) {
         location.replace('/oversikt.html');
@@ -45,51 +33,167 @@
 })();
 </script>
 </head>
-<body data-externals>
-  <header>
-    <h1 is=roi-title>
-      <span>roiheimen</span><br>
-      &ndash;
-    </h1>
-  </header>
-  <div class=feil style="display: none">
-    <p>Nettleseren din er diverre ikkje støtta, du bør ha ein nyare versjon
-    av Chrome eller Firefox for at det skal fungera best. Og i mange
-    tilfelle i det heile teke. (Dette inkluderer andre moderne netlesarar,
-    som Vivaldi, Brave og Opera).
-    <p><code class=feilextra></code>
-  </div>
-  <div class=warn style="display: none">
-    Dette systemet fungerer best i nyaste Chrome og Firefox på datamaskin. På mobil gjeld det same
-    for Android, medan for Iphone må du bruka Safari i det tilfellet.
-  </div>
-  <section class="card sm">
-    <roi-meeting-list>
-      <p></p>
-    </roi-meeting-list>
+<body>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1><span>roiheimen</span></h1>
+      <p class="tagline">
+        Taleliste og avrøysting for demokratiske møte.<br>
+        Frå styremøte til landsmøte &ndash; enkelt og effektivt.
+      </p>
+      <div class="hero-buttons">
+        <a href="/registrer.html" class="btn btn-primary">Kom i gang gratis</a>
+        <a href="/login.html" class="btn btn-secondary">Logg inn</a>
+      </div>
+    </div>
   </section>
-</body>
 
-<script>
-  var ua, m, num;
-  try {
-    ua = navigator.userAgent;
-    if (ua.indexOf("Chrome/") != -1) {
-      num = +/Chrome\/(\d+)/.exec(ua)[1];
-      if (num < 80) {
-        throw new Error("Din Chrome er for gamal, må vera versjon 80 eller nyare");
-      }
-    }
-    else if (ua.indexOf("Firefox/") != -1) {
-      num = +/Firefox\/(\d+)/.exec(ua)[1];
-      if (num < 75) {
-        throw new Error("Din Firefox er for gamal, må vera versjon 75 eller nyare");
-      }
-    } else {
-      document.querySelector(".warn").style.display = "block";
-    }
-  } catch (e) {
-    document.querySelector(".feil").style.display = "block";
-    document.querySelector(".feilextra").innerHTML = ""+e.message;
-  }
-</script>
+  <!-- Features -->
+  <section class="features">
+    <div class="section-header">
+      <h2>Alt du treng for gode møte</h2>
+      <p>Roiheimen gjer det enkelt å halda styr på kven som skal snakka, og la alle stemma når avgjerder skal takast.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Smart taleliste</h3>
+        <p>Deltakarane melder seg på frå eiga eining. Du ser kven som ventar, og kven som har ordet. Støtte for innlegg, replikkar og saksopplysningar.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗳️</div>
+        <h3>Enkel avrøysting</h3>
+        <p>Opne eller hemmelege avrøystingar. Resultat i sanntid eller etter at alle har stemt. Perfekt for vedtak og val.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Fungerer overalt</h3>
+        <p>Deltakarane brukar eigen mobil, nettbrett eller PC. Ingen app å lasta ned &ndash; berre opna nettlesaren.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Enkelt oppsett</h3>
+        <p>Opprett organisasjon, legg til møte, inviter deltakarar. Klart til bruk på minutt.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📺</div>
+        <h3>Storskjermvisning</h3>
+        <p>Vis talelista og avrøysting på storskjerm. Alle ser kven som har ordet og resultata av avrøystinga.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Sikker og privat</h3>
+        <p>Hemmelege avrøystingar er verkeleg hemmelege. Ingen kan sjå kva den enkelte stemte.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="screenshots">
+    <div class="section-header">
+      <h2>Sjå korleis det fungerer</h2>
+      <p>Roiheimen er designa for å vera enkel å bruka &ndash; både for dei som styrer møtet og deltakarane.</p>
+    </div>
+    <div class="screenshot-showcase">
+      <div class="screenshot-main">
+        <div class="screenshot-placeholder">
+          Bilete av Roiheimen i bruk kjem her
+        </div>
+      </div>
+      <div class="screenshot-grid">
+        <div class="screenshot-thumb">
+          <img src="/docs/speechlist.png" alt="Taleliste">
+          <p>Taleliste for deltakarar</p>
+        </div>
+        <div class="screenshot-thumb">
+          <img src="/docs/manage.png" alt="Administrasjon">
+          <p>Administrer møtet</p>
+        </div>
+        <div class="screenshot-thumb">
+          <img src="/docs/referendum.png" alt="Avrøysting">
+          <p>Enkel avrøysting</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works -->
+  <section class="how-it-works">
+    <div class="section-header">
+      <h2>Kom i gang på tre steg</h2>
+      <p>Det tar berre nokre minutt å setja opp organisasjonen din.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Opprett organisasjon</h3>
+        <p>Registrer deg og opprett ein organisasjon for laget, partiet eller foreininga di.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Legg til møte</h3>
+        <p>Opprett møte med agenda og avrøysting. Inviter deltakarar med e-post eller lenkje.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Køyr møtet</h3>
+        <p>Deltakarane melder seg på talelista og stemmer frå eiga eining. Du har full oversikt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing">
+    <div class="section-header">
+      <h2>Pris som passar alle</h2>
+      <p>Gratis for små møte. Rimeleg for dei store.</p>
+    </div>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <h3>Gratis</h3>
+        <div class="price">0 kr</div>
+        <ul>
+          <li>Opp til 24 deltakarar</li>
+          <li>Alle funksjonar</li>
+          <li>Ubegrensa møte</li>
+          <li>Automatisk sletting etter 30 dagar</li>
+        </ul>
+        <a href="/registrer.html" class="btn btn-primary">Kom i gang</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Kjem snart</div>
+        <h3>Organisasjon</h3>
+        <div class="price">? kr <span>/ møte</span></div>
+        <ul>
+          <li>Ubegrensa deltakarar</li>
+          <li>Alle funksjonar</li>
+          <li>Data lagrast til du slettar</li>
+          <li>Prioritert support</li>
+        </ul>
+        <a href="/registrer.html" class="btn btn-primary">Prøv gratis først</a>
+      </div>
+    </div>
+    <p class="pricing-note">
+      Har du spørsmål? Ta kontakt på hei@roiheimen.no
+    </p>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Klar til å gjera møta dine betre?</h2>
+    <p>Det er gratis å prøva, og du kan vera i gang på minutt.</p>
+    <a href="/registrer.html" class="btn">Opprett gratis konto</a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="logo">roiheimen</div>
+    <p>Taleliste og avrøysting for demokratiske møte</p>
+    <div class="footer-links">
+      <a href="/login.html">Logg inn</a>
+      <a href="/registrer.html">Registrer deg</a>
+    </div>
+  </footer>
+</body>
+</html>
