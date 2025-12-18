@@ -2,7 +2,7 @@
   --roi-theme-main-color: #2b2c3a;
   --roi-theme-main-color2: #ffffff;
   --roi-theme-video-bg: #9c9fbd;
-  --roi-theme-font: "sans-serif";
+  --roi-theme-font: system-ui, -apple-system, sans-serif;
   --roi-theme-font-color: #333;
   --roi-theme-head-size: 42px;
   --roi-theme-head-font: inherit;
@@ -17,10 +17,16 @@ body {
   line-height: 145%;
   margin: 0;
 }
+body, body * {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
 body.bigtext {
   font-size: 2.5vw;
 }
-input, textarea { box-sizing: border-box }
+input, textarea, button, select {
+  box-sizing: border-box;
+  font-family: inherit;
+}
 h1, h2, h3 {
   font-weight: normal;
 }

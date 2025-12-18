@@ -4,18 +4,37 @@ export default define("RoiReferendumResult", {
   style(self) {
     return `
     ${self} {
-      display: flex;
-      justify-content: center;
+      display: block;
+    }
+    ${self} > div {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      padding: 14px 16px;
+    }
+    ${self} h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+    }
+    ${self} .prev {
+      color: #666;
+      font-weight: 400;
     }
     ${self} .choice {
       display: inline-block;
-      background-color: #ddd;
-      padding: 2px 4px;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 6px 10px;
       margin: 2px;
-      border-radius: 2px;
+      font-size: 0.9rem;
+      color: #333;
     }
-    ${self} .prev {
-      color: #888;
+    ${self} .choice:first-of-type {
+      background: #c6f6d5;
+      border-color: #9ae6b4;
+      color: #276749;
+      font-weight: 600;
     }
     `;
   },

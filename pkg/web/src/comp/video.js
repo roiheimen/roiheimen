@@ -60,13 +60,13 @@ define("RoiVideo", {
   },
   style(self) {
     return `
-    ${self} { 
+    ${self} {
       background: var(--roi-theme-video-bg);
       display: flex;
       height: 60vh;
     }
     ${self}.novideo {
-      height: 16px;
+      display: none;
     }
     ${self}:not(.bigyoutube) :nth-child(1) {
       flex: 1;

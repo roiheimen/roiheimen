@@ -14,56 +14,37 @@ const RoiQueueDrawer = {
   extends: "aside",
   style(self) {
     return `
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(15px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
     ${self} {
       display: grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 200px 1fr;
       min-height: 40vh;
-      gap: 20px;
-      padding: 20px;
-      animation: fadeInUp 0.4s ease-out;
+      gap: 16px;
+      padding: 16px;
     }
     ${self} .buttons {
       align-self: start;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      padding: 20px;
+      gap: 8px;
+      padding: 16px;
       background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
-      min-height: calc(40vh - 40px);
+      border: 1px solid #e5e5e5;
+      min-height: calc(40vh - 32px);
     }
     ${self} .buttons button {
-      background: #f8fafc;
+      background: #fafafa;
       color: var(--roi-theme-main-color);
-      border-radius: 10px;
-      border: 1.5px solid #e2e8f0;
+      border: 1px solid #ddd;
       font-size: 1rem;
-      font-weight: 600;
-      padding: 14px 16px;
+      font-weight: 500;
+      padding: 12px 14px;
       cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
+      transition: background 0.15s, border-color 0.15s;
     }
     ${self} .buttons button:hover:not(:disabled) {
       background: var(--roi-theme-main-color);
       color: var(--roi-theme-main-color2, white);
       border-color: var(--roi-theme-main-color);
-      box-shadow: 0 4px 12px rgba(43, 44, 58, 0.25);
-      transform: translateY(-2px);
-    }
-    ${self} .buttons button:active:not(:disabled) {
-      transform: translateY(0);
     }
     ${self} .buttons button:disabled {
       opacity: 0.5;
@@ -72,106 +53,85 @@ const RoiQueueDrawer = {
     ${self} .buttons button.main {
       background: var(--roi-theme-main-color);
       color: var(--roi-theme-main-color2, white);
-      border: none;
-      box-shadow: 0 2px 8px rgba(43, 44, 58, 0.2);
-      font-size: 1.125rem;
-      padding: 16px 18px;
+      border-color: var(--roi-theme-main-color);
+      font-weight: 600;
     }
     ${self} .buttons button.main:hover:not(:disabled) {
-      background: #1f2029;
-      box-shadow: 0 6px 16px rgba(43, 44, 58, 0.35);
+      opacity: 0.9;
     }
     ${self} .buttons .settings {
       margin-top: auto;
       background: transparent;
-      border: 1.5px solid #cbd5e1;
-      color: #64748b;
+      border: 1px solid #ccc;
+      color: #666;
       font-size: 0.9rem;
     }
     ${self} .buttons .settings:hover {
-      background: #f1f5f9;
-      border-color: #94a3b8;
-      color: #475569;
-      transform: none;
-      box-shadow: none;
+      background: #f5f5f5;
+      border-color: #999;
     }
     ${self} .queue {
-      padding: 24px;
+      padding: 20px;
       background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e5e5e5;
     }
     ${self} .title {
       text-align: center;
-      font-size: 1.75rem;
-      font-weight: 700;
+      font-size: 1.5rem;
+      font-weight: 600;
       color: var(--roi-theme-main-color);
-      margin: 0 0 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #e2e8f0;
+      margin: 0 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e5e5;
     }
     ${self} .info {
-      background: #dbeafe;
-      border: 1.5px solid #93c5fd;
-      border-radius: 10px;
-      color: #1e40af;
-      padding: 14px 16px;
-      margin: 0 0 20px;
+      background: #f0f7ff;
+      border: 1px solid #cce0ff;
+      color: #1a4d80;
+      padding: 12px 14px;
+      margin: 0 0 16px;
       font-size: 0.95rem;
-      line-height: 1.5;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     ${self} .info button {
-      padding: 8px 16px;
-      background: #1e40af;
+      padding: 6px 12px;
+      background: #1a4d80;
       color: white;
       border: none;
-      border-radius: 8px;
       font-size: 0.875rem;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
       margin-left: auto;
     }
     ${self} .info button:hover {
-      background: #1e3a8a;
-      box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
-    }
-    ${self} roi-speeches-list {
+      background: #133a61;
     }
     ${self} roi-referendum {
-      margin: 0 0 32px;
+      margin: 0 0 24px;
     }
     ${self} roi-referendum-result {
-      margin: 0 0 32px;
+      margin: 0 0 24px;
     }
     ${self} .gfx-vote-iframe {
-      border: none;
-      border-radius: 12px;
+      border: 1px solid #e5e5e5;
       width: 100%;
-      min-height: 280px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     @media (max-width: 768px) {
       ${self} {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 12px;
         padding: 12px;
       }
       ${self} .buttons {
-        padding: 16px;
+        padding: 12px;
         min-height: auto;
       }
       ${self} .queue {
-        padding: 16px;
-      }
-      ${self} .title {
-        font-size: 1.375rem;
+        padding: 14px;
       }
     }
     `;
@@ -184,6 +144,7 @@ const RoiQueueDrawer = {
       config,
       meeting,
       myself,
+      peopleDelegates,
       referendum,
       referendumPrev,
       sak,
@@ -198,6 +159,7 @@ const RoiQueueDrawer = {
       "config",
       "meeting",
       "myself",
+      "peopleDelegates",
       "referendum",
       "referendumPrev",
       "sak",
@@ -212,9 +174,12 @@ const RoiQueueDrawer = {
       document.title = title;
     }
     const myNewestSpeechRequest = speechesUpcomingByMe.sort((a, b) => b.id - a.id)[0];
+    // Calculate iframe height: ~18 chips per row, ~28px per row + padding
+    const delegateCount = peopleDelegates?.length || 0;
+    const iframeHeight = Math.ceil(delegateCount / 18) * 28 + 24;
     let workArea = html`
       ${referendum ? html` <roi-referendum simple /> ` : null}
-      ${referendum && clientGfxIframe ? html` <iframe class="gfx-vote-iframe" src="/gfx-vote.html"></iframe> ` : null}
+      ${referendum && clientGfxIframe ? html` <iframe class="gfx-vote-iframe" style="height: ${iframeHeight}px" src="/gfx-vote.html"></iframe> ` : null}
       ${referendumPrev ? html` <roi-referendum-result /> ` : null}
       ${sak?.id ? html` <roi-speeches-list simple /> ` : null}
     `;
@@ -310,7 +275,7 @@ define("RoiQueue", {
     ${self} {
       display: block;
       min-height: 100vh;
-      background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+      background: #f5f5f5;
     }
     `;
   },
