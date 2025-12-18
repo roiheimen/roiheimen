@@ -115,19 +115,19 @@ export default define("RoiParticipantList", {
     const meetingId = this["meeting-id"];
 
     if (!meetingId) {
-      this.html`<div class="error">Ingen mote-ID spesifisert</div>`;
+      this.html`<div class="error">Ingen møte-ID spesifisert</div>`;
       return;
     }
 
     if (this.loading) {
-      this.html`<div class="loading">Lastar deltakarar...</div>`;
+      this.html`<div class="loading">Lastar deltakarane...</div>`;
       return;
     }
 
     if (this.error) {
       this.html`
         <div class="error">${this.error}</div>
-        <button onclick=${() => this.fetchParticipants()}>Prov igjen</button>
+        <button onclick=${() => this.fetchParticipants()}>Prøv igjen</button>
       `;
       return;
     }
@@ -135,7 +135,7 @@ export default define("RoiParticipantList", {
     if (!this.participants.length) {
       this.html`
         <div class="empty">
-          <p>Ingen deltakarar har blitt med i motet enno.</p>
+          <p>Ingen deltakarar har blitt med i møtet enno.</p>
           <p>Del ein invitasjonskode for at folk kan bli med.</p>
         </div>
       `;

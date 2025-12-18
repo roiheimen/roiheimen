@@ -223,9 +223,9 @@ define("RoiSignup", {
         <div class="success">
           <div class="success-icon">✓</div>
           <h3>Registreringa var vellukka!</h3>
-          <p>Vi har sendt ein e-post til deg med ein stadfestingslenke.</p>
+          <p>Me har sendt ein e-post til deg med ein stadfestingslenke.</p>
           <p>Klikk på lenka i e-posten for å aktivera kontoen din.</p>
-          <a href="/">Gå til innlogging</a>
+          <p><a href="/">Gå til innlogging</a></p>
         </div>
       `;
       return;

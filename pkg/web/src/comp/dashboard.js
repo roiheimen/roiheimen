@@ -201,13 +201,13 @@ define("RoiDashboard", {
       <div class="dashboard-layout">
         <div class="main-content">
           <div class="section">
-            <h2>Mine organisasjonar og mote</h2>
+            <h2>Mine organisasjonar og møte</h2>
             ${
               organizations.length === 0
                 ? html`
                     <div class="empty">
                       <p>Du er ikkje medlem av nokon organisasjonar enno.</p>
-                      <p>Opprett ein organisasjon for a koma i gang.</p>
+                      <p>Opprett ein organisasjon for å koma i gang.</p>
                     </div>
                   `
                 : html`
@@ -228,11 +228,11 @@ define("RoiDashboard", {
                                   )}
                                 </div>
                               `
-                            : html`<p class="no-meetings">Ingen mote i denne organisasjonen enno.</p>`}
+                            : html`<p class="no-meetings">Ingen møte i denne organisasjonen enno.</p>`}
                           ${["owner", "admin"].includes(org.myRole)
                             ? html`
                                 <a href=${`/meeting/ny.html?org=${org.slug}`} class="create-meeting-btn">
-                                  + Nytt mote
+                                  + Nytt møte
                                 </a>
                               `
                             : ""}
