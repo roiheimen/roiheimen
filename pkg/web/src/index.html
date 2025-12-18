@@ -7,9 +7,19 @@
 <meta name="description" content="Roiheimen gjer det enkelt å halda styr på talelista og gjennomføra avrøysting på møte.">
 <link rel="stylesheet" href="landing.css">
 <script>
-// Redirect to dashboard if logged in with user account
+// Redirect based on URL parameters and auth state
 (function() {
   try {
+    // Check for ?m= parameter (legacy meeting link)
+    var params = new URLSearchParams(location.search);
+    var meetingId = params.get('m');
+    if (meetingId) {
+      // Redirect to legacy meeting login page
+      location.replace('/mote.html?m=' + encodeURIComponent(meetingId));
+      return;
+    }
+
+    // Redirect to dashboard if logged in with user account
     var creds = JSON.parse(localStorage.getItem('creds') || '{}');
     if (creds.jwt && !location.search.includes('logout')) {
       var payload = JSON.parse(atob(creds.jwt.split('.')[1]));
