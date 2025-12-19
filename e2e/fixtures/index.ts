@@ -2,7 +2,7 @@
  * Main fixtures export
  *
  * Combines all fixtures for tests.
- * Server lifecycle is handled by Playwright's webServer config in playwright.config.ts.
+ * Server lifecycle is handled by globalSetup/globalTeardown.
  * Import { test, expect } from this file in all tests.
  */
 
