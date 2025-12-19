@@ -13,19 +13,15 @@ import { Page } from "@playwright/test";
  * This is specific to the legacy system and uses pre-seeded meet20 meeting
  */
 async function legacyLogin(page: Page, num: string, password: string) {
-  // Navigate to home page first
-  await page.goto("/");
+  // Navigate to legacy meeting list page (mote.html) - the root is now a marketing page
+  await page.goto("/mote.html");
 
-  // Clear localStorage and wait for redirect if any
+  // Clear localStorage and reload to get fresh state
   await page.evaluate(() => localStorage.clear());
-
-  // If we got redirected away from home (due to existing JWT), go back
-  if (!page.url().endsWith("/") && !page.url().includes("/?")) {
-    await page.goto("/");
-  }
+  await page.goto("/mote.html", { waitUntil: "domcontentloaded" });
 
   // Wait for meetings to load and click on "Test" meeting (meet20)
-  await page.waitForSelector('a[data-id="meet20"]');
+  await page.waitForSelector('a[data-id="meet20"]', { timeout: 30000 });
   await page.click('a[data-id="meet20"]');
 
   // Wait for login form

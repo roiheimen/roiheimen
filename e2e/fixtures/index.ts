@@ -59,17 +59,27 @@ export type {
 const execAsync = promisify(exec);
 const projectRoot = path.resolve(__dirname, "../..");
 const DEBUG = process.env.DEBUG === "1" || process.env.DEBUG === "true";
+const CI = process.env.CI === "true";
+
+// In CI, we need TCP connections. Locally, Unix socket with peer auth works.
+const DATABASE_URL = "postgres://roiheimen_postgraphile:xyz@localhost/roiheimen_test";
+// OWNER_DATABASE_URL needs superuser access for migrations
+// In CI: use postgres user over TCP. Locally: use Unix socket with peer auth
+const OWNER_DATABASE_URL = CI
+  ? "postgres://roiheimen_postgraphile:xyz@localhost/roiheimen_test"
+  : "postgres:///roiheimen_test";
 
 let apiServer: ChildProcess | null = null;
 let webServer: ChildProcess | null = null;
 let setupDone = false;
 
 function log(...args: unknown[]) {
-  if (DEBUG) console.log("[fixtures]", ...args);
+  if (DEBUG || CI) console.log("[fixtures]", ...args);
 }
 
 function logError(...args: unknown[]) {
-  if (DEBUG) console.error("[fixtures]", ...args);
+  // Always log errors in CI or debug mode
+  if (DEBUG || CI) console.error("[fixtures]", ...args);
 }
 
 async function waitForServer(url: string, maxAttempts = 30): Promise<void> {
@@ -90,9 +100,17 @@ async function setupServers() {
 
   // Step 1: Setup test database
   console.log("Setting up test database...");
-  await execAsync(`bash ${projectRoot}/scripts/setup-test-db.sh`, {
-    env: { ...process.env, PGOPTIONS: "-c client_min_messages=warning" },
-  });
+  try {
+    await execAsync(`bash ${projectRoot}/scripts/setup-test-db.sh`, {
+      env: { ...process.env, PGOPTIONS: "-c client_min_messages=warning" },
+    });
+  } catch (err: unknown) {
+    const error = err as { stdout?: string; stderr?: string; message?: string };
+    console.error("Database setup failed!");
+    if (error.stdout) console.error("stdout:", error.stdout);
+    if (error.stderr) console.error("stderr:", error.stderr);
+    throw new Error(`Database setup failed: ${error.message || err}`);
+  }
   console.log("Test database ready.");
 
   // Step 2: Start API server
@@ -101,8 +119,8 @@ async function setupServers() {
     cwd: path.join(projectRoot, "pkg/server"),
     env: {
       ...process.env,
-      DATABASE_URL: "postgres://roiheimen_postgraphile:xyz@localhost/roiheimen_test",
-      OWNER_DATABASE_URL: "postgres:///roiheimen_test",
+      DATABASE_URL,
+      OWNER_DATABASE_URL,
       NODE_ENV: "test",
     },
     stdio: ["pipe", "pipe", "pipe"],

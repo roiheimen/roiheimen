@@ -66,7 +66,7 @@ test.describe("User Registration", () => {
         inputs.forEach((input) => input.removeAttribute("minlength"));
       });
 
-      await page.click('input[type="submit"]');
+      await page.click('button[type="submit"]');
 
       await expect(page.locator(".err")).toContainText("minst 8 teikn");
     });
@@ -80,7 +80,7 @@ test.describe("User Registration", () => {
       await page.fill('input[name="password"]', "testpassord123");
       await page.fill('input[name="password2"]', "testpassord456");
 
-      await page.click('input[type="submit"]');
+      await page.click('button[type="submit"]');
 
       await expect(page.locator(".err")).toContainText("ikkje like");
     });
@@ -141,7 +141,7 @@ test.describe("User Login", () => {
 
       await Promise.all([
         page.waitForURL("**/oversikt.html", { timeout: 10000 }),
-        page.click('input[type="submit"]'),
+        page.click('button[type="submit"]'),
       ]);
 
       const jwt = await page.evaluate(() => {
@@ -165,7 +165,7 @@ test.describe("User Login", () => {
     await page.fill('input[name="email"]', email);
     await page.fill('input[name="password"]', password);
 
-    await page.click('input[type="submit"]');
+    await page.click('button[type="submit"]');
 
     await expect(page.locator(".err")).toContainText("ikkje stadfesta");
   });
@@ -188,7 +188,7 @@ test.describe("User Login", () => {
     await page.fill('input[name="email"]', email);
     await page.fill('input[name="password"]', "wrongpassword");
 
-    await page.click('input[type="submit"]');
+    await page.click('button[type="submit"]');
 
     await expect(page.locator(".err")).toBeVisible();
   });
@@ -215,7 +215,7 @@ test.describe("Brute Force Protection", () => {
         await page.fill('input[name="email"]', email);
         await page.fill('input[name="password"]', "wrongpassword");
 
-        await page.click('input[type="submit"]');
+        await page.click('button[type="submit"]');
 
         await page.waitForSelector(".err");
       }
@@ -232,7 +232,7 @@ test.describe("Brute Force Protection", () => {
       await page.fill('input[name="email"]', email);
       await page.fill('input[name="password"]', password);
 
-      await page.click('input[type="submit"]');
+      await page.click('button[type="submit"]');
 
       await expect(page.locator(".err")).toContainText("låst");
     });
@@ -258,7 +258,7 @@ test.describe("Password Reset", () => {
       await page.waitForSelector("roi-password-reset-request");
 
       await page.fill('input[name="email"]', email);
-      await page.click('input[type="submit"]');
+      await page.click('button[type="submit"]');
 
       await page.waitForSelector(".success", { timeout: 10000 });
 
@@ -276,7 +276,7 @@ test.describe("Password Reset", () => {
 
       await page.fill('input[name="password"]', newPassword);
       await page.fill('input[name="password2"]', newPassword);
-      await page.click('input[type="submit"]');
+      await page.click('button[type="submit"]');
 
       await page.waitForSelector(".success", { timeout: 10000 });
 
@@ -289,7 +289,7 @@ test.describe("Password Reset", () => {
 
       await Promise.all([
         page.waitForURL("**/oversikt.html", { timeout: 10000 }),
-        page.click('input[type="submit"]'),
+        page.click('button[type="submit"]'),
       ]);
 
       const jwt = await page.evaluate(() => {
@@ -306,7 +306,7 @@ test.describe("Password Reset", () => {
 
     await page.fill('input[name="password"]', "newpassword123");
     await page.fill('input[name="password2"]', "newpassword123");
-    await page.click('input[type="submit"]');
+    await page.click('button[type="submit"]');
 
     await expect(page.locator(".err")).toBeVisible();
   });

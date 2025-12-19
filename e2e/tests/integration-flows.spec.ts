@@ -55,8 +55,8 @@ test("complete new user flow via UI", async ({ page }) => {
     await page.fill('input[name="password"]', password);
     await page.fill('input[name="password2"]', password);
 
-    // Submit registration
-    await page.click('input[type="submit"]');
+    // Submit registration (signup uses <button type="submit">)
+    await page.click('button[type="submit"]');
 
     // Wait for success message
     await page.waitForSelector(".success", { timeout: 10000 });
@@ -87,10 +87,10 @@ test("complete new user flow via UI", async ({ page }) => {
     await page.fill('input[name="email"]', email);
     await page.fill('input[name="password"]', password);
 
-    // Submit and wait for redirect to dashboard
+    // Submit and wait for redirect to dashboard (login uses <button type="submit">)
     await Promise.all([
       page.waitForURL("**/oversikt.html", { timeout: 10000 }),
-      page.click('input[type="submit"]'),
+      page.click('button[type="submit"]'),
     ]);
 
     // Verify we're on the dashboard

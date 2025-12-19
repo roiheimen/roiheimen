@@ -6,14 +6,18 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: process.env.CI ? "dot" : "list",
+  reporter: process.env.CI ? [["dot"], ["html", { outputFolder: "playwright-report", open: "never" }]] : "list",
   timeout: 30000,
 
   use: {
     baseURL: "http://localhost:8080",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    video: process.env.CI ? "on-first-retry" : "off",
   },
+
+  // Output directory for test artifacts (screenshots, traces, videos)
+  outputDir: "test-results",
 
   projects: [
     // Setup project runs first - creates authenticated user
@@ -34,6 +38,8 @@ export default defineConfig({
         // storageState: ".playwright-auth/user.json",
       },
       dependencies: ["setup"],
+      // Exclude tests that are handled by chromium-no-auth
+      testIgnore: ["**/user-auth.spec.ts", "**/integration-flows.spec.ts", "**/voting.spec.ts"],
     },
 
     // Tests that need completely fresh browser state (no pre-auth)
