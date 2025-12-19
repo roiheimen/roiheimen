@@ -14,11 +14,20 @@ import { Page } from "@playwright/test";
  * not standard form POST, so we need to wait for the URL change after clicking.
  */
 async function legacyLogin(page: Page, num: string, password: string) {
-  // Navigate to legacy meeting list page
-  await page.goto("/mote.html");
+  // Navigate to a simple page first to clear any existing auth
+  // This avoids race conditions with the app's auto-redirect logic
+  await page.goto("about:blank");
 
-  // Clear any existing auth state
-  await page.evaluate(() => localStorage.clear());
+  // We need to be on the origin to clear localStorage
+  await page.goto("/mote.html", { waitUntil: "domcontentloaded" });
+
+  // Check if we got redirected due to existing auth
+  const currentUrl = page.url();
+  if (!currentUrl.includes("mote.html")) {
+    // We got redirected (probably to queue.html) - clear auth and try again
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/mote.html");
+  }
 
   // Wait for meetings to load
   await page.waitForSelector('a[data-id="meet20"]', { timeout: 30000 });
