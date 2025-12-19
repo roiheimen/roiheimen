@@ -14,18 +14,14 @@ import { Page } from "@playwright/test";
  * not standard form POST, so we need to wait for the URL change after clicking.
  */
 async function legacyLogin(page: Page, num: string, password: string) {
-  // First, go to the origin to be able to clear localStorage
-  // Use a simple page that won't auto-redirect
-  await page.goto("/mote.html?logout", { waitUntil: "domcontentloaded" });
+  // Use ?logout to trigger the app's logout flow and clear any existing auth
+  await page.goto("/mote.html?logout");
 
-  // Wait a moment for any auto-redirect to start (the logout param should prevent it)
-  await page.waitForTimeout(100);
+  // Wait for logout to complete (the app clears localStorage on ?logout)
+  await page.waitForTimeout(500);
 
-  // Clear localStorage to remove any existing auth
-  await page.evaluate(() => localStorage.clear());
-
-  // Navigate to meeting list page (now clean, without any auth redirect)
-  await page.goto("/mote.html", { waitUntil: "networkidle" });
+  // Go to mote.html without logout param to show meeting list
+  await page.goto("/mote.html");
 
   // Wait for meetings to load
   await page.waitForSelector('a[data-id="meet20"]', { timeout: 30000 });
