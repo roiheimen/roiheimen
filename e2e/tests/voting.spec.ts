@@ -9,40 +9,49 @@ import { test, expect } from "../fixtures";
 import { Page } from "@playwright/test";
 
 /**
- * Helper to log in a user via legacy num/password auth
- * This is specific to the legacy system and uses pre-seeded meet20 meeting
+ * Helper to log in a user via legacy num/password auth.
+ * The legacy login uses GraphQL mutations and JavaScript navigation (location.assign),
+ * not standard form POST, so we need to wait for the URL change after clicking.
  */
 async function legacyLogin(page: Page, num: string, password: string) {
-  // Navigate to home page first
-  await page.goto("/");
+  // Navigate to mote.html - may redirect to queue.html if already authenticated
+  await page.goto("/mote.html");
 
-  // Clear localStorage and wait for redirect if any
-  await page.evaluate(() => localStorage.clear());
+  // Give time for any JS-based redirect to happen
+  await page.waitForTimeout(1000);
 
-  // If we got redirected away from home (due to existing JWT), go back
-  if (!page.url().endsWith("/") && !page.url().includes("/?")) {
-    await page.goto("/");
+  // Check if we're on mote.html or got redirected
+  let attempts = 0;
+  while (!page.url().includes("mote.html") && attempts < 3) {
+    // We got redirected (probably to queue.html) - clear auth and retry
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/mote.html");
+    await page.waitForTimeout(1000); // Give time for any redirect
+    attempts++;
   }
 
-  // Wait for meetings to load and click on "Test" meeting (meet20)
-  await page.waitForSelector('a[data-id="meet20"]');
+  // Wait for meetings to load
+  await page.waitForSelector('a[data-id="meet20"]', { timeout: 30000 });
+
+  // Click on the test meeting
   await page.click('a[data-id="meet20"]');
 
-  // Wait for login form
+  // Wait for login form to appear
   await page.waitForSelector('input[name="num"]');
 
   // Fill login form
   await page.fill('input[name="num"]', num);
   await page.fill('input[name="code"]', password);
 
-  // Submit and wait for navigation to queue
-  await Promise.all([
-    page.waitForURL("**/queue.html"),
-    page.click('input[type="submit"]'),
-  ]);
+  // Click submit - this triggers a GraphQL mutation, not a form POST
+  await page.click('input[type="submit"]');
+
+  // Wait for JavaScript-based navigation to queue.html
+  // The login uses location.assign() after successful auth, which is async
+  await page.waitForURL("**/queue.html", { timeout: 30000 });
 
   // Wait for queue page to be fully loaded
-  await page.waitForSelector("roi-queue");
+  await page.waitForSelector("roi-queue", { timeout: 30000 });
 }
 
 test("legacy login flow", async ({ page }) => {

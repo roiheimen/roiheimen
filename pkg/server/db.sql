@@ -290,6 +290,7 @@ comment on table roiheimen.organization_invite is 'Pending invitations to join a
 create index on roiheimen.organization_invite(organization_id);
 create index on roiheimen.organization_invite(email);
 create index on roiheimen.organization_invite(token);
+create index on roiheimen.organization_invite(invited_by);
 
 -- Add organization_id and created_by columns to meeting table
 -- (Added after organization and user_account tables exist)
@@ -336,6 +337,7 @@ create index on roiheimen.meeting_participant(meeting_id);
 create index on roiheimen.meeting_participant(user_id);
 create index on roiheimen.meeting_participant(participant_num);
 create index on roiheimen.meeting_participant(person_id);
+create index on roiheimen.meeting_participant(joined_via);
 
 -- Views
 
@@ -1907,7 +1909,8 @@ grant execute on function roiheimen.vote_count(integer) to roiheimen_person;
 grant execute on function roiheimen.stats_people_meeting(text) to roiheimen_person;
 
 -- User account table permissions
-grant select on table roiheimen.user_account to roiheimen_user;
+-- Anonymous and person can SELECT (RLS ensures they only see their own record if logged in)
+grant select on table roiheimen.user_account to roiheimen_anonymous, roiheimen_person, roiheimen_user;
 grant update on table roiheimen.user_account to roiheimen_user;
 
 -- User account function permissions (anonymous can register/login/reset password)
@@ -1917,8 +1920,8 @@ grant execute on function roiheimen.authenticate_user(text, text) to roiheimen_a
 grant execute on function roiheimen.request_password_reset(text) to roiheimen_anonymous;
 grant execute on function roiheimen.reset_password(text, text) to roiheimen_anonymous;
 
--- Authenticated user functions
-grant execute on function roiheimen.current_user_account() to roiheimen_user;
+-- Authenticated user functions (anonymous/person can call but RLS returns empty)
+grant execute on function roiheimen.current_user_account() to roiheimen_anonymous, roiheimen_person, roiheimen_user;
 grant execute on function roiheimen.user_logout() to roiheimen_user;
 
 -- Organization table permissions

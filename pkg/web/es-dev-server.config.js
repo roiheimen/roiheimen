@@ -14,8 +14,10 @@ async function inviteRedirect(ctx, next) {
 
 module.exports = {
   //http2: true, -- if using Whereby, also add --ssl-cert --ssl-key and this
-  rootDir: "src/",
+  rootDir: "src",
+  appIndex: "index.html",
   compatibility: "none",
+  nodeResolve: false,
   watch: true,
   port: 8080,
   middlewares: [

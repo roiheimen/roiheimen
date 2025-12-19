@@ -11,11 +11,29 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 /**
+ * Get the psql command, using appropriate connection method
+ * - In CI: use sudo -u postgres (queries need access to private schema)
+ * - Locally as root: use sudo -u postgres
+ * - Locally as regular user: use peer auth
+ */
+function getPsqlCommand(): string {
+  if (process.env.CI === "true") {
+    // In CI, use postgres superuser for admin queries
+    return "sudo -u postgres psql";
+  }
+  // In CI/Docker environments running as root, we need sudo -u postgres
+  return process.getuid?.() === 0
+    ? "sudo -u postgres psql"
+    : "psql";
+}
+
+/**
  * Run SQL query against the test database, returns first row
  */
 export async function query(sql: string): Promise<string> {
+  const psql = getPsqlCommand();
   const { stdout } = await execAsync(
-    `PSQLRC=/dev/null psql -d roiheimen_test -t -A -F'|' -c "${sql.replace(/"/g, '\\"')}"`,
+    `PSQLRC=/dev/null ${psql} -d roiheimen_test -t -A -F'|' -c "${sql.replace(/"/g, '\\"')}"`,
     { env: { ...process.env, PGOPTIONS: "-c client_min_messages=warning" } }
   );
   const lines = stdout
@@ -35,8 +53,9 @@ export async function query(sql: string): Promise<string> {
  * Run SQL query that returns multiple rows
  */
 export async function queryRows(sql: string): Promise<string[]> {
+  const psql = getPsqlCommand();
   const { stdout } = await execAsync(
-    `PSQLRC=/dev/null psql -d roiheimen_test -t -A -F'|' -c "${sql.replace(/"/g, '\\"')}"`,
+    `PSQLRC=/dev/null ${psql} -d roiheimen_test -t -A -F'|' -c "${sql.replace(/"/g, '\\"')}"`,
     { env: { ...process.env, PGOPTIONS: "-c client_min_messages=warning" } }
   );
   return stdout

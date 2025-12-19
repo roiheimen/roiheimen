@@ -4,7 +4,7 @@
   "scripts": {
     "build": "snowpack build",
     "lint": "prettier --check \"src/**/*.js\"",
-    "prepare": "snowpack prepare",
+    "prepare": "snowpack prepare && rm -rf src/web_modules && mkdir -p src/web_modules && cp -r node_modules/.cache/snowpack/development/@ungap node_modules/.cache/snowpack/development/*.js src/web_modules/",
     "start": "es-dev-server",
     "test": "echo \"Nothing yet\" && exit 1"
   },
@@ -15,6 +15,7 @@
       }
     },
     "packageOptions": {
+      "knownEntrypoints": ["heresy", "redux-bundler", "@ungap/custom-elements-builtin"],
       "dest": "src/web_modules"
     },
     "plugins": [

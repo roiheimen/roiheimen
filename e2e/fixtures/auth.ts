@@ -109,7 +109,7 @@ export async function registerUserViaUI(
   await page.fill('input[name="password"]', password);
   await page.fill('input[name="password2"]', password);
 
-  await page.click('input[type="submit"]');
+  await page.click('button[type="submit"]');
   await page.waitForSelector(".success", { timeout: 10000 });
 }
 
@@ -129,7 +129,7 @@ export async function loginUserViaUI(
 
   await Promise.all([
     page.waitForURL("**/oversikt.html", { timeout: 10000 }),
-    page.click('input[type="submit"]'),
+    page.click('button[type="submit"]'),
   ]);
 }
 
