@@ -39,7 +39,7 @@ if (cluster.isMaster) {
       enableCors: DEV,
       extendedErrors: DEV ? ["hint", "detail", "errcode"] : ["errcode"],
       graphiql: DEV,
-      watchPg: DEV,
+      watchPg: DEV && process.env.NODE_ENV !== "test",
 
       appendPlugins: [pg_simplify_inflector, require("@graphile/subscriptions-lds").default],
       live: true,
