@@ -1,5 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const CI = process.env.CI === "true";
+
+// In CI, we need TCP connections. Locally, Unix socket with peer auth works.
+const DATABASE_URL = "postgres://roiheimen_postgraphile:xyz@localhost/roiheimen_test";
+const OWNER_DATABASE_URL = CI
+  ? "postgres://roiheimen_postgraphile:xyz@localhost/roiheimen_test"
+  : "postgres:///roiheimen_test";
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
@@ -7,7 +15,10 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: process.env.CI ? [["dot"], ["html", { outputFolder: "playwright-report", open: "never" }]] : "list",
-  timeout: 30000,
+  timeout: 60000, // Increased for CI stability
+
+  // Global setup runs once before all tests
+  globalSetup: "./global-setup.ts",
 
   use: {
     baseURL: "http://localhost:8080",
@@ -18,6 +29,31 @@ export default defineConfig({
 
   // Output directory for test artifacts (screenshots, traces, videos)
   outputDir: "test-results",
+
+  // Start servers before tests
+  webServer: [
+    {
+      command: "node server.js",
+      cwd: "../pkg/server",
+      port: 3000,
+      reuseExistingServer: !process.env.CI,
+      env: {
+        DATABASE_URL,
+        OWNER_DATABASE_URL,
+        NODE_ENV: "test",
+      },
+      stdout: "ignore",
+      stderr: "pipe",
+    },
+    {
+      command: "npx es-dev-server",
+      cwd: "../pkg/web",
+      port: 8080,
+      reuseExistingServer: !process.env.CI,
+      stdout: "ignore",
+      stderr: "pipe",
+    },
+  ],
 
   projects: [
     // Setup project runs first - creates authenticated user
@@ -47,6 +83,7 @@ export default defineConfig({
     {
       name: "chromium-no-auth",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"], // Now depends on setup to ensure servers are fully ready
       testMatch: ["**/user-auth.spec.ts", "**/integration-flows.spec.ts", "**/voting.spec.ts"],
     },
   ],
