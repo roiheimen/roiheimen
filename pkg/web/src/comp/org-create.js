@@ -42,8 +42,8 @@ define("RoiOrgCreate", {
       margin: 10px 0 0 auto;
       width: 150px;
       cursor: pointer;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       border: none;
       font-size: 16px;
     }

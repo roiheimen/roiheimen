@@ -49,7 +49,7 @@ define("RoiInviteList", {
     }
     ${self} h3 {
       margin: 0 0 16px 0;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       font-size: 18px;
     }
     ${self} .invite-table {
@@ -78,7 +78,7 @@ define("RoiInviteList", {
       font-family: monospace;
       font-size: 14px;
       font-weight: 600;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       letter-spacing: 1px;
       background: #f3f4f6;
       padding: 4px 8px;
@@ -237,7 +237,7 @@ define("RoiInviteList", {
     }
     ${self} .qr-modal h4 {
       margin: 0 0 16px 0;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
     }
     ${self} .qr-modal-close {
       position: absolute;
@@ -257,7 +257,7 @@ define("RoiInviteList", {
       font-family: monospace;
       font-size: 18px;
       font-weight: bold;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       letter-spacing: 2px;
       margin: 12px 0;
     }

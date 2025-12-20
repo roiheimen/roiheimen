@@ -16,98 +16,125 @@ const RoiQueueDrawer = {
     return `
     ${self} {
       display: grid;
-      grid-template-columns: 200px 1fr;
+      grid-template-columns: 220px 1fr;
+      grid-template-rows: auto auto 1fr;
       min-height: 40vh;
-      gap: 16px;
-      padding: 16px;
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     ${self} .buttons {
       align-self: start;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 16px;
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      min-height: calc(40vh - 32px);
+      gap: 10px;
+      padding: 20px;
+      background: var(--roi-bg-surface);
+      border-radius: var(--roi-radius-lg);
+      box-shadow: var(--roi-shadow-md);
+      min-height: calc(40vh - 40px);
     }
     ${self} .buttons button {
-      background: #fafafa;
-      color: var(--roi-theme-main-color);
-      border: 1px solid #ddd;
+      background: var(--roi-bg-surface);
+      color: var(--roi-primary);
+      border: 2px solid var(--roi-border-medium);
       font-size: 1rem;
       font-weight: 500;
-      padding: 12px 14px;
+      padding: 14px 16px;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
+      transition: all var(--roi-transition-fast);
+      border-radius: var(--roi-radius-md);
     }
     ${self} .buttons button:hover:not(:disabled) {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
-      border-color: var(--roi-theme-main-color);
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
+      transform: translateY(-1px);
     }
     ${self} .buttons button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
     ${self} .buttons button.main {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
-      border-color: var(--roi-theme-main-color);
+      background: linear-gradient(135deg, var(--roi-accent) 0%, var(--roi-accent-dark) 100%);
+      color: #ffffff;
+      border: none;
       font-weight: 600;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
     }
     ${self} .buttons button.main:hover:not(:disabled) {
-      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
     }
     ${self} .buttons .settings {
       margin-top: auto;
       background: transparent;
-      border: 1px solid #ccc;
-      color: #666;
-      font-size: 0.9rem;
+      border: 1px solid var(--roi-border-light);
+      color: var(--roi-text-tertiary);
+      font-size: 0.875rem;
+      padding: 10px 14px;
     }
     ${self} .buttons .settings:hover {
-      background: #f5f5f5;
-      border-color: #999;
+      background: var(--roi-bg-body);
+      border-color: var(--roi-border-medium);
+      color: var(--roi-text-secondary);
+      transform: none;
+    }
+    ${self} > roi-referendum-result {
+      grid-column: 1;
+      padding: 14px 16px;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-light);
+      border-radius: var(--roi-radius-md);
+      box-shadow: var(--roi-shadow-sm);
+      align-self: start;
     }
     ${self} .queue {
-      padding: 20px;
-      background: #fff;
-      border: 1px solid #e5e5e5;
+      grid-column: 2;
+      grid-row: 1 / -1;
+      padding: 24px;
+      background: var(--roi-bg-surface);
+      border-radius: var(--roi-radius-lg);
+      box-shadow: var(--roi-shadow-md);
     }
     ${self} .title {
       text-align: center;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--roi-theme-main-color);
-      margin: 0 0 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e5e5e5;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--roi-primary);
+      margin: 0 0 24px;
+      letter-spacing: -0.5px;
     }
     ${self} .info {
-      background: #f0f7ff;
-      border: 1px solid #cce0ff;
-      color: #1a4d80;
-      padding: 12px 14px;
-      margin: 0 0 16px;
+      background: var(--roi-info-bg);
+      border: 1px solid var(--roi-info-light);
+      border-left: 4px solid var(--roi-info);
+      color: var(--roi-info);
+      padding: 14px 16px;
+      margin: 0 0 20px;
       font-size: 0.95rem;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
+      border-radius: var(--roi-radius-md);
     }
     ${self} .info button {
-      padding: 6px 12px;
-      background: #1a4d80;
-      color: white;
+      padding: 8px 14px;
+      background: var(--roi-info);
+      color: var(--roi-text-inverse);
       border: none;
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
       margin-left: auto;
+      border-radius: var(--roi-radius-sm);
+      transition: background var(--roi-transition-fast);
     }
     ${self} .info button:hover {
-      background: #133a61;
+      background: var(--roi-info-dark);
     }
     ${self} roi-referendum {
       margin: 0 0 24px;
@@ -116,22 +143,36 @@ const RoiQueueDrawer = {
       margin: 0 0 24px;
     }
     ${self} .gfx-vote-iframe {
-      border: 1px solid #e5e5e5;
+      border: 1px solid var(--roi-border-light);
+      border-radius: var(--roi-radius-md);
       width: 100%;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
     @media (max-width: 768px) {
       ${self} {
         grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 12px;
+        gap: 16px;
+        padding: 16px;
       }
       ${self} .buttons {
-        padding: 12px;
+        padding: 16px;
         min-height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      ${self} .buttons button {
+        flex: 1;
+        min-width: 120px;
+      }
+      ${self} .buttons .settings {
+        width: 100%;
+        margin-top: 8px;
       }
       ${self} .queue {
-        padding: 14px;
+        padding: 16px;
+      }
+      ${self} .title {
+        font-size: 1.3rem;
       }
     }
     `;
@@ -180,7 +221,6 @@ const RoiQueueDrawer = {
     let workArea = html`
       ${referendum ? html` <roi-referendum simple /> ` : null}
       ${referendum && clientGfxIframe ? html` <iframe class="gfx-vote-iframe" style="height: ${iframeHeight}px" src="/gfx-vote.html"></iframe> ` : null}
-      ${referendumPrev ? html` <roi-referendum-result /> ` : null}
       ${sak?.id ? html` <roi-speeches-list simple /> ` : null}
     `;
 
@@ -246,6 +286,7 @@ const RoiQueueDrawer = {
           .onclick=${() => store.doClientUi("settings")}
           >Innstillingar</button>
       </div>
+      ${referendumPrev ? html` <roi-referendum-result /> ` : null}
       <div class=queue>
         ${config.emoji ? html` <button .onclick=${() => store.doEmojiSend("like")}>Like</button> ` : null}
         ${
@@ -275,7 +316,7 @@ define("RoiQueue", {
     ${self} {
       display: block;
       min-height: 100vh;
-      background: #f5f5f5;
+      background: var(--roi-bg-body);
     }
     `;
   },

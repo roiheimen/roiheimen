@@ -17,7 +17,7 @@ define("RoiOrgCard", {
       transition: box-shadow 0.2s, border-color 0.2s;
     }
     ${self}:hover {
-      border-color: var(--roi-theme-main-color);
+      border-color: var(--roi-primary);
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     ${self} .org-header {
@@ -28,7 +28,7 @@ define("RoiOrgCard", {
     }
     ${self} h3 {
       margin: 0;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       font-size: 18px;
     }
     ${self} .role-badge {
@@ -69,7 +69,7 @@ define("RoiOrgCard", {
     }
     ${self} .org-link {
       font-size: 14px;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       text-decoration: none;
     }
     ${self} .org-link:hover {

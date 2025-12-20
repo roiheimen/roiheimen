@@ -43,7 +43,7 @@ define("RoiDashboard", {
     ${self} .btn {
       display: inline-block;
       padding: 12px 24px;
-      background: var(--roi-theme-main-color);
+      background: var(--roi-primary);
       color: white;
       text-decoration: none;
       border-radius: 4px;
@@ -77,7 +77,7 @@ define("RoiDashboard", {
     ${self} .org-header h3 {
       margin: 0;
       font-size: 18px;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     ${self} .org-header a {
       font-size: 14px;
@@ -85,7 +85,7 @@ define("RoiDashboard", {
       text-decoration: none;
     }
     ${self} .org-header a:hover {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     ${self} .meetings-grid {
       display: grid;
@@ -100,7 +100,7 @@ define("RoiDashboard", {
     ${self} .create-meeting-btn {
       display: inline-block;
       padding: 8px 16px;
-      background: var(--roi-theme-main-color);
+      background: var(--roi-primary);
       color: white;
       text-decoration: none;
       border-radius: 4px;

@@ -36,7 +36,7 @@ define("RoiOrgSettings", {
     }
     ${self} h3 {
       margin: 0 0 16px 0;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       font-size: 18px;
     }
     ${self} .form-group {
@@ -57,7 +57,7 @@ define("RoiOrgSettings", {
       box-sizing: border-box;
     }
     ${self} input[type="text"]:focus {
-      border-color: var(--roi-theme-main-color);
+      border-color: var(--roi-primary);
       outline: none;
     }
     ${self} input[type="text"]:disabled {
@@ -89,7 +89,7 @@ define("RoiOrgSettings", {
       cursor: not-allowed;
     }
     ${self} .btn-primary {
-      background: var(--roi-theme-main-color);
+      background: var(--roi-primary);
       color: white;
     }
     ${self} .btn-primary:hover:not(:disabled) {

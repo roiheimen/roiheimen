@@ -6,6 +6,7 @@
 <script type=module src=/db/state.js></script>
 <script type=module src=/comp/login.js></script>
 <style>
+/* Auth Page Styles - Using Design Tokens */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -20,124 +21,148 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
 .auth-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: var(--roi-space-lg);
+  background: linear-gradient(145deg, var(--roi-gray-50) 0%, var(--roi-gray-200) 100%);
 }
+
+:root[data-theme="dark"] .auth-page,
+.dark-mode .auth-page {
+  background: linear-gradient(145deg, var(--roi-bg-body) 0%, var(--roi-bg-surface) 100%);
+}
+
 .auth-logo {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: var(--roi-space-xl);
   animation: fadeIn 0.6s ease-out;
 }
+
 .auth-logo-icon {
   width: 56px;
   height: 56px;
-  background: var(--roi-theme-main-color);
-  border-radius: 14px;
+  background: var(--roi-primary);
+  border-radius: var(--roi-radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
-  box-shadow: 0 4px 12px rgba(43, 44, 58, 0.25);
+  margin: 0 auto var(--roi-space-md);
+  box-shadow: var(--roi-shadow-lg);
 }
+
 .auth-logo-icon svg {
   width: 32px;
   height: 32px;
-  fill: white;
+  fill: var(--roi-text-inverse);
 }
+
 .auth-logo h1 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: var(--roi-theme-main-color);
+  font-size: var(--roi-text-4xl);
+  font-weight: var(--roi-weight-bold);
+  color: var(--roi-primary);
   margin: 0;
   letter-spacing: -0.5px;
 }
+
 .auth-logo p {
-  color: #64748b;
-  margin: 8px 0 0;
-  font-size: 0.95rem;
-  font-weight: 400;
+  color: var(--roi-text-secondary);
+  margin: var(--roi-space-sm) 0 0;
+  font-size: var(--roi-text-base);
+  font-weight: var(--roi-weight-normal);
 }
+
 .auth-card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.12);
-  padding: 36px;
+  background: var(--roi-bg-surface);
+  border-radius: var(--roi-radius-xl);
+  box-shadow: var(--roi-shadow-xl);
+  padding: var(--roi-space-2xl);
   width: 100%;
   max-width: 400px;
   animation: fadeInUp 0.5s ease-out;
+  border: 1px solid var(--roi-border-light);
 }
+
 .auth-card h2 {
-  margin: 0 0 24px;
-  font-size: 1.375rem;
-  font-weight: 600;
-  color: #1e293b;
+  margin: 0 0 var(--roi-space-lg);
+  font-size: var(--roi-text-2xl);
+  font-weight: var(--roi-weight-semibold);
+  color: var(--roi-text-primary);
   text-align: center;
 }
+
 .auth-card .subtitle {
   text-align: center;
-  color: #64748b;
-  margin: -16px 0 24px;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  color: var(--roi-text-secondary);
+  margin: calc(var(--roi-space-md) * -1) 0 var(--roi-space-lg);
+  font-size: var(--roi-text-sm);
+  line-height: var(--roi-leading-normal);
 }
+
 .auth-footer {
   text-align: center;
-  margin-top: 24px;
-  color: #64748b;
-  font-size: 0.9rem;
+  margin-top: var(--roi-space-lg);
+  color: var(--roi-text-secondary);
+  font-size: var(--roi-text-sm);
   animation: fadeIn 0.6s ease-out 0.2s both;
 }
+
 .auth-footer a {
-  color: var(--roi-theme-main-color);
+  color: var(--roi-primary);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--roi-weight-semibold);
+  transition: opacity var(--roi-transition-fast);
 }
+
 .auth-footer a:hover {
+  opacity: 0.8;
   text-decoration: underline;
 }
+
 .browser-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 12px;
-  color: #991b1b;
-  padding: 16px;
-  margin-bottom: 20px;
+  background: var(--roi-error-bg);
+  border: 1px solid var(--roi-error-light);
+  border-radius: var(--roi-radius-lg);
+  color: var(--roi-error-text);
+  padding: var(--roi-space-md);
+  margin-bottom: var(--roi-space-lg);
   max-width: 400px;
   display: none;
 }
+
 .browser-error code {
   display: block;
-  margin-top: 8px;
-  font-size: 0.85rem;
+  margin-top: var(--roi-space-sm);
+  font-size: var(--roi-text-sm);
 }
+
 .browser-warn {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 12px;
-  color: #92400e;
-  padding: 16px;
-  margin-bottom: 20px;
+  background: var(--roi-warning-bg);
+  border: 1px solid var(--roi-warning-light);
+  border-radius: var(--roi-radius-lg);
+  color: var(--roi-warning-text);
+  padding: var(--roi-space-md);
+  margin-bottom: var(--roi-space-lg);
   max-width: 400px;
-  font-size: 0.9rem;
+  font-size: var(--roi-text-sm);
   display: none;
 }
+
 @media (max-width: 480px) {
   .auth-card {
-    padding: 28px 24px;
+    padding: var(--roi-space-xl) var(--roi-space-lg);
   }
   .auth-logo h1 {
-    font-size: 1.875rem;
+    font-size: var(--roi-text-3xl);
   }
   .auth-logo-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: var(--roi-radius-lg);
   }
   .auth-logo-icon svg {
     width: 28px;

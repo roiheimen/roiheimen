@@ -4,15 +4,53 @@ export default define("RoiReferendumList", {
   style(self) {
     return `
     ${self} {
-      display: flex;
-      justify-content: center;
+      display: block;
+    }
+    ${self} table {
+      width: 100%;
+      border-radius: var(--roi-radius-md);
+      overflow: hidden;
+    }
+    ${self} th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--roi-text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--roi-bg-body);
+    }
+    ${self} td {
+      padding: 12px;
+      color: var(--roi-text-primary);
+    }
+    ${self} tr {
+      border-bottom: 1px solid var(--roi-border-light);
     }
     ${self} .choice {
       display: inline-block;
-      background-color: #ddd;
-      padding: 2px 4px;
+      background-color: var(--roi-bg-muted);
+      color: var(--roi-text-primary);
+      padding: 4px 8px;
       margin: 2px;
-      border-radius: 2px;
+      border-radius: var(--roi-radius-sm);
+      font-size: 0.9rem;
+    }
+    ${self} button {
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
+      border: 1px solid var(--roi-border-medium);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
+    }
+    ${self} button:hover {
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
     }
     `;
   },

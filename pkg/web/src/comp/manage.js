@@ -144,32 +144,59 @@ const SakSpeakerAdderInput = {
     ${self} form {
       width: 100%;
       display: flex;
+      gap: var(--roi-space-sm);
     }
     ${self} input[name=adder] {
-      width: 100%;
+      flex: 1;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-medium);
+      border-radius: var(--roi-radius-sm);
+      color: var(--roi-text-primary);
+      font-size: var(--roi-text-base);
+      padding: var(--roi-space-sm) var(--roi-space-md);
     }
-    ${self} input {
-      padding: 3px;
+    ${self} input[name=adder]:focus {
+      outline: 2px solid var(--roi-primary);
+      outline-offset: 2px;
+    }
+    ${self} input[type=submit] {
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
+      border: 1px solid var(--roi-border-medium);
+      padding: var(--roi-space-sm) var(--roi-space-md);
+      font-size: var(--roi-text-sm);
+      cursor: pointer;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
+    }
+    ${self} input[type=submit]:hover {
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
     }
     ${self} p {
-      margin: 0;
-      font-size: 0.8em;
-      color: #666;
-      line-height: 1;
+      margin: var(--roi-space-xs) 0 0;
+      font-size: var(--roi-text-xs);
+      color: var(--roi-text-tertiary);
+      line-height: 1.3;
     }
     ${self} code {
-      background: #ccc;
-      color: #333;
+      background: var(--roi-bg-muted);
+      color: var(--roi-text-primary);
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-size: 0.9em;
     }
     ${self} .err {
       position: absolute;
       color: white;
-      background-color: red;
+      background-color: var(--roi-error);
       pointer-events: none;
-      font-size: 20px;
+      font-size: var(--roi-text-lg);
       margin: 0;
       right: 20px;
-      padding: 5px 28px;
+      padding: var(--roi-space-sm) var(--roi-space-lg);
+      border-radius: var(--roi-radius-sm);
     }
     `;
   },
@@ -251,15 +278,16 @@ const SakList = {
     return `
     ${self} h3 {
       display: flex;
-      background-color: #ffa;
+      background-color: var(--roi-warning-bg);
       padding: 6px 20px;
       margin: 20px -20px 0;
-      border: 1px solid #ddd;
+      border: 1px solid var(--roi-border-light);
       border-right: none;
       border-left: none;
+      color: var(--roi-text-primary);
     }
     ${self} h3.current {
-      background-color: #cea;
+      background-color: var(--roi-success-bg);
     }
     ${self} h3 button {
       margin-left: auto;
@@ -267,28 +295,31 @@ const SakList = {
     ${self} .choice {
       font-size: 80%;
       display: inline-block;
-      background-color: #ddd;
+      background-color: var(--roi-bg-muted);
       padding: 2px 4px;
       margin: 2px;
       border-radius: 2px;
+      color: var(--roi-text-primary);
     }
     ${self} .deleted {
       text-decoration: line-through;
-      color: #ccc;
+      color: var(--roi-text-tertiary);
     }
     ${self} .speeches {
-      background-color: #eee;
+      background-color: var(--roi-bg-muted);
       padding: 0px 20px;
       margin: 0px -20px 6px;
+      color: var(--roi-text-primary);
     }
     ${self} .speech {
       font-size: 80%;
       display: inline-block;
-      background-color: white;
+      background-color: var(--roi-bg-surface);
       padding: 2px 4px;
       margin: 2px;
       border-radius: 2px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--roi-border-medium);
+      color: var(--roi-text-primary);
     }
     ${self} ol {
       margin: 0;
@@ -537,8 +568,8 @@ const MoreDialog = {
       display: inline-block;
     }
     ${self} .tabs button.active {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2);
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
     }
     ${self} .invitasjonar-tab {
       display: flex;
@@ -761,35 +792,108 @@ define("RoiManage", {
         'config config update'
         'adder  adder  more'
         'list   list   list';
-      grid-gap: 10px;
+      grid-gap: var(--roi-space-sm);
+      padding: var(--roi-space-md);
+      max-width: 1200px;
+      margin: 0 auto;
     }
     ${self} .title {
       grid-area: title;
-      font-size: 24px;
+      font-size: var(--roi-text-2xl);
       height: 100%;
-      padding: 3px;
+      padding: var(--roi-space-sm) var(--roi-space-md);
       width: 100%;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-medium);
+      border-radius: var(--roi-radius-sm);
+      color: var(--roi-text-primary);
+    }
+    ${self} .title:focus {
+      outline: 2px solid var(--roi-primary);
+      outline-offset: 2px;
     }
     ${self} .finish { grid-area: finish; }
-    ${self} .config { grid-area: config; }
+    ${self} .config {
+      grid-area: config;
+      display: flex;
+      gap: var(--roi-space-md);
+      flex-wrap: wrap;
+      color: var(--roi-text-secondary);
+      font-size: var(--roi-text-sm);
+    }
+    ${self} .config label {
+      display: flex;
+      align-items: center;
+      gap: var(--roi-space-xs);
+      cursor: pointer;
+    }
+    ${self} .config input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+    }
     ${adder} { grid-area: adder; }
     ${more} { grid-area: more; }
     ${self} .list { grid-area: list; }
     ${self} .people {
-      color: #666;
+      color: var(--roi-text-secondary);
       grid-column: 1/4;
+      margin-top: var(--roi-space-xl);
+      border-top: 1px solid var(--roi-border-light);
+      padding-top: var(--roi-space-lg);
     }
     ${self} .people p {
       text-align: center;
+      font-size: var(--roi-text-sm);
+      margin: var(--roi-space-sm) 0 var(--roi-space-md);
     }
     roi-referendum-list, roi-speeches-list {
-      margin-bottom: 20px;
+      margin-bottom: var(--roi-space-lg);
     }
     roi-speeches-list table {
-        width: 100%;
+      width: 100%;
     }
-    ${self} h2 { text-align: center }
+    ${self} h2 {
+      text-align: center;
+      color: var(--roi-text-primary);
+      font-size: var(--roi-text-xl);
+      font-weight: var(--roi-weight-medium);
+    }
     roi-person-list table { width: 100% }
+    ${self} button {
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
+      border: 1px solid var(--roi-border-medium);
+      padding: var(--roi-space-sm) var(--roi-space-md);
+      font-size: var(--roi-text-sm);
+      cursor: pointer;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
+    }
+    ${self} button:hover {
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
+    }
+    ${self} button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    ${self} button.finish {
+      background: var(--roi-success);
+      color: white;
+      border-color: var(--roi-success);
+    }
+    ${self} button.finish:hover {
+      background: var(--roi-success-dark);
+      border-color: var(--roi-success-dark);
+    }
+    ${self} button.new {
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
+      font-size: var(--roi-text-lg);
+      padding: var(--roi-space-md) var(--roi-space-xl);
+    }
     `;
   },
   oninput({ target }) {

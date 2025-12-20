@@ -61,7 +61,7 @@ define("RoiVideo", {
   style(self) {
     return `
     ${self} {
-      background: var(--roi-theme-video-bg);
+      background: linear-gradient(135deg, var(--roi-primary) 0%, var(--roi-primary-light) 100%);
       display: flex;
       height: 60vh;
     }

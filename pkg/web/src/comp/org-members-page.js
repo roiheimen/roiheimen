@@ -33,7 +33,7 @@ define("RoiOrgMembersPage", {
       text-align: center;
     }
     ${self} .back-link a {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     ${self} .org-header {
       display: flex;
@@ -60,7 +60,7 @@ define("RoiOrgMembersPage", {
       background: #f3f4f6;
     }
     ${self} .org-nav a.active {
-      background: var(--roi-theme-main-color);
+      background: var(--roi-primary);
       color: white;
     }
     `;

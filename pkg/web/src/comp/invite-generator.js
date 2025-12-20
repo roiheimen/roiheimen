@@ -30,7 +30,7 @@ define("RoiInviteGenerator", {
     }
     ${self} h3 {
       margin: 0 0 16px 0;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       font-size: 18px;
     }
     ${self} .form-row {
@@ -65,12 +65,12 @@ define("RoiInviteGenerator", {
       box-sizing: border-box;
     }
     ${self} input:focus {
-      border-color: var(--roi-theme-main-color, #2b2c3a);
+      border-color: var(--roi-primary);
       outline: none;
     }
     ${self} .btn-create {
       padding: 12px 24px;
-      background: var(--roi-theme-main-color, #2b2c3a);
+      background: var(--roi-primary);
       color: white;
       border: none;
       border-radius: 4px;
@@ -107,7 +107,7 @@ define("RoiInviteGenerator", {
       font-family: monospace;
       font-size: 32px;
       font-weight: bold;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       letter-spacing: 4px;
       background: #fff;
       padding: 16px 32px;
@@ -125,7 +125,7 @@ define("RoiInviteGenerator", {
       word-break: break-all;
     }
     ${self} .invite-link a {
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       text-decoration: none;
     }
     ${self} .invite-link a:hover {
@@ -155,7 +155,7 @@ define("RoiInviteGenerator", {
     }
     ${self} .btn-new {
       padding: 10px 20px;
-      background: var(--roi-theme-main-color, #2b2c3a);
+      background: var(--roi-primary);
       color: white;
       border: none;
       border-radius: 4px;

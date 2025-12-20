@@ -52,7 +52,7 @@ define("RoiOrgMembers", {
     }
     ${self} h3 {
       margin: 0 0 16px 0;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       font-size: 18px;
     }
     ${self} .member-list {
@@ -161,12 +161,12 @@ define("RoiOrgMembers", {
     }
     ${self} input[type="email"]:focus,
     ${self} select:focus {
-      border-color: var(--roi-theme-main-color);
+      border-color: var(--roi-primary);
       outline: none;
     }
     ${self} .btn-invite {
       padding: 10px 20px;
-      background: var(--roi-theme-main-color);
+      background: var(--roi-primary);
       color: white;
       border: none;
       border-radius: 4px;

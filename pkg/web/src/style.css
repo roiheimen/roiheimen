@@ -1,24 +1,219 @@
+/* ==============================================
+   DESIGN TOKENS - Roiheimen Design System
+   ============================================== */
+
 :root {
-  --roi-theme-main-color: #2b2c3a;
-  --roi-theme-main-color2: #ffffff;
-  --roi-theme-video-bg: #9c9fbd;
-  --roi-theme-font: system-ui, -apple-system, sans-serif;
-  --roi-theme-font-color: #333;
-  --roi-theme-head-size: 42px;
-  --roi-theme-head-font: inherit;
+  /* ===== COLOR PALETTE ===== */
+
+  /* Primary Colors (Brand) */
+  --roi-primary: #2b2c3a;
+  --roi-primary-light: #3d3e50;
+  --roi-primary-dark: #1a1b26;
+
+  /* Secondary Colors */
+  --roi-secondary: #9c9fbd;
+  --roi-secondary-light: #b8b6d0;
+  --roi-secondary-dark: #7a7891;
+
+  /* Accent Colors */
+  --roi-accent: #ff6b35;
+  --roi-accent-light: #ff8c5a;
+  --roi-accent-dark: #e55a25;
+
+  /* Neutral/Grayscale Palette */
+  --roi-gray-50: #fafafa;
+  --roi-gray-100: #f5f5f5;
+  --roi-gray-200: #e5e5e5;
+  --roi-gray-300: #ddd;
+  --roi-gray-400: #ccc;
+  --roi-gray-500: #999;
+  --roi-gray-600: #888;
+  --roi-gray-700: #666;
+  --roi-gray-800: #444;
+  --roi-gray-900: #333;
+
+  /* Semantic Colors */
+  --roi-success: #38a169;
+  --roi-success-light: #9ae6b4;
+  --roi-success-lighter: #c6f6d5;
+  --roi-success-bg: #f0fff4;
+  --roi-success-dark: #2f855a;
+  --roi-success-text: #276749;
+
+  --roi-error: #e53e3e;
+  --roi-error-light: #fecaca;
+  --roi-error-bg: #fef2f2;
+  --roi-error-dark: #dc2626;
+  --roi-error-text: #991b1b;
+
+  --roi-warning: #d97706;
+  --roi-warning-light: #fde68a;
+  --roi-warning-bg: #fffbeb;
+  --roi-warning-text: #92400e;
+
+  --roi-info: #1a4d80;
+  --roi-info-light: #cce0ff;
+  --roi-info-bg: #f0f7ff;
+  --roi-info-dark: #133a61;
+
+  /* Background Colors */
+  --roi-bg-body: #fefbf8;
+  --roi-bg-surface: #ffffff;
+  --roi-bg-elevated: #ffffff;
+  --roi-bg-muted: #e5e5e5;
+  --roi-bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Text Colors */
+  --roi-text-primary: #333;
+  --roi-text-secondary: #666;
+  --roi-text-tertiary: #888;
+  --roi-text-inverse: #ffffff;
+
+  /* Border Colors */
+  --roi-border-light: #e6e6e6;
+  --roi-border-medium: #ddd;
+  --roi-border-dark: #ccc;
+
+  /* ===== SPACING SCALE ===== */
+  --roi-space-xs: 4px;
+  --roi-space-sm: 8px;
+  --roi-space-md: 16px;
+  --roi-space-lg: 24px;
+  --roi-space-xl: 32px;
+  --roi-space-2xl: 48px;
+  --roi-space-3xl: 64px;
+
+  /* ===== TYPOGRAPHY ===== */
+
+  /* Font Families */
+  --roi-font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --roi-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  /* Font Sizes */
+  --roi-text-xs: 0.75rem;    /* 12px */
+  --roi-text-sm: 0.875rem;   /* 14px */
+  --roi-text-base: 1rem;     /* 16px */
+  --roi-text-lg: 1.125rem;   /* 18px */
+  --roi-text-xl: 1.25rem;    /* 20px */
+  --roi-text-2xl: 1.5rem;    /* 24px */
+  --roi-text-3xl: 1.875rem;  /* 30px */
+  --roi-text-4xl: 2.25rem;   /* 36px */
+  --roi-text-5xl: 3rem;      /* 48px */
+
+  /* Font Weights */
+  --roi-weight-light: 300;
+  --roi-weight-normal: 400;
+  --roi-weight-medium: 500;
+  --roi-weight-semibold: 600;
+  --roi-weight-bold: 700;
+  --roi-weight-extrabold: 800;
+
+  /* Line Heights */
+  --roi-leading-tight: 1.25;
+  --roi-leading-snug: 1.375;
+  --roi-leading-normal: 1.5;
+  --roi-leading-relaxed: 1.625;
+  --roi-leading-loose: 2;
+
+  /* ===== BORDER RADIUS ===== */
+  --roi-radius-sm: 4px;
+  --roi-radius-md: 8px;
+  --roi-radius-lg: 12px;
+  --roi-radius-xl: 16px;
+  --roi-radius-2xl: 20px;
+  --roi-radius-3xl: 24px;
+  --roi-radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+  --roi-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --roi-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --roi-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --roi-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --roi-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --roi-shadow-card: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+
+  /* ===== TRANSITIONS ===== */
+  --roi-transition-fast: 150ms ease;
+  --roi-transition-base: 250ms ease;
+  --roi-transition-slow: 350ms ease;
+
+  /* Customizable heading styles (can be overridden by meeting theme) */
+  --roi-font-heading: inherit;
+  --roi-text-heading: var(--roi-text-4xl);
+}
+
+/* ==============================================
+   DARK MODE
+   ============================================== */
+
+:root[data-theme="dark"],
+.dark-mode {
+  /* Primary Colors (slightly muted for dark mode) */
+  --roi-primary: #4a4b5f;
+  --roi-primary-light: #5e5f78;
+  --roi-primary-dark: #2b2c3a;
+
+  /* Backgrounds */
+  --roi-bg-body: #1a1b26;
+  --roi-bg-surface: #2b2c3a;
+  --roi-bg-elevated: #3d3e50;
+  --roi-bg-muted: #1f2029;
+  --roi-bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text Colors (inverted) */
+  --roi-text-primary: #e5e5e5;
+  --roi-text-secondary: #b8b8b8;
+  --roi-text-tertiary: #888888;
+  --roi-text-inverse: #1a1b26;
+
+  /* Borders (darker) */
+  --roi-border-light: #3d3e50;
+  --roi-border-medium: #4a4b5f;
+  --roi-border-dark: #5e5f78;
+
+  /* Semantic colors for dark mode - using dark tinted backgrounds */
+  --roi-success: #4ade80;
+  --roi-success-light: #166534;
+  --roi-success-lighter: #14352a;
+  --roi-success-bg: #0f261e;
+  --roi-success-dark: #22c55e;
+  --roi-success-text: #86efac;
+
+  --roi-error: #f87171;
+  --roi-error-light: #7f1d1d;
+  --roi-error-bg: #2a1515;
+  --roi-error-text: #fecaca;
+
+  --roi-warning: #fbbf24;
+  --roi-warning-light: #78350f;
+  --roi-warning-bg: #271d0a;
+  --roi-warning-text: #fde68a;
+
+  --roi-info: #60a5fa;
+  --roi-info-light: #1e40af;
+  --roi-info-bg: #0f1a2e;
+  --roi-info-dark: #3b82f6;
+
+  /* Shadows (more subtle in dark mode) */
+  --roi-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --roi-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --roi-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --roi-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --roi-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --roi-shadow-card: 0 2px 4px 0 rgba(0, 0, 0, 0.4), 0 25px 50px 0 rgba(0, 0, 0, 0.3);
 }
 
 body {
-  background-color: #fefbf8; /* #eeefee; */
-  color: var(--roi-theme-font-color);
+  background-color: var(--roi-bg-body);
+  color: var(--roi-text-primary);
   display: grid;
-  font-family: var(--roi-theme-font);
-  font-size: 20px;
-  line-height: 145%;
+  font-family: var(--roi-font-sans);
+  font-size: var(--roi-text-xl);
+  line-height: var(--roi-leading-normal);
   margin: 0;
 }
 body, body * {
-  font-family: system-ui, -apple-system, sans-serif !important;
+  font-family: var(--roi-font-sans) !important;
 }
 body.bigtext {
   font-size: 2.5vw;
@@ -28,58 +223,65 @@ input, textarea, button, select {
   font-family: inherit;
 }
 h1, h2, h3 {
-  font-weight: normal;
+  font-weight: var(--roi-weight-normal);
 }
 table {
   border-collapse: collapse;
   border-spacing: 0;
 }
 th, td {
-  padding: 10px;
+  padding: var(--roi-space-sm) var(--roi-space-md);
   text-align: left;
 }
 tr {
-  border-bottom: thin solid #e6e6e6;
+  border-bottom: 1px solid var(--roi-border-light);
 }
 tr:last-child {
   border-bottom: none;
 }
-a { color: var(--roi-theme-main-color, #459745); }
-a:visited { opacity: 0.6; }
+a {
+  color: var(--roi-primary);
+  transition: opacity var(--roi-transition-fast);
+}
+a:visited {
+  opacity: 0.6;
+}
+a:hover {
+  opacity: 0.8;
+}
 body > header {
   display: flex;
 }
 body > header h1 {
-  color: var(--roi-theme-main-color, #459745);
-  font-size: var(--roi-theme-head-size);
-  margin: 10px auto;
-  font-family: var(--roi-theme-head-font);
-  line-height: 1;
+  color: var(--roi-primary);
+  font-size: var(--roi-text-heading);
+  margin: var(--roi-space-md) auto;
+  font-family: var(--roi-font-heading);
+  line-height: var(--roi-leading-tight);
 }
 body > header span {
-  color: #666;
-  font-size: 20px;
-  font-weight: 300;
-  top: 10px;
+  color: var(--roi-text-secondary);
+  font-size: var(--roi-text-xl);
+  font-weight: var(--roi-weight-light);
+  top: var(--roi-space-md);
   position: relative;
 }
 section.card {
-  background-color: #fff;
+  background-color: var(--roi-bg-surface);
   box-sizing: border-box;
-  box-shadow:
-    0 2px 4px 0 rgba(0, 0, 0, 0.2),
-    0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--roi-shadow-card);
+  border-radius: var(--roi-radius-md);
   margin: 0 auto;
-  padding: 10px 20px;
+  padding: var(--roi-space-md) var(--roi-space-lg);
   width: 100%;
 }
 section.card.lg { max-width: 960px; }
 section.card.sm { max-width: 300px; }
 
 .radio-group {
-  border: solid 1px var(--roi-theme-main-color2);
+  border: 1px solid var(--roi-border-medium);
   display: inline-flex;
-  border-radius: 4px;
+  border-radius: var(--roi-radius-sm);
   overflow: hidden;
 }
 .radio-group input[type=radio] {
@@ -89,19 +291,35 @@ section.card.sm { max-width: 300px; }
   width: 0;
 }
 .radio-group label {
-  color: var(--roi-theme-main-color2);
+  color: var(--roi-text-primary);
   cursor: pointer;
   display: inline-block;
   min-width: 80px;
+  padding: var(--roi-space-sm) var(--roi-space-md);
   text-align: center;
+  transition: all var(--roi-transition-fast);
 }
-.radio-group input[type=radio]:checked + label{
-  color: var(--roi-theme-main-color);
-  background: var(--roi-theme-main-color2);
-  font-weight: bold;
-  opacity: 0.5;
+.radio-group input[type=radio]:checked + label {
+  color: var(--roi-text-inverse);
+  background: var(--roi-primary);
+  font-weight: var(--roi-weight-semibold);
 }
-.radio-group input[type=radio]:focus + label{
-  outline: 5px solid white;
-  opacity: 1;
+.radio-group input[type=radio]:focus + label {
+  outline: 2px solid var(--roi-primary);
+  outline-offset: 2px;
+}
+
+/* Dialog styling for dark mode support */
+dialog {
+  background-color: var(--roi-bg-surface);
+  color: var(--roi-text-primary);
+  border: 1px solid var(--roi-border-medium);
+  border-radius: var(--roi-radius-md);
+}
+dialog input,
+dialog textarea,
+dialog select {
+  background-color: var(--roi-bg-elevated);
+  color: var(--roi-text-primary);
+  border: 1px solid var(--roi-border-medium);
 }

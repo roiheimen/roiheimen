@@ -34,7 +34,7 @@ define("RoiBreadcrumbs", {
       gap: 4px;
     }
     ${self} .breadcrumb-item a {
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       text-decoration: none;
     }
     ${self} .breadcrumb-item a:hover {

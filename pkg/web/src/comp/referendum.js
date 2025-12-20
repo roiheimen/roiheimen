@@ -10,15 +10,19 @@ export default define("RoiReferendum", {
       display: block;
     }
     ${self} form {
-      background: #f0fff4;
-      border: 1px solid #9ae6b4;
-      padding: 16px;
+      background: var(--roi-bg-surface);
+      border: 2px solid var(--roi-accent);
+      border-radius: var(--roi-radius-lg);
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(255, 107, 53, 0.1);
     }
     ${self} h3 {
-      margin: 0 0 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #276749;
+      margin: 0 0 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--roi-primary);
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--roi-border-light);
     }
     ${self} ul {
       list-style: none;
@@ -26,56 +30,74 @@ export default define("RoiReferendum", {
       padding: 0;
     }
     ${self} li {
-      margin: 0 0 6px;
+      margin: 0 0 8px;
     }
     ${self} label {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: #fff;
-      border: 1px solid #c6f6d5;
+      gap: 12px;
+      padding: 12px 14px;
       cursor: pointer;
       font-size: 1rem;
+      color: var(--roi-text-primary);
+      border-radius: var(--roi-radius-sm);
+      transition: background var(--roi-transition-fast);
     }
     ${self} label:hover {
-      background: #f0fff4;
+      background: var(--roi-bg-body);
     }
     ${self} input[type="radio"] {
-      accent-color: #38a169;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--roi-gray-400);
+      border-radius: 50%;
+      background: white;
+    }
+    ${self} input[type="radio"]:checked {
+      border-color: var(--roi-accent);
+      background: var(--roi-accent);
     }
     ${self} label:has(input:checked) {
-      background: #c6f6d5;
-      border-color: #68d391;
+      background: var(--roi-bg-body);
+      font-weight: 500;
     }
     ${self} p {
-      margin: 12px 0 0;
+      margin: 16px 0 0;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      color: var(--roi-text-primary);
     }
     ${self} input[type="submit"] {
-      background: #38a169;
-      color: white;
+      background: linear-gradient(135deg, var(--roi-accent) 0%, var(--roi-accent-dark) 100%);
+      color: #ffffff;
       border: none;
-      padding: 8px 16px;
-      font-size: 0.95rem;
-      font-weight: 500;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
+      border-radius: var(--roi-radius-md);
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      transition: all var(--roi-transition-fast);
     }
     ${self} input[type="submit"]:hover {
-      background: #2f855a;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
     }
     ${self} button[name="back"] {
-      background: #f7fafc;
-      color: #4a5568;
-      border: 1px solid #cbd5e0;
-      padding: 6px 12px;
-      font-size: 0.9rem;
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
+      border: 1px solid var(--roi-border-medium);
+      padding: 8px 14px;
+      font-size: 0.875rem;
       cursor: pointer;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
     }
     ${self} button[name="back"]:hover {
-      background: #edf2f7;
+      background: var(--roi-bg-body);
+      border-color: var(--roi-border-dark);
     }
     `;
   },

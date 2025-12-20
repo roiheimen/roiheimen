@@ -34,7 +34,7 @@ define("RoiMeetingSettingsPage", {
       text-align: center;
     }
     ${self} .back-link a {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     ${self} .meeting-header {
       display: flex;
@@ -68,7 +68,7 @@ define("RoiMeetingSettingsPage", {
       background: #f3f4f6;
     }
     ${self} .meeting-nav a.active {
-      background: var(--roi-theme-main-color);
+      background: var(--roi-primary);
       color: white;
     }
     `;

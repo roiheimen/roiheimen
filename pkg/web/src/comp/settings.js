@@ -15,25 +15,56 @@ define("RoiSettings", {
       left: 0;
       justify-content: center;
       align-items: center;
-      background-color: rgba(34, 34, 34, 0.6);
+      background-color: var(--roi-bg-overlay);
+      z-index: 100;
     }
     ${self} .settings {
-      background: white;
+      background: var(--roi-bg-surface);
       display: flex;
       flex-direction: column;
-      padding: 20px;
+      padding: 24px;
       position: relative;
       min-height: 200px;
       max-width: 500px;
       width: 70vw;
+      border-radius: var(--roi-radius-xl);
+      box-shadow: var(--roi-shadow-2xl);
     }
     ${self} .info {
-      background: #ffc;
-      padding: 10px 20px;
-      margin: 0 -20px;
+      background: var(--roi-warning-bg);
+      border: 1px solid var(--roi-warning-light);
+      border-left: 4px solid var(--roi-warning);
+      padding: 12px 16px;
+      margin: 0 0 16px;
+      border-radius: var(--roi-radius-md);
+      color: var(--roi-warning-text);
+      font-size: 0.95rem;
     }
     ${self} h2 {
-      margin-top: 0;
+      margin: 0 0 16px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--roi-primary);
+    }
+    ${self} p {
+      color: var(--roi-text-primary);
+      line-height: 1.6;
+      margin: 0 0 12px;
+    }
+    ${self} strong {
+      color: var(--roi-primary);
+    }
+    ${self} label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--roi-text-primary);
+    }
+    ${self} input[type="checkbox"] {
+      accent-color: var(--roi-accent);
+      width: 16px;
+      height: 16px;
     }
     ${self} .close {
       background: transparent;
@@ -41,19 +72,70 @@ define("RoiSettings", {
       display: block;
       font-size: 0;
       position: absolute;
-      right: 10px;
-      top: 10px;
+      right: 16px;
+      top: 16px;
+      cursor: pointer;
+      color: var(--roi-text-tertiary);
+      transition: color var(--roi-transition-fast);
+    }
+    ${self} .close:hover {
+      color: var(--roi-text-primary);
     }
     ${self} .close::before {
       content: "×";
       display: block;
-      font-size: 40px;
-      height: 20px;
-      line-height: 0.5;
-      width: 20px;
+      font-size: 32px;
+      height: 24px;
+      line-height: 0.75;
+      width: 24px;
     }
     ${self} .buttons {
       margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid var(--roi-border-light);
+      display: flex;
+      gap: 10px;
+    }
+    ${self} .buttons button {
+      padding: 10px 20px;
+      border-radius: var(--roi-radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--roi-transition-fast);
+    }
+    ${self} .buttons button[name="close"] {
+      background: var(--roi-bg-body);
+      border: 1px solid var(--roi-border-medium);
+      color: var(--roi-text-secondary);
+    }
+    ${self} .buttons button[name="close"]:hover {
+      background: var(--roi-bg-surface);
+      border-color: var(--roi-border-dark);
+    }
+    ${self} .buttons .logout {
+      background: var(--roi-error-bg);
+      border: 1px solid var(--roi-error-light);
+      color: var(--roi-error-text);
+      margin-left: auto;
+    }
+    ${self} .buttons .logout:hover {
+      background: var(--roi-error);
+      color: #ffffff;
+      border-color: var(--roi-error);
+    }
+    ${self} > div button:not(.close):not(.logout) {
+      background: var(--roi-primary);
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--roi-radius-md);
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all var(--roi-transition-fast);
+    }
+    ${self} > div button:not(.close):not(.logout):hover {
+      background: var(--roi-primary-dark);
     }
     `;
   },

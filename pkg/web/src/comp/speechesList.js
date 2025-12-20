@@ -13,55 +13,77 @@ export default define("RoiSpeechesList", {
     }
     ${self} table {
       width: 100%;
+      border-radius: var(--roi-radius-md);
+      overflow: hidden;
     }
     ${self} th {
       text-align: left;
-      padding: 6px 10px;
-      font-size: 0.8rem;
+      padding: 10px 12px;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: #666;
+      color: var(--roi-text-tertiary);
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
+      background: var(--roi-bg-body);
     }
     ${self} td {
-      padding: 10px;
+      padding: 12px;
+      color: var(--roi-text-primary);
     }
     ${self} tr {
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 1px solid var(--roi-border-light);
+      transition: background var(--roi-transition-fast);
+    }
+    ${self} tr:hover:not(.status-started):not(.status-ended):not(.status-cancelled) {
+      background: var(--roi-bg-body);
     }
     ${self} .status-started {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
-      font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--roi-accent) 0%, var(--roi-accent-dark) 100%);
+      color: #ffffff;
+    }
+    ${self} .status-started td {
+      background: transparent;
+      color: #ffffff;
+      font-size: 1.15rem;
+      font-weight: 600;
+      padding: 16px 12px;
     }
     ${self} .status-ended {
-      color: #999;
+      color: var(--roi-text-tertiary);
       text-decoration: line-through;
+      opacity: 0.7;
     }
     ${self} .status-cancelled {
-      color: #b45309;
+      color: var(--roi-warning-text);
       text-decoration: line-through;
-      background: #fffbeb;
+      background: var(--roi-warning-bg);
     }
     ${self} .simple .status-cancelled { display: none }
-    ${self} .color .is-prev { background: #f5f5f5; }
-    ${self} .color .is-current { background: #c6f6d5; }
-    ${self} .color .is-next { background: #fef9c3; }
+    ${self} .color .is-prev { background: var(--roi-bg-muted); }
+    ${self} .color .is-current:not(.status-started) { background: var(--roi-bg-elevated); }
+    ${self} .color .is-next { background: var(--roi-bg-elevated); }
     ${self} button {
-      background: #f5f5f5;
-      color: #444;
-      border: 1px solid #ccc;
-      padding: 4px 10px;
-      font-size: 0.85rem;
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
+      border: 1px solid var(--roi-border-medium);
+      padding: 6px 12px;
+      font-size: 0.8rem;
       cursor: pointer;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
     }
     ${self} button:hover {
-      background: #eee;
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
     }
     ${self} .status-started button {
       background: rgba(255,255,255,0.2);
       color: white;
       border-color: rgba(255,255,255,0.4);
+    }
+    ${self} .status-started button:hover {
+      background: rgba(255,255,255,0.35);
     }
     `;
   },

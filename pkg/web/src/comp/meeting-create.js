@@ -63,8 +63,8 @@ define("RoiMeetingCreate", {
       margin: 10px 0 0 auto;
       width: 150px;
       cursor: pointer;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       border: none;
       font-size: 16px;
     }
@@ -114,7 +114,7 @@ define("RoiMeetingCreate", {
       font-size: 14px;
     }
     ${self} .org-info strong {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     `;
   },

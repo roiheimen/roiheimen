@@ -17,7 +17,7 @@ define("RoiMeetingCard", {
       transition: box-shadow 0.2s, border-color 0.2s;
     }
     ${self}:hover {
-      border-color: var(--roi-theme-main-color);
+      border-color: var(--roi-primary);
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     ${self} .meeting-header {
@@ -28,7 +28,7 @@ define("RoiMeetingCard", {
     }
     ${self} h4 {
       margin: 0;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       font-size: 16px;
       font-weight: 600;
     }
@@ -63,7 +63,7 @@ define("RoiMeetingCard", {
     }
     ${self} .meeting-link {
       font-size: 13px;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       text-decoration: none;
     }
     ${self} .meeting-link:hover {
