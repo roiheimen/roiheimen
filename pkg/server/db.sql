@@ -18,7 +18,6 @@ create role roiheimen_person;
 create type roiheimen.jwt_token as (
   role text,
   person_id integer,
-  meeting_id text,
   admin boolean,
   exp bigint,
   user_id integer
@@ -343,7 +342,7 @@ create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $
   select *
     from roiheimen.sak
     where finished_at is null
-    and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+    and meeting_id = coalesce($1, roiheimen_private.current_meeting_id())
     order by created_at desc
     limit 1
 $$ language sql stable;
@@ -366,7 +365,7 @@ select *
     select id
       from roiheimen.sak
       where finished_at is null
-      and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+      and meeting_id = coalesce($1, roiheimen_private.current_meeting_id())
       order by created_at desc
       limit 1)
   limit 1;
@@ -388,6 +387,17 @@ create function roiheimen.current_person() returns roiheimen.person as $$
 $$ language sql stable;
 comment on function roiheimen.current_person() is 'Gets the person who was identified by our JWT.';
 
+-- Helper function to get the meeting_id from the current person's JWT
+-- Used by RLS policies to derive meeting context from person_id instead of jwt.claims.meeting_id
+create function roiheimen_private.current_meeting_id() returns text as $$
+  select meeting_id from roiheimen.person
+  where id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+$$ language sql stable security definer;
+
+-- Grant execute on helper function to roles that need it
+grant usage on schema roiheimen_private to roiheimen_person;
+grant execute on function roiheimen_private.current_meeting_id() to roiheimen_person;
+
 -- current_participant: Returns the meeting_participant for the current user and meeting
 -- This is the new function for the SaaS platform, providing participant info for users
 -- who joined via invite code or org membership
@@ -395,7 +405,7 @@ create or replace function roiheimen.current_participant() returns roiheimen.mee
   select mp.*
   from roiheimen.meeting_participant mp
   where mp.user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer
-    and mp.meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    and mp.meeting_id = roiheimen_private.current_meeting_id()
 $$ language sql stable;
 comment on function roiheimen.current_participant() is 'Gets the meeting participant for the current user and meeting from JWT.';
 
@@ -413,7 +423,7 @@ select id as person_id,
   (select count(*) from roiheimen.speech s where s.speaker_id = p.id) speeches,
   (select count(*) from roiheimen.vote v where v.person_id = p.id) votes
   from roiheimen.person p
-  where meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+  where meeting_id = coalesce($1, roiheimen_private.current_meeting_id())
   order by num desc;
 $$ language sql stable;
 comment on function roiheimen.stats_people_meeting(text) is E'@foreignKey (person_id) references person (id)\nGets some basic stats on participation in meeting.';
@@ -547,7 +557,6 @@ begin
 
     return (
       'roiheimen_user',
-      null,
       null,
       false,
       extract(epoch from (now() + interval '6 days')),
@@ -1463,11 +1472,10 @@ begin
       returning * into participant;
   end if;
 
-  -- Return meeting-scoped JWT with person_id for legacy compatibility
+  -- Return JWT with person_id (meeting_id is derived from person record via current_meeting_id())
   return (
     'roiheimen_person',
-    participant.person_id, -- Use the actual person.id for legacy compatibility
-    p_meeting_id,
+    participant.person_id,
     participant.is_organizer, -- Organizers get admin access
     extract(epoch from (now() + interval '6 days')),
     current_user_id
@@ -1833,11 +1841,11 @@ create policy select_meeting_legacy on roiheimen.meeting
   for select to roiheimen_anonymous, roiheimen_person
   using (organization_id is null);
 
--- Allow roiheimen_person to see their current meeting (from JWT meeting_id claim)
+-- Allow roiheimen_person to see their current meeting (derived from person record)
 -- This enables participants with meeting tokens to access meeting data for voting/speech
 create policy select_meeting_participant on roiheimen.meeting
   for select to roiheimen_person
-  using (id = nullif(current_setting('jwt.claims.meeting_id', true), ''));
+  using (id = roiheimen_private.current_meeting_id());
 
 -- Meeting RLS policies for organization-based access (roiheimen_user role)
 -- Select: org members can view meetings in their orgs
@@ -1891,11 +1899,11 @@ create policy delete_meeting_org on roiheimen.meeting
   );
 
 create policy select_sak on roiheimen.sak for select using (
-    meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    meeting_id = roiheimen_private.current_meeting_id()
   );
 create policy update_sak on roiheimen.sak for all using (
     coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
-    and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    and meeting_id = roiheimen_private.current_meeting_id()
   );
 
 create policy select_person on roiheimen.person for select using (true);
@@ -1904,7 +1912,7 @@ create policy update_person on roiheimen.person for update to roiheimen_person
 create policy all_admin_person on roiheimen.person for all to roiheimen_person
   using (
     coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
-    and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    and meeting_id = roiheimen_private.current_meeting_id()
   );
 
 create policy select_speech on roiheimen.speech for select using (true);
@@ -1920,7 +1928,7 @@ create policy all_admin_speech on roiheimen.speech for all to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = speaker_id
-      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 
@@ -1932,7 +1940,7 @@ create policy all_admin_test on roiheimen.test for all to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = requester_id
-      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 
@@ -1942,7 +1950,7 @@ create policy update_referendum on roiheimen.referendum for all using (
     and exists (
       select 1 from roiheimen.sak
       where id = sak_id
-      and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 create policy select_vote on roiheimen.vote for select to roiheimen_person
@@ -1957,7 +1965,7 @@ create policy select_vote on roiheimen.vote for select to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = person_id
-      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 -- Actually not a good idea, since admins will have access to users pws,

@@ -177,7 +177,8 @@ test("meeting token", async ({ page, meetingWithInvite }) => {
     const claims = decodeJwtClaims(jwt);
 
     expect(claims.role).toBe("roiheimen_person");
-    expect(claims.meeting_id).toBe(meeting.id);
+    // meeting_id removed from JWT - derived from person record instead
+    expect(claims.meeting_id).toBeUndefined();
     expect(claims.person_id).toBeGreaterThan(0);
     expect(claims.admin).toBe(false);
   });
@@ -189,7 +190,8 @@ test("meeting token", async ({ page, meetingWithInvite }) => {
     const claims = decodeJwtClaims(jwt);
 
     expect(claims.role).toBe("roiheimen_person");
-    expect(claims.meeting_id).toBe(meeting.id);
+    // meeting_id removed from JWT - derived from person record instead
+    expect(claims.meeting_id).toBeUndefined();
     expect(claims.admin).toBe(true);
   });
 
