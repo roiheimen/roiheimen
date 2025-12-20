@@ -60,7 +60,7 @@ export default define("RoiSpeechesList", {
     }
     ${self} .simple .status-cancelled { display: none }
     ${self} .color .is-prev { background: var(--roi-bg-muted); }
-    ${self} .color .is-current { background: var(--roi-bg-elevated); }
+    ${self} .color .is-current:not(.status-started) { background: var(--roi-bg-elevated); }
     ${self} .color .is-next { background: var(--roi-bg-elevated); }
     ${self} button {
       background: var(--roi-bg-surface);
