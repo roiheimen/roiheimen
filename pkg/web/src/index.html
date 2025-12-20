@@ -14,7 +14,7 @@
     var params = new URLSearchParams(location.search);
     var meetingId = params.get('m');
     if (meetingId) {
-      // Redirect to legacy meeting login page
+      // Redirect to meeting page
       location.replace('/mote.html?m=' + encodeURIComponent(meetingId));
       return;
     }
@@ -28,7 +28,7 @@
       }
     }
   } catch (e) {
-    // Ignore errors - JWT might be malformed or old format
+    // Show landing page on error
   }
 })();
 </script>

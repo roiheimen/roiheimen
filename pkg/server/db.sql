@@ -18,7 +18,6 @@ create role roiheimen_person;
 create type roiheimen.jwt_token as (
   role text,
   person_id integer,
-  meeting_id text,
   admin boolean,
   exp bigint,
   user_id integer
@@ -74,26 +73,6 @@ create table roiheimen.person (
 comment on table roiheimen.person is 'A registered person with name+num.';
 create index on roiheimen.person(meeting_id);
 
--- person_account
-create table roiheimen_private.person_account (
-  person_id        integer primary key references roiheimen.person(id) on delete cascade,
-  email            text null check (email ~* '^.+@.+\..+$'),
-  password_hash    text not null
-);
-comment on table roiheimen_private.person_account is 'Private information about a person’s account.';
-create index on roiheimen_private.person_account(person_id);
-
--- person_login
-create table roiheimen_private.person_login (
-  id               serial primary key,
-  person_id        integer references roiheimen.person(id) on delete cascade,
-  login_at         timestamp default now(),
-  logout_at        timestamp null
-);
-comment on table roiheimen_private.person_login is 'Private information about a person’s login.';
-create index on roiheimen_private.person_login(person_id);
-create index on roiheimen_private.person_login(logout_at);
-create unique index idx_no_double_login on roiheimen_private.person_login (person_id, (logout_at is null)) where logout_at is null;
 
 -- speech
 create type roiheimen.speech_type as enum (
@@ -350,52 +329,6 @@ create view ordered_speech as
 
 -- Functions
 
-create or replace function roiheimen.authenticate(
-  num integer,
-  meeting_id text,
-  password text
-) returns roiheimen.jwt_token as $$
-declare
-  person roiheimen.person;
-  account roiheimen_private.person_account;
-begin
-  select * into person
-    from roiheimen.person p
-    where p.num = $1 and p.meeting_id = $2;
-  select *  into account
-    from roiheimen_private.person_account as a
-    where person.id = a.person_id;
-
-  if account.password_hash = crypt(password, account.password_hash) then
-    update roiheimen_private.person_login
-      set logout_at = now()
-      where person_id = account.person_id
-      and logout_at is null;
-    insert into roiheimen_private.person_login (person_id)
-      values (account.person_id);
-    return (
-      'roiheimen_person',
-      account.person_id,
-      $2,
-      person.admin,
-      extract(epoch from (now() + interval '6 days')),
-      null
-    )::roiheimen.jwt_token;
-  else
-    return null;
-  end if;
-end;
-$$ language plpgsql strict security definer;
-comment on function roiheimen.authenticate(integer, text, text) is 'Creates a JWT token that will securely identify a person and give them certain permissions. This token expires in 6 days.';
-
-create function roiheimen.logout(person_id integer) returns roiheimen_private.person_login as $$
-  update roiheimen_private.person_login
-    set logout_at = now()
-    where logout_at is null
-    and person_id = coalesce($1::text, current_setting('jwt.claims.person_id', true))::integer
-    returning *;
-$$ language sql strict security definer;
-
 create function roiheimen.person_latest_speech(person roiheimen.person) returns roiheimen.speech as $$
   select speech.*
   from roiheimen.speech as speech
@@ -403,95 +336,13 @@ create function roiheimen.person_latest_speech(person roiheimen.person) returns 
   order by created_at desc
   limit 1
 $$ language sql stable;
-comment on function roiheimen.person_latest_speech(roiheimen.person) is 'Get’s the latest speech written by the person.';
-
-create function roiheimen.register_person(
-  num integer,
-  name text,
-  meeting_id text,
-  password text,
-  org text,
-  email text default null
-) returns roiheimen.person as $$
-declare
-  person roiheimen.person;
-begin
-  insert into roiheimen.person (num, name, org, meeting_id) values
-    (num, name, org, meeting_id)
-    returning * into person;
-
-  insert into roiheimen_private.person_account (person_id, email, password_hash) values
-    (person.id, email, crypt(password, gen_salt('bf')));
-
-  return person;
-end;
-$$ language plpgsql security definer;
-comment on function roiheimen.register_person(integer, text, text, text, text, text) is 'Registers a single user and creates an account.';
-
-create function roiheimen.change_person(
-  l_id integer,
-  l_name text,
-  l_password text,
-  l_org text,
-  l_email text default null
-) returns roiheimen.person as $$
-declare
-  person roiheimen.person;
-begin
-  update roiheimen.person
-    set name=l_name, org=l_org
-    where id = l_id
-    returning * into person;
-
-  update roiheimen_private.person_account
-    set email=l_email, password_hash=crypt(l_password, gen_salt('bf'))
-    where person_id = l_id;
-
-  return person;
-end;
-$$ language plpgsql security definer;
-comment on function roiheimen.change_person(integer, text, text, text, text) is 'Updates a single person and their account.';
-
--- input type
-drop type roiheimen.people_input;
-create type roiheimen.people_input as (
-  num integer,
-  name text,
-  password text,
-  org text,
-  email text
-);
-
-create function roiheimen.register_people(
-  meeting_id text,
-  people roiheimen.people_input[]
-) returns roiheimen.person[] as $$
-  declare
-    pa roiheimen.people_input;
-    p roiheimen.person[];
-    pp roiheimen.person;
-  begin
-    foreach pa in array people loop
-      select * from roiheimen.person rp
-        where rp.meeting_id = register_people.meeting_id
-        and rp.num = pa.num
-        into pp;
-      if pp.id <> 0 then
-        p := p || (select roiheimen.change_person(pp.id, pa.name, pa.password, pa.org, pa.email));
-      else
-        p := p || (select roiheimen.register_person(pa.num, pa.name, meeting_id, pa.password, pa.org, pa.email));
-      end if;
-    end loop;
-
-    return p;
-  end;
-$$ language plpgsql volatile strict set search_path from current;
+comment on function roiheimen.person_latest_speech(roiheimen.person) is 'Gets the latest speech written by the person.';
 
 create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $$
   select *
     from roiheimen.sak
     where finished_at is null
-    and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+    and meeting_id = coalesce($1, roiheimen_private.current_meeting_id())
     order by created_at desc
     limit 1
 $$ language sql stable;
@@ -514,7 +365,7 @@ select *
     select id
       from roiheimen.sak
       where finished_at is null
-      and meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+      and meeting_id = coalesce($1, roiheimen_private.current_meeting_id())
       order by created_at desc
       limit 1)
   limit 1;
@@ -536,6 +387,17 @@ create function roiheimen.current_person() returns roiheimen.person as $$
 $$ language sql stable;
 comment on function roiheimen.current_person() is 'Gets the person who was identified by our JWT.';
 
+-- Helper function to get the meeting_id from the current person's JWT
+-- Used by RLS policies to derive meeting context from person_id instead of jwt.claims.meeting_id
+create function roiheimen_private.current_meeting_id() returns text as $$
+  select meeting_id from roiheimen.person
+  where id = nullif(current_setting('jwt.claims.person_id', true), '')::integer
+$$ language sql stable security definer;
+
+-- Grant execute on helper function to roles that need it
+grant usage on schema roiheimen_private to roiheimen_person;
+grant execute on function roiheimen_private.current_meeting_id() to roiheimen_person;
+
 -- current_participant: Returns the meeting_participant for the current user and meeting
 -- This is the new function for the SaaS platform, providing participant info for users
 -- who joined via invite code or org membership
@@ -543,7 +405,7 @@ create or replace function roiheimen.current_participant() returns roiheimen.mee
   select mp.*
   from roiheimen.meeting_participant mp
   where mp.user_id = nullif(current_setting('jwt.claims.user_id', true), '')::integer
-    and mp.meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    and mp.meeting_id = roiheimen_private.current_meeting_id()
 $$ language sql stable;
 comment on function roiheimen.current_participant() is 'Gets the meeting participant for the current user and meeting from JWT.';
 
@@ -561,7 +423,7 @@ select id as person_id,
   (select count(*) from roiheimen.speech s where s.speaker_id = p.id) speeches,
   (select count(*) from roiheimen.vote v where v.person_id = p.id) votes
   from roiheimen.person p
-  where meeting_id = coalesce($1, current_setting('jwt.claims.meeting_id', true))
+  where meeting_id = coalesce($1, roiheimen_private.current_meeting_id())
   order by num desc;
 $$ language sql stable;
 comment on function roiheimen.stats_people_meeting(text) is E'@foreignKey (person_id) references person (id)\nGets some basic stats on participation in meeting.';
@@ -695,7 +557,6 @@ begin
 
     return (
       'roiheimen_user',
-      null,
       null,
       false,
       extract(epoch from (now() + interval '6 days')),
@@ -1542,10 +1403,6 @@ begin
     values (next_num, trim(p_display_name), false, p_meeting_id, '')
     returning * into new_person;
 
-  -- Create password for the person (not used, but required by the system)
-  insert into roiheimen_private.person_account (person_id, password_hash)
-    values (new_person.id, crypt(encode(gen_random_bytes(32), 'hex'), gen_salt('bf')));
-
   -- Create participant with link to person record
   insert into roiheimen.meeting_participant (meeting_id, user_id, display_name, participant_num, joined_via, person_id)
     values (p_meeting_id, current_user_id, trim(p_display_name), next_num, invite.id, new_person.id)
@@ -1609,21 +1466,16 @@ begin
       values (next_num, user_name, true, p_meeting_id, '')
       returning * into new_person;
 
-    -- Create password for the person (not used, but required by the system)
-    insert into roiheimen_private.person_account (person_id, password_hash)
-      values (new_person.id, crypt(encode(gen_random_bytes(32), 'hex'), gen_salt('bf')));
-
     -- Create organizer participant entry with link to person
     insert into roiheimen.meeting_participant (meeting_id, user_id, display_name, participant_num, is_organizer, person_id)
       values (p_meeting_id, current_user_id, user_name, next_num, true, new_person.id)
       returning * into participant;
   end if;
 
-  -- Return meeting-scoped JWT with person_id for legacy compatibility
+  -- Return JWT with person_id (meeting_id is derived from person record via current_meeting_id())
   return (
     'roiheimen_person',
-    participant.person_id, -- Use the actual person.id for legacy compatibility
-    p_meeting_id,
+    participant.person_id,
     participant.is_organizer, -- Organizers get admin access
     extract(epoch from (now() + interval '6 days')),
     current_user_id
@@ -1897,10 +1749,6 @@ grant usage on sequence roiheimen.vote_id_seq to roiheimen_person;
 
 grant select on roiheimen.ordered_speech to roiheimen_anonymous, roiheimen_person;
 
-grant execute on function roiheimen.authenticate(integer, text, text) to roiheimen_anonymous, roiheimen_person;
-grant execute on function roiheimen.register_person(integer, text, text, text, text, text) to roiheimen_person;
-grant execute on function roiheimen.change_person(integer, text, text, text, text) to roiheimen_person;
-grant execute on function roiheimen.register_people(text, roiheimen.people_input[]) to roiheimen_person;
 grant execute on function roiheimen.latest_sak(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_speech(text) to roiheimen_anonymous, roiheimen_person;
 grant execute on function roiheimen.current_person() to roiheimen_anonymous, roiheimen_person;
@@ -1993,6 +1841,12 @@ create policy select_meeting_legacy on roiheimen.meeting
   for select to roiheimen_anonymous, roiheimen_person
   using (organization_id is null);
 
+-- Allow roiheimen_person to see their current meeting (derived from person record)
+-- This enables participants with meeting tokens to access meeting data for voting/speech
+create policy select_meeting_participant on roiheimen.meeting
+  for select to roiheimen_person
+  using (id = roiheimen_private.current_meeting_id());
+
 -- Meeting RLS policies for organization-based access (roiheimen_user role)
 -- Select: org members can view meetings in their orgs
 -- Also allow viewing legacy meetings (org_id is null)
@@ -2045,11 +1899,11 @@ create policy delete_meeting_org on roiheimen.meeting
   );
 
 create policy select_sak on roiheimen.sak for select using (
-    meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    meeting_id = roiheimen_private.current_meeting_id()
   );
 create policy update_sak on roiheimen.sak for all using (
     coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
-    and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    and meeting_id = roiheimen_private.current_meeting_id()
   );
 
 create policy select_person on roiheimen.person for select using (true);
@@ -2058,7 +1912,7 @@ create policy update_person on roiheimen.person for update to roiheimen_person
 create policy all_admin_person on roiheimen.person for all to roiheimen_person
   using (
     coalesce(current_setting('jwt.claims.admin', true), 'false')::boolean
-    and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+    and meeting_id = roiheimen_private.current_meeting_id()
   );
 
 create policy select_speech on roiheimen.speech for select using (true);
@@ -2074,7 +1928,7 @@ create policy all_admin_speech on roiheimen.speech for all to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = speaker_id
-      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 
@@ -2086,7 +1940,7 @@ create policy all_admin_test on roiheimen.test for all to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = requester_id
-      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 
@@ -2096,7 +1950,7 @@ create policy update_referendum on roiheimen.referendum for all using (
     and exists (
       select 1 from roiheimen.sak
       where id = sak_id
-      and meeting_id = nullif(current_setting('jwt.claims.meeting_id', true), '')
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 create policy select_vote on roiheimen.vote for select to roiheimen_person
@@ -2111,7 +1965,7 @@ create policy select_vote on roiheimen.vote for select to roiheimen_person
     and exists (
       select 1 from roiheimen.person
       where id = person_id
-      and meeting_id = current_setting('jwt.claims.meeting_id', true)
+      and meeting_id = roiheimen_private.current_meeting_id()
     )
   );
 -- Actually not a good idea, since admins will have access to users pws,
@@ -2459,65 +2313,4 @@ create trigger queue_password_reset_email_on_insert
   for each row
   execute function roiheimen_private.queue_password_reset_email();
 
--- Test data
--- XXX speechRoom actually has to be hidden from anon!
-insert into roiheimen.meeting (id, title, theme, config) values (
-  'meet20',
-  'Test',
-  '{
-    "font": "Avenir",
-    "head-font": "MDG",
-    "head-size": "68px",
-    "main-color": "#6a9325",
-    "video-bg": "#daf3f4"
-  }',
-  '{
-    "hostname": "roiheimen.s0.no",
-    "speechDisabled": false,
-    "speechInnleggDisabled": false,
-    "gfxIframeOnQueue": true,
-    "voteDisallowNum": [],
-    "video": false,
-    "tests": false,
-    "externalCss": "https://mdg.nationbuilder.com/themes/7/5d13d1874764e8ad3dc700ac/0/attachments/15615800231611569455/mobile/main.scss"
-   }');
-
-
-select roiheimen.register_people(
-  'meet20',
-  array[
-    (10, 'Kong Harald', 'test', 'Oslo-laget', null),
-    (11, 'Timmi Bristol', 'test', 'Oslo-laget', null),
-    (12, 'Dalai Lama', 'test', 'Oslo-laget', null),
-    (13, 'Marilyn Monroe', 'test', 'Oslo-laget', null),
-    (14, 'Queen Elizabeth', 'test', 'Stavanger-laget', null),
-    (15, 'Ivar Aasen', 'test', 'Stavanger-laget', null),
-    (16, 'Arne Garborg', 'test', 'Stavanger-laget', null),
-    (1000, 'Hulda Garborg', 'test', 'Teknisk', null),
-    (1001, 'Timmi adm', 'test', 'Teknisk', null),
-    (1002, 'Dalai adm', 'test', 'Teknisk', null),
-    (1003, 'Marilyn adm', 'test', 'Teknisk', null),
-    (1004, 'Queen adm', 'test', 'Teknisk', null),
-    (1005, 'Ivar adm', 'test', 'Teknisk', null),
-    (1006, 'Arne adm', 'test', 'Teknisk', null)
-  ]::roiheimen.people_input[]
-);
-update roiheimen.person set admin = true where num >= 1000 and meeting_id = 'meet20';
-
-
-COPY roiheimen.sak (id, title, meeting_id, created_at, updated_at, finished_at) FROM stdin;
-1	Opning	meet20	2020-09-29 20:54:07.189976+02	2020-09-29 20:54:07.189976+02	\N
-\.
-
-
-COPY roiheimen.speech (id, speaker_id, sak_id, type, created_at, updated_at) FROM stdin;
-4	1	1	innleiing	2020-09-29 20:54:18.20359	2020-09-29 20:54:18.20359
-5	3	1	innlegg	2020-09-29 21:28:21.216097	2020-09-29 21:28:21.216097
-6	2	1	innlegg	2020-09-30 00:21:31.327424	2020-09-30 00:21:31.327424
-7	1	1	innlegg	2020-09-30 00:33:39.560804	2020-09-30 00:33:39.560804
-8	6	1	innlegg	2020-09-30 00:38:43.920796	2020-09-30 00:38:43.920796
-\.
-
-SELECT pg_catalog.setval('roiheimen.person_id_seq', 14, true);
-SELECT pg_catalog.setval('roiheimen.sak_id_seq', 1, true);
-SELECT pg_catalog.setval('roiheimen.speech_id_seq', 8, true);
+-- Test data removed - use new auth system to create test data
