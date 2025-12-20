@@ -308,3 +308,18 @@ section.card.sm { max-width: 300px; }
   outline: 2px solid var(--roi-primary);
   outline-offset: 2px;
 }
+
+/* Dialog styling for dark mode support */
+dialog {
+  background-color: var(--roi-bg-surface);
+  color: var(--roi-text-primary);
+  border: 1px solid var(--roi-border-medium);
+  border-radius: var(--roi-radius-md);
+}
+dialog input,
+dialog textarea,
+dialog select {
+  background-color: var(--roi-bg-elevated);
+  color: var(--roi-text-primary);
+  border: 1px solid var(--roi-border-medium);
+}
