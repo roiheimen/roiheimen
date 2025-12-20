@@ -1,26 +1,31 @@
 /* Landing Page Styles */
+
+/* Landing-specific variables (these override the global tokens for marketing flair) */
 :root {
-  --accent: #ff6b35;
-  --accent-light: #ff8c5a;
-  --accent-dark: #e55a25;
-  --deep: #1a1a2e;
-  --deep-light: #2d2d44;
-  --cream: #fefbf8;
-  --soft-gray: #f4f4f8;
+  /* Use the global design tokens as a base */
+  --landing-accent: var(--roi-accent);
+  --landing-accent-light: var(--roi-accent-light);
+  --landing-accent-dark: var(--roi-accent-dark);
+  --landing-deep: #1a1a2e;
+  --landing-deep-light: #2d2d44;
+  --landing-cream: var(--roi-bg-body);
+  --landing-soft-gray: #f4f4f8;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--deep);
+  display: block;
+  font-family: var(--roi-font-sans);
+  font-size: var(--roi-text-base);
+  background: var(--landing-deep);
 }
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(135deg, var(--deep) 0%, var(--deep-light) 50%, #3d3d5c 100%);
-  color: white;
-  padding: 80px 24px 100px;
+  background: linear-gradient(135deg, var(--landing-deep) 0%, var(--landing-deep-light) 50%, #3d3d5c 100%);
+  color: var(--roi-text-inverse);
+  padding: var(--roi-space-3xl) var(--roi-space-lg) 100px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -49,13 +54,13 @@ body {
 }
 .hero h1 {
   font-size: clamp(48px, 8vw, 80px);
-  font-weight: 800;
-  margin: 0 0 16px;
+  font-weight: var(--roi-weight-extrabold);
+  margin: 0 0 var(--roi-space-md);
   letter-spacing: -2px;
-  line-height: 1.1;
+  line-height: var(--roi-leading-tight);
 }
 .hero h1 span {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  background: linear-gradient(135deg, var(--landing-accent) 0%, var(--landing-accent-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -63,30 +68,32 @@ body {
 .tagline {
   font-size: clamp(20px, 3vw, 28px);
   opacity: 0.9;
-  margin: 0 0 40px;
-  font-weight: 300;
-  line-height: 1.5;
+  margin: 0 0 var(--roi-space-2xl);
+  font-weight: var(--roi-weight-light);
+  line-height: var(--roi-leading-normal);
 }
 .hero-buttons {
   display: flex;
-  gap: 16px;
+  gap: var(--roi-space-md);
   justify-content: center;
   flex-wrap: wrap;
 }
 .btn {
-  padding: 16px 36px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 50px;
+  padding: var(--roi-space-md) var(--roi-space-2xl);
+  font-size: var(--roi-text-lg);
+  font-weight: var(--roi-weight-semibold);
+  border-radius: var(--roi-radius-full);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all var(--roi-transition-base);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--roi-space-sm);
+  border: none;
+  cursor: pointer;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--landing-accent) 0%, var(--landing-accent-dark) 100%);
+  color: var(--roi-text-inverse);
   box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
 }
 .btn-primary:hover {
@@ -95,7 +102,7 @@ body {
 }
 .btn-secondary {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--roi-text-inverse);
   border: 2px solid rgba(255, 255, 255, 0.3);
 }
 .btn-secondary:hover {
@@ -115,7 +122,7 @@ body {
 }
 .section-header h2 {
   font-size: clamp(32px, 5vw, 48px);
-  color: var(--deep);
+  color: var(--landing-deep);
   margin: 0 0 16px;
   font-weight: 700;
 }
@@ -132,7 +139,7 @@ body {
   margin: 0 auto;
 }
 .feature-card {
-  background: var(--soft-gray);
+  background: var(--landing-soft-gray);
   border-radius: 20px;
   padding: 40px 32px;
   transition: all 0.3s ease;
@@ -144,7 +151,7 @@ body {
 .feature-icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  background: linear-gradient(135deg, var(--landing-accent) 0%, var(--landing-accent-light) 100%);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -154,7 +161,7 @@ body {
 }
 .feature-card h3 {
   font-size: 22px;
-  color: var(--deep);
+  color: var(--landing-deep);
   margin: 0 0 12px;
   font-weight: 600;
 }
@@ -167,14 +174,14 @@ body {
 /* Screenshot Section */
 .screenshots {
   padding: 100px 24px;
-  background: linear-gradient(180deg, var(--cream) 0%, white 100%);
+  background: linear-gradient(180deg, var(--landing-cream) 0%, white 100%);
 }
 .screenshot-showcase {
   max-width: 1100px;
   margin: 0 auto;
 }
 .screenshot-main {
-  background: var(--deep);
+  background: var(--landing-deep);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
@@ -231,7 +238,7 @@ body {
 /* How it Works */
 .how-it-works {
   padding: 100px 24px;
-  background: var(--deep);
+  background: var(--landing-deep);
   color: white;
 }
 .how-it-works .section-header h2 {
@@ -254,7 +261,7 @@ body {
 .step-number {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  background: linear-gradient(135deg, var(--landing-accent) 0%, var(--landing-accent-dark) 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -287,7 +294,7 @@ body {
   margin: 0 auto;
 }
 .pricing-card {
-  background: var(--soft-gray);
+  background: var(--landing-soft-gray);
   border-radius: 24px;
   padding: 40px 32px;
   text-align: center;
@@ -295,7 +302,7 @@ body {
   transition: all 0.3s ease;
 }
 .pricing-card.featured {
-  background: linear-gradient(135deg, var(--deep) 0%, var(--deep-light) 100%);
+  background: linear-gradient(135deg, var(--landing-deep) 0%, var(--landing-deep-light) 100%);
   color: white;
   transform: scale(1.02);
 }
@@ -307,7 +314,7 @@ body {
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--accent);
+  background: var(--landing-accent);
   color: white;
   padding: 6px 20px;
   border-radius: 20px;
@@ -345,11 +352,11 @@ body {
 }
 .pricing-card li::before {
   content: '\2713';
-  color: var(--accent);
+  color: var(--landing-accent);
   font-weight: bold;
 }
 .pricing-card.featured li::before {
-  color: var(--accent-light);
+  color: var(--landing-accent-light);
 }
 .pricing-card .btn {
   width: 100%;
@@ -366,7 +373,7 @@ body {
 
 /* CTA Section */
 .cta {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  background: linear-gradient(135deg, var(--landing-accent) 0%, var(--landing-accent-dark) 100%);
   padding: 80px 24px;
   text-align: center;
   color: white;
@@ -386,15 +393,15 @@ body {
 }
 .cta .btn {
   background: white;
-  color: var(--accent-dark);
+  color: var(--landing-accent-dark);
 }
 .cta .btn:hover {
-  background: var(--cream);
+  background: var(--landing-cream);
 }
 
 /* Footer */
 .landing-footer {
-  background: var(--deep);
+  background: var(--landing-deep);
   color: rgba(255, 255, 255, 0.7);
   padding: 60px 24px 40px;
   text-align: center;
@@ -421,5 +428,5 @@ body {
   font-size: 14px;
 }
 .footer-links a:hover {
-  color: var(--accent-light);
+  color: var(--landing-accent-light);
 }

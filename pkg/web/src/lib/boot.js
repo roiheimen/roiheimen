@@ -1,4 +1,5 @@
 import store from "../db/state.js";
+import { initColorSchemes } from "../color-schemes.js";
 
 export function themeToCss(theme) {
   return Array.from(Object.entries(theme))
@@ -22,3 +23,6 @@ store.subscribeToSelectors(["selectMeeting"], ({ meeting }) => {
   if (!meeting) return;
   applyTheme(meeting, "externals" in document.body.dataset);
 });
+
+// Initialize color schemes on page load
+initColorSchemes();
