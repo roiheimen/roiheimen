@@ -4,21 +4,15 @@
  * Tests the voting workflow using the new organization/invite-based auth system.
  */
 
-import { test, expect } from "../fixtures";
 import {
-  query,
+  test,
+  expect,
   uniqueSlug,
   uniqueMeetingId,
-  createVerifiedUserFast,
-  loginUserFast,
-  createOrganizationDirect,
-  createMeetingDirect,
-  createInviteCodeDirect,
-  joinMeetingDirect,
-  getMeetingTokenDirect,
-  setMeetingJwt,
-  createSakDirect,
-} from "../helpers";
+  createAndLoginUser,
+  GraphQLClient,
+  setJwt,
+} from "../fixtures";
 
 test("voting workflow with admin and participant", async ({ browser }) => {
   // Create two separate browser contexts for admin and participant
@@ -30,28 +24,28 @@ test("voting workflow with admin and participant", async ({ browser }) => {
 
   try {
     // Setup: Create admin user, org, meeting
-    const admin = await createVerifiedUserFast(adminPage, "Admin");
-    await loginUserFast(adminPage, admin.email, admin.password);
+    await createAndLoginUser(adminPage, "Admin");
+    const adminApi = new GraphQLClient(adminPage);
 
     const slug = uniqueSlug();
-    const org = await createOrganizationDirect(adminPage, slug, "Testorganisasjon");
+    const org = await adminApi.createOrganization(slug, "Testorganisasjon");
     const meetingId = uniqueMeetingId();
-    await createMeetingDirect(adminPage, org.id, meetingId, "Testavstemming 2025");
+    await adminApi.createMeeting(org.id, meetingId, "Testavstemming 2025");
 
     // Generate invite code for participant
-    const invite = await createInviteCodeDirect(adminPage, meetingId);
+    const invite = await adminApi.createInviteCode(meetingId);
 
     // Get admin's meeting token and create sak
-    const adminJwt = await getMeetingTokenDirect(adminPage, meetingId);
-    await setMeetingJwt(adminPage, adminJwt);
-    const sak = await createSakDirect(adminPage, meetingId, "Sak 1: Testavstemming");
+    const adminJwt = await adminApi.getMeetingToken(meetingId);
+    await setJwt(adminPage, adminJwt);
+    await adminApi.createSak(meetingId, "Sak 1: Testavstemming");
 
     // Setup participant
-    const participant = await createVerifiedUserFast(participantPage, "Deltakar");
-    await loginUserFast(participantPage, participant.email, participant.password);
-    await joinMeetingDirect(participantPage, meetingId, invite.code, "Test Deltakar");
-    const participantJwt = await getMeetingTokenDirect(participantPage, meetingId);
-    await setMeetingJwt(participantPage, participantJwt);
+    await createAndLoginUser(participantPage, "Deltakar");
+    const participantApi = new GraphQLClient(participantPage);
+    await participantApi.joinMeeting(meetingId, invite.code, "Test Deltakar");
+    const participantJwt = await participantApi.getMeetingToken(meetingId);
+    await setJwt(participantPage, participantJwt);
 
     await test.step("admin creates referendum via manage page", async () => {
       // Admin goes to manage page
@@ -81,12 +75,22 @@ test("voting workflow with admin and participant", async ({ browser }) => {
       await participantPage.waitForSelector("roi-referendum", { timeout: 10000 });
       await expect(participantPage.locator("text=Test votering?")).toBeVisible({ timeout: 10000 });
 
-      // Participant selects "Ja" and submits
-      await participantPage.click('input[type="radio"][value="Ja"]');
-      await participantPage.click('input[type="submit"][name="vote"]');
+      // Wait for vote form to be ready - the form with radio buttons
+      const jaRadio = participantPage.locator('input[type="radio"][value="Ja"]');
+      await jaRadio.waitFor({ state: "visible", timeout: 10000 });
 
-      // Verify vote was recorded
-      await expect(participantPage.locator("text=Du har roysta")).toBeVisible({ timeout: 10000 });
+      // Participant selects "Ja"
+      await jaRadio.check();
+
+      // Wait for selection to register
+      await expect(jaRadio).toBeChecked();
+
+      // Submit the form by clicking the button
+      const submitButton = participantPage.locator('input[type="submit"][name="vote"]');
+      await submitButton.click();
+
+      // Wait for the vote to be processed
+      await expect(participantPage.locator("text=Du har røysta")).toBeVisible({ timeout: 20000 });
     });
 
     await test.step("admin ends referendum and sees results", async () => {
@@ -111,41 +115,41 @@ test("closed (secret) referendum hides individual votes", async ({ browser }) =>
 
   try {
     // Setup: Create admin user, org, meeting
-    const admin = await createVerifiedUserFast(adminPage, "Admin");
-    await loginUserFast(adminPage, admin.email, admin.password);
+    await createAndLoginUser(adminPage, "Admin");
+    const adminApi = new GraphQLClient(adminPage);
 
     const slug = uniqueSlug();
-    const org = await createOrganizationDirect(adminPage, slug, "Testorg");
+    const org = await adminApi.createOrganization(slug, "Testorg");
     const meetingId = uniqueMeetingId();
-    await createMeetingDirect(adminPage, org.id, meetingId, "Hemmeleg avstemming");
+    await adminApi.createMeeting(org.id, meetingId, "Hemmeleg avstemming");
 
-    const invite = await createInviteCodeDirect(adminPage, meetingId);
+    const invite = await adminApi.createInviteCode(meetingId);
 
-    const adminJwt = await getMeetingTokenDirect(adminPage, meetingId);
-    await setMeetingJwt(adminPage, adminJwt);
-    await createSakDirect(adminPage, meetingId, "Sak 1: Hemmeleg val");
+    const adminJwt = await adminApi.getMeetingToken(meetingId);
+    await setJwt(adminPage, adminJwt);
+    await adminApi.createSak(meetingId, "Sak 1: Hemmeleg val");
 
     // Setup participant
-    const participant = await createVerifiedUserFast(participantPage, "Deltakar");
-    await loginUserFast(participantPage, participant.email, participant.password);
-    await joinMeetingDirect(participantPage, meetingId, invite.code, "Hemmeleg Deltakar");
-    const participantJwt = await getMeetingTokenDirect(participantPage, meetingId);
-    await setMeetingJwt(participantPage, participantJwt);
+    await createAndLoginUser(participantPage, "Deltakar");
+    const participantApi = new GraphQLClient(participantPage);
+    await participantApi.joinMeeting(meetingId, invite.code, "Hemmeleg Deltakar");
+    const participantJwt = await participantApi.getMeetingToken(meetingId);
+    await setJwt(participantPage, participantJwt);
 
     await test.step("admin creates closed referendum", async () => {
       await adminPage.goto(`/manage.html?id=${meetingId}`);
       await adminPage.waitForSelector("roi-manage", { timeout: 10000 });
 
-      // Use 'V' (uppercase) for closed/secret referendum
+      // Use 'l' for closed/secret referendum with custom choices
       const adderInput = adminPage.locator('input[name="adder"]');
-      await adderInput.fill("VHemmeleg val? @For @Mot");
+      await adderInput.fill("lHemmeleg val? @For @Mot");
       await adminPage.click('input[type="submit"][value="Legg til"]');
 
       await adminPage.waitForSelector("roi-referendum-list", { timeout: 10000 });
       await expect(adminPage.locator("text=Hemmeleg val?")).toBeVisible({ timeout: 10000 });
 
-      // Verify it's marked as closed
-      await expect(adminPage.locator("text=closed")).toBeVisible({ timeout: 5000 });
+      // Verify it's marked as closed (Lukka = closed in Norwegian)
+      await expect(adminPage.locator("text=Lukka")).toBeVisible({ timeout: 5000 });
 
       await adminPage.click('button[name="start"]');
     });
@@ -158,7 +162,7 @@ test("closed (secret) referendum hides individual votes", async ({ browser }) =>
       await participantPage.click('input[type="radio"][value="For"]');
       await participantPage.click('input[type="submit"][name="vote"]');
 
-      await expect(participantPage.locator("text=Du har roysta")).toBeVisible({ timeout: 10000 });
+      await expect(participantPage.locator("text=Du har røysta")).toBeVisible({ timeout: 10000 });
     });
 
     await test.step("admin ends and results are shown", async () => {

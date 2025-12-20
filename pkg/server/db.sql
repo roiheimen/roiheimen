@@ -337,7 +337,7 @@ create function roiheimen.person_latest_speech(person roiheimen.person) returns 
   order by created_at desc
   limit 1
 $$ language sql stable;
-comment on function roiheimen.person_latest_speech(roiheimen.person) is 'Get's the latest speech written by the person.';
+comment on function roiheimen.person_latest_speech(roiheimen.person) is 'Gets the latest speech written by the person.';
 
 create function roiheimen.latest_sak(meeting_id text) returns roiheimen.sak as $$
   select *
@@ -1832,6 +1832,12 @@ alter table roiheimen.vote enable row level security;
 create policy select_meeting_legacy on roiheimen.meeting
   for select to roiheimen_anonymous, roiheimen_person
   using (organization_id is null);
+
+-- Allow roiheimen_person to see their current meeting (from JWT meeting_id claim)
+-- This enables participants with meeting tokens to access meeting data for voting/speech
+create policy select_meeting_participant on roiheimen.meeting
+  for select to roiheimen_person
+  using (id = nullif(current_setting('jwt.claims.meeting_id', true), ''));
 
 -- Meeting RLS policies for organization-based access (roiheimen_user role)
 -- Select: org members can view meetings in their orgs
