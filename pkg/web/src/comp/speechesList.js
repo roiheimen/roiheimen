@@ -13,34 +13,42 @@ export default define("RoiSpeechesList", {
     }
     ${self} table {
       width: 100%;
+      border-radius: var(--roi-radius-md);
+      overflow: hidden;
     }
     ${self} th {
       text-align: left;
-      padding: 6px 10px;
-      font-size: 0.8rem;
+      padding: 10px 12px;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: var(--roi-text-secondary);
+      color: var(--roi-text-tertiary);
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
+      background: var(--roi-bg-body);
     }
     ${self} td {
-      padding: 10px;
+      padding: 12px;
       color: var(--roi-text-primary);
     }
     ${self} tr {
       border-bottom: 1px solid var(--roi-border-light);
+      transition: background var(--roi-transition-fast);
+    }
+    ${self} tr:hover:not(.status-started):not(.status-ended):not(.status-cancelled) {
+      background: var(--roi-bg-body);
     }
     ${self} .status-started,
     ${self} .status-started td {
-      background: var(--roi-primary);
+      background: linear-gradient(135deg, var(--roi-accent) 0%, var(--roi-accent-dark) 100%);
       color: #ffffff;
       font-size: 1.15rem;
-      font-weight: 500;
-      padding: 14px 10px;
+      font-weight: 600;
+      padding: 16px 12px;
     }
     ${self} .status-ended {
       color: var(--roi-text-tertiary);
       text-decoration: line-through;
+      opacity: 0.7;
     }
     ${self} .status-cancelled {
       color: var(--roi-warning-text);
@@ -52,20 +60,27 @@ export default define("RoiSpeechesList", {
     ${self} .color .is-current { background: var(--roi-bg-elevated); }
     ${self} .color .is-next { background: var(--roi-bg-elevated); }
     ${self} button {
-      background: var(--roi-bg-elevated);
-      color: var(--roi-text-primary);
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
       border: 1px solid var(--roi-border-medium);
-      padding: 4px 10px;
-      font-size: 0.85rem;
+      padding: 6px 12px;
+      font-size: 0.8rem;
       cursor: pointer;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
     }
     ${self} button:hover {
-      background: var(--roi-bg-body);
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
     }
     ${self} .status-started button {
       background: rgba(255,255,255,0.2);
       color: white;
       border-color: rgba(255,255,255,0.4);
+    }
+    ${self} .status-started button:hover {
+      background: rgba(255,255,255,0.35);
     }
     `;
   },

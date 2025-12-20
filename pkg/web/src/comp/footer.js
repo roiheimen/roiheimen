@@ -14,20 +14,30 @@ define("RoiFooter<footer>", {
   style(self) {
     return `
     ${self} {
-      margin-top: 28px;
-      padding: 5px;
+      margin-top: 32px;
+      padding: 16px;
       text-align: center;
+      background: var(--roi-bg-body);
+      border-top: 1px solid var(--roi-border-light);
+      font-size: 0.9rem;
     }
     ${self} a {
-      color: inherit;
-      opacity: 0.9;
+      color: var(--roi-text-secondary);
       text-decoration: none;
+      padding: 6px 10px;
+      border-radius: var(--roi-radius-sm);
+      transition: all var(--roi-transition-fast);
     }
     ${self} a:hover {
+      color: var(--roi-accent);
+      background: var(--roi-bg-surface);
+    }
+    ${self} a:visited {
       opacity: 1;
     }
     ${self} .active {
-      font-weight: bold;
+      font-weight: 600;
+      color: var(--roi-primary);
     }
     `;
   },
