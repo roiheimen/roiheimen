@@ -2,7 +2,7 @@
   "name": "roiheimen-server",
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "setup": "cat db.sql | psql",
+    "setup": "psql -f db.sql",
     "start": "run-p start:*",
     "start:server": "node server.js",
     "start:emoji": "node emoji_server.js",

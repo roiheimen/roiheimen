@@ -104,7 +104,12 @@ sudo apt install postgresql-12-wal2json
 
 ## Key Files
 
-- `pkg/server/db.sql` - Database schema (source of truth)
+- `pkg/server/db.sql` - Database schema entry point (includes split files)
+- `pkg/server/sql/` - Split schema files:
+  - `001-schema.sql` - Tables, types, indexes
+  - `002-functions.sql` - All SQL functions
+  - `003-permissions.sql` - GRANTs and RLS policies
+  - `004-triggers.sql` - Triggers
 - `pkg/server/server.js` - PostGraphile setup
 - `pkg/web/src/db/state.js` - Redux state bundles
 - `pkg/web/src/comp/queue.js` - Main participant UI

@@ -35,7 +35,7 @@ $PSQL -q -c "DROP ROLE IF EXISTS roiheimen_postgraphile;" > /dev/null 2>&1 || tr
 
 # Apply schema (includes test data: meeting meet20, users with password 'test')
 # Redirect all output (psql -q only suppresses status messages, not query results)
-$PSQL -q -d "$TEST_DB" < "$PROJECT_ROOT/pkg/server/db.sql" > /dev/null 2>&1
+cd "$PROJECT_ROOT/pkg/server" && $PSQL -q -d "$TEST_DB" -f db.sql > /dev/null 2>&1
 
 # Grant replication permission to roiheimen_postgraphile for live subscriptions (wal2json)
 # This is needed in CI where we need TCP connections instead of peer auth
