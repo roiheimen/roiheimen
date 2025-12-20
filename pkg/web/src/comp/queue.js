@@ -27,14 +27,14 @@ const RoiQueueDrawer = {
       flex-direction: column;
       gap: 8px;
       padding: 16px;
-      background: #fff;
-      border: 1px solid #e5e5e5;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-light);
       min-height: calc(40vh - 32px);
     }
     ${self} .buttons button {
-      background: #fafafa;
-      color: var(--roi-theme-main-color);
-      border: 1px solid #ddd;
+      background: var(--roi-bg-elevated);
+      color: var(--roi-primary);
+      border: 1px solid var(--roi-border-medium);
       font-size: 1rem;
       font-weight: 500;
       padding: 12px 14px;
@@ -42,18 +42,18 @@ const RoiQueueDrawer = {
       transition: background 0.15s, border-color 0.15s;
     }
     ${self} .buttons button:hover:not(:disabled) {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
-      border-color: var(--roi-theme-main-color);
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
+      border-color: var(--roi-primary);
     }
     ${self} .buttons button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
     ${self} .buttons button.main {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
-      border-color: var(--roi-theme-main-color);
+      background: var(--roi-primary);
+      color: #ffffff;
+      border-color: var(--roi-primary);
       font-weight: 600;
     }
     ${self} .buttons button.main:hover:not(:disabled) {
@@ -62,32 +62,32 @@ const RoiQueueDrawer = {
     ${self} .buttons .settings {
       margin-top: auto;
       background: transparent;
-      border: 1px solid #ccc;
-      color: #666;
+      border: 1px solid var(--roi-border-medium);
+      color: var(--roi-text-secondary);
       font-size: 0.9rem;
     }
     ${self} .buttons .settings:hover {
-      background: #f5f5f5;
-      border-color: #999;
+      background: var(--roi-bg-elevated);
+      border-color: var(--roi-border-dark);
     }
     ${self} .queue {
       padding: 20px;
-      background: #fff;
-      border: 1px solid #e5e5e5;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-light);
     }
     ${self} .title {
       text-align: center;
       font-size: 1.5rem;
       font-weight: 600;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       margin: 0 0 20px;
       padding-bottom: 12px;
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 1px solid var(--roi-border-light);
     }
     ${self} .info {
-      background: #f0f7ff;
-      border: 1px solid #cce0ff;
-      color: #1a4d80;
+      background: var(--roi-info-bg);
+      border: 1px solid var(--roi-info-light);
+      color: var(--roi-info);
       padding: 12px 14px;
       margin: 0 0 16px;
       font-size: 0.95rem;
@@ -98,8 +98,8 @@ const RoiQueueDrawer = {
     }
     ${self} .info button {
       padding: 6px 12px;
-      background: #1a4d80;
-      color: white;
+      background: var(--roi-info);
+      color: var(--roi-text-inverse);
       border: none;
       font-size: 0.875rem;
       font-weight: 500;
@@ -107,7 +107,7 @@ const RoiQueueDrawer = {
       margin-left: auto;
     }
     ${self} .info button:hover {
-      background: #133a61;
+      background: var(--roi-info-dark);
     }
     ${self} roi-referendum {
       margin: 0 0 24px;
@@ -116,7 +116,7 @@ const RoiQueueDrawer = {
       margin: 0 0 24px;
     }
     ${self} .gfx-vote-iframe {
-      border: 1px solid #e5e5e5;
+      border: 1px solid var(--roi-border-light);
       width: 100%;
       margin-bottom: 16px;
     }
@@ -275,7 +275,7 @@ define("RoiQueue", {
     ${self} {
       display: block;
       min-height: 100vh;
-      background: #f5f5f5;
+      background: var(--roi-bg-body);
     }
     `;
   },

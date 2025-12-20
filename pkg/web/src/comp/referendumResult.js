@@ -7,33 +7,35 @@ export default define("RoiReferendumResult", {
       display: block;
     }
     ${self} > div {
-      background: #fafafa;
-      border: 1px solid #e5e5e5;
+      background: var(--roi-bg-elevated);
+      border: 1px solid var(--roi-border-light);
+      border-radius: 8px;
       padding: 14px 16px;
     }
     ${self} h3 {
       margin: 0 0 10px;
       font-size: 1rem;
       font-weight: 600;
-      color: #333;
+      color: var(--roi-text-primary);
     }
     ${self} .prev {
-      color: #666;
+      color: var(--roi-text-secondary);
       font-weight: 400;
     }
     ${self} .choice {
       display: inline-block;
-      background: #fff;
-      border: 1px solid #ddd;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-medium);
+      border-radius: 4px;
       padding: 6px 10px;
       margin: 2px;
       font-size: 0.9rem;
-      color: #333;
+      color: var(--roi-text-primary);
     }
     ${self} .choice:first-of-type {
-      background: #c6f6d5;
-      border-color: #9ae6b4;
-      color: #276749;
+      background: var(--roi-primary);
+      border-color: var(--roi-primary);
+      color: #ffffff;
       font-weight: 600;
     }
     `;

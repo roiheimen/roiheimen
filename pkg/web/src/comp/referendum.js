@@ -10,15 +10,16 @@ export default define("RoiReferendum", {
       display: block;
     }
     ${self} form {
-      background: #f0fff4;
-      border: 1px solid #9ae6b4;
+      background: var(--roi-bg-elevated);
+      border: 1px solid var(--roi-border-medium);
+      border-radius: 8px;
       padding: 16px;
     }
     ${self} h3 {
       margin: 0 0 12px;
       font-size: 1.1rem;
       font-weight: 600;
-      color: #276749;
+      color: var(--roi-text-primary);
     }
     ${self} ul {
       list-style: none;
@@ -33,49 +34,54 @@ export default define("RoiReferendum", {
       align-items: center;
       gap: 10px;
       padding: 10px 12px;
-      background: #fff;
-      border: 1px solid #c6f6d5;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-medium);
+      border-radius: 4px;
       cursor: pointer;
       font-size: 1rem;
+      color: var(--roi-text-primary);
     }
     ${self} label:hover {
-      background: #f0fff4;
+      border-color: var(--roi-primary);
     }
     ${self} input[type="radio"] {
-      accent-color: #38a169;
+      accent-color: var(--roi-primary);
     }
     ${self} label:has(input:checked) {
-      background: #c6f6d5;
-      border-color: #68d391;
+      background: var(--roi-bg-body);
+      border-color: var(--roi-primary);
     }
     ${self} p {
       margin: 12px 0 0;
       display: flex;
       align-items: center;
       gap: 10px;
+      color: var(--roi-text-primary);
     }
     ${self} input[type="submit"] {
-      background: #38a169;
-      color: white;
+      background: var(--roi-primary);
+      color: #ffffff;
       border: none;
       padding: 8px 16px;
       font-size: 0.95rem;
       font-weight: 500;
       cursor: pointer;
+      border-radius: 4px;
     }
     ${self} input[type="submit"]:hover {
-      background: #2f855a;
+      background: var(--roi-primary-dark);
     }
     ${self} button[name="back"] {
-      background: #f7fafc;
-      color: #4a5568;
-      border: 1px solid #cbd5e0;
+      background: var(--roi-bg-surface);
+      color: var(--roi-text-secondary);
+      border: 1px solid var(--roi-border-medium);
       padding: 6px 12px;
       font-size: 0.9rem;
       cursor: pointer;
+      border-radius: 4px;
     }
     ${self} button[name="back"]:hover {
-      background: #edf2f7;
+      background: var(--roi-bg-body);
     }
     `;
   },

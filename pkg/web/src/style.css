@@ -60,6 +60,7 @@
   --roi-bg-body: #fefbf8;
   --roi-bg-surface: #ffffff;
   --roi-bg-elevated: #ffffff;
+  --roi-bg-muted: #e5e5e5;
   --roi-bg-overlay: rgba(0, 0, 0, 0.5);
 
   /* Text Colors */
@@ -136,15 +137,9 @@
   --roi-transition-base: 250ms ease;
   --roi-transition-slow: 350ms ease;
 
-  /* ===== BACKWARD COMPATIBILITY ===== */
-  /* Keep existing variable names for compatibility */
-  --roi-theme-main-color: var(--roi-primary);
-  --roi-theme-main-color2: var(--roi-bg-surface);
-  --roi-theme-video-bg: var(--roi-secondary);
-  --roi-theme-font: var(--roi-font-sans);
-  --roi-theme-font-color: var(--roi-text-primary);
-  --roi-theme-head-size: var(--roi-text-4xl);
-  --roi-theme-head-font: inherit;
+  /* Customizable heading styles (can be overridden by meeting theme) */
+  --roi-font-heading: inherit;
+  --roi-text-heading: var(--roi-text-4xl);
 }
 
 /* ==============================================
@@ -162,6 +157,7 @@
   --roi-bg-body: #1a1b26;
   --roi-bg-surface: #2b2c3a;
   --roi-bg-elevated: #3d3e50;
+  --roi-bg-muted: #1f2029;
   --roi-bg-overlay: rgba(0, 0, 0, 0.7);
 
   /* Text Colors (inverted) */
@@ -175,11 +171,28 @@
   --roi-border-medium: #4a4b5f;
   --roi-border-dark: #5e5f78;
 
-  /* Adjust semantic colors for dark mode */
-  --roi-success-bg: rgba(56, 161, 105, 0.15);
-  --roi-error-bg: rgba(229, 62, 62, 0.15);
-  --roi-warning-bg: rgba(217, 119, 6, 0.15);
-  --roi-info-bg: rgba(26, 77, 128, 0.15);
+  /* Semantic colors for dark mode - using dark tinted backgrounds */
+  --roi-success: #4ade80;
+  --roi-success-light: #166534;
+  --roi-success-lighter: #14352a;
+  --roi-success-bg: #0f261e;
+  --roi-success-dark: #22c55e;
+  --roi-success-text: #86efac;
+
+  --roi-error: #f87171;
+  --roi-error-light: #7f1d1d;
+  --roi-error-bg: #2a1515;
+  --roi-error-text: #fecaca;
+
+  --roi-warning: #fbbf24;
+  --roi-warning-light: #78350f;
+  --roi-warning-bg: #271d0a;
+  --roi-warning-text: #fde68a;
+
+  --roi-info: #60a5fa;
+  --roi-info-light: #1e40af;
+  --roi-info-bg: #0f1a2e;
+  --roi-info-dark: #3b82f6;
 
   /* Shadows (more subtle in dark mode) */
   --roi-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
@@ -241,9 +254,9 @@ body > header {
 }
 body > header h1 {
   color: var(--roi-primary);
-  font-size: var(--roi-text-4xl);
+  font-size: var(--roi-text-heading);
   margin: var(--roi-space-md) auto;
-  font-family: var(--roi-theme-head-font);
+  font-family: var(--roi-font-heading);
   line-height: var(--roi-leading-tight);
 }
 body > header span {

@@ -19,44 +19,48 @@ export default define("RoiSpeechesList", {
       padding: 6px 10px;
       font-size: 0.8rem;
       font-weight: 600;
-      color: #666;
+      color: var(--roi-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
     ${self} td {
       padding: 10px;
+      color: var(--roi-text-primary);
     }
     ${self} tr {
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 1px solid var(--roi-border-light);
     }
-    ${self} .status-started {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
-      font-size: 1.1rem;
+    ${self} .status-started,
+    ${self} .status-started td {
+      background: var(--roi-primary);
+      color: #ffffff;
+      font-size: 1.15rem;
+      font-weight: 500;
+      padding: 14px 10px;
     }
     ${self} .status-ended {
-      color: #999;
+      color: var(--roi-text-tertiary);
       text-decoration: line-through;
     }
     ${self} .status-cancelled {
-      color: #b45309;
+      color: var(--roi-warning-text);
       text-decoration: line-through;
-      background: #fffbeb;
+      background: var(--roi-warning-bg);
     }
     ${self} .simple .status-cancelled { display: none }
-    ${self} .color .is-prev { background: #f5f5f5; }
-    ${self} .color .is-current { background: #c6f6d5; }
-    ${self} .color .is-next { background: #fef9c3; }
+    ${self} .color .is-prev { background: var(--roi-bg-muted); }
+    ${self} .color .is-current { background: var(--roi-bg-elevated); }
+    ${self} .color .is-next { background: var(--roi-bg-elevated); }
     ${self} button {
-      background: #f5f5f5;
-      color: #444;
-      border: 1px solid #ccc;
+      background: var(--roi-bg-elevated);
+      color: var(--roi-text-primary);
+      border: 1px solid var(--roi-border-medium);
       padding: 4px 10px;
       font-size: 0.85rem;
       cursor: pointer;
     }
     ${self} button:hover {
-      background: #eee;
+      background: var(--roi-bg-body);
     }
     ${self} .status-started button {
       background: rgba(255,255,255,0.2);
