@@ -17,6 +17,7 @@ const RoiQueueDrawer = {
     ${self} {
       display: grid;
       grid-template-columns: 220px 1fr;
+      grid-template-rows: auto auto 1fr;
       min-height: 40vh;
       gap: 20px;
       padding: 20px;
@@ -81,7 +82,18 @@ const RoiQueueDrawer = {
       color: var(--roi-text-secondary);
       transform: none;
     }
+    ${self} > roi-referendum-result {
+      grid-column: 1;
+      padding: 14px 16px;
+      background: var(--roi-bg-surface);
+      border: 1px solid var(--roi-border-light);
+      border-radius: var(--roi-radius-md);
+      box-shadow: var(--roi-shadow-sm);
+      align-self: start;
+    }
     ${self} .queue {
+      grid-column: 2;
+      grid-row: 1 / -1;
       padding: 24px;
       background: var(--roi-bg-surface);
       border-radius: var(--roi-radius-lg);
@@ -93,8 +105,6 @@ const RoiQueueDrawer = {
       font-weight: 700;
       color: var(--roi-primary);
       margin: 0 0 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid var(--roi-border-light);
       letter-spacing: -0.5px;
     }
     ${self} .info {
@@ -275,8 +285,8 @@ const RoiQueueDrawer = {
           class=settings
           .onclick=${() => store.doClientUi("settings")}
           >Innstillingar</button>
-        ${referendumPrev ? html` <roi-referendum-result /> ` : null}
       </div>
+      ${referendumPrev ? html` <roi-referendum-result /> ` : null}
       <div class=queue>
         ${config.emoji ? html` <button .onclick=${() => store.doEmojiSend("like")}>Like</button> ` : null}
         ${

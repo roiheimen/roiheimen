@@ -37,9 +37,12 @@ export default define("RoiSpeechesList", {
     ${self} tr:hover:not(.status-started):not(.status-ended):not(.status-cancelled) {
       background: var(--roi-bg-body);
     }
-    ${self} .status-started,
-    ${self} .status-started td {
+    ${self} .status-started {
       background: linear-gradient(135deg, var(--roi-accent) 0%, var(--roi-accent-dark) 100%);
+      color: #ffffff;
+    }
+    ${self} .status-started td {
+      background: transparent;
       color: #ffffff;
       font-size: 1.15rem;
       font-weight: 600;
