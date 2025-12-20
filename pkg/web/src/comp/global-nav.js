@@ -54,7 +54,7 @@ define("RoiGlobalNav", {
       align-items: center;
       justify-content: space-between;
       padding: 12px 20px;
-      background: var(--roi-theme-main-color, #2b2c3a);
+      background: var(--roi-primary);
       color: white;
     }
     ${self} .nav-brand {
@@ -133,7 +133,7 @@ define("RoiGlobalNav", {
     }
     ${self} .dropdown-item.active {
       background: #e8f0fe;
-      color: var(--roi-theme-main-color, #2b2c3a);
+      color: var(--roi-primary);
       font-weight: 500;
     }
     ${self} .dropdown-divider {

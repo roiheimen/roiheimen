@@ -69,8 +69,8 @@ export default define("RoiParticipantList", {
       text-transform: uppercase;
     }
     ${self} .badge-organizer {
-      background: var(--roi-theme-main-color, #2b2c3a);
-      color: var(--roi-theme-main-color2, #fff);
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
     }
     ${self} .badge-participant {
       background: #ddd;

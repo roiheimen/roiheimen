@@ -69,7 +69,7 @@ define("RoiQrCode", {
     }
     ${self} .download-btn {
       padding: 8px 16px;
-      background: var(--roi-theme-main-color, #2b2c3a);
+      background: var(--roi-primary);
       color: white;
       border: none;
       border-radius: 4px;

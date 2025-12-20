@@ -37,8 +37,8 @@ define("RoiEmailVerify", {
       display: inline-block;
       margin-top: 15px;
       padding: 10px 20px;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       text-decoration: none;
       border-radius: 4px;
     }

@@ -125,7 +125,7 @@ define("RoiActivityFeed", {
       text-decoration: none;
     }
     ${self} .activity-title a:hover {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     ${self} .activity-desc {
       color: #6b7280;

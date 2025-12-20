@@ -50,7 +50,7 @@ define("RoiLogin", {
     ${self} input[type="email"]:focus,
     ${self} input[type="password"]:focus {
       outline: none;
-      border-color: var(--roi-theme-main-color);
+      border-color: var(--roi-primary);
       box-shadow: 0 0 0 3px rgba(43, 44, 58, 0.08);
     }
     ${self} input::placeholder {
@@ -59,8 +59,8 @@ define("RoiLogin", {
     ${self} .btn-submit {
       width: 100%;
       cursor: pointer;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       border: none;
       border-radius: 10px;
       padding: 14px 20px;
@@ -107,7 +107,7 @@ define("RoiLogin", {
       font-size: 0.875rem;
     }
     ${self} .links a {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       text-decoration: none;
       font-weight: 500;
     }

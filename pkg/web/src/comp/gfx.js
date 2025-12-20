@@ -150,7 +150,7 @@ define("RoiGfxVote", {
         line-height: 1;
       }
       ${self} h2 {
-        background: var(--roi-theme-main-color, #2b2c3a);
+        background: var(--roi-primary);
         color: white;
         display: inline-block;
         margin: 0 0 8px;
@@ -166,7 +166,7 @@ define("RoiGfxVote", {
         display: inline-block;
         padding: 3px 5px;
         font-weight: 500;
-        color: #666;
+        color: var(--roi-text-secondary);
       }
       ${self} .type-CLOSED .vote {
         width: 16px;
@@ -174,18 +174,20 @@ define("RoiGfxVote", {
         padding: 0;
       }
       ${self} .voted {
-        background: #444;
-        color: white;
+        background: var(--roi-primary);
+        color: #ffffff;
       }
       ${self} .voted.yes {
-        background: #38a169;
+        background: var(--roi-success);
+        color: #ffffff;
       }
       ${self} .voted.no {
-        background: #e53e3e;
+        background: var(--roi-error);
+        color: #ffffff;
       }
       ${self} .not_voted {
-        background: #e5e5e5;
-        color: #999;
+        background: var(--roi-bg-muted);
+        color: var(--roi-text-primary);
       }
     `;
   },

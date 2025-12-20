@@ -61,7 +61,7 @@ define("RoiVideo", {
   style(self) {
     return `
     ${self} {
-      background: var(--roi-theme-video-bg);
+      background: var(--roi-secondary);
       display: flex;
       height: 60vh;
     }

@@ -48,8 +48,8 @@ define("RoiJoinMeeting", {
       margin: 10px 0 0 auto;
       width: 150px;
       cursor: pointer;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       border: none;
       font-size: 16px;
       padding: 10px;
@@ -73,7 +73,7 @@ define("RoiJoinMeeting", {
     }
     ${self} .meeting-info h3 {
       margin: 0 0 5px 0;
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
     }
     ${self} .meeting-info p {
       margin: 0;
@@ -91,8 +91,8 @@ define("RoiJoinMeeting", {
       display: inline-block;
       margin-top: 15px;
       padding: 10px 20px;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       text-decoration: none;
       border-radius: 4px;
     }
@@ -105,7 +105,7 @@ define("RoiJoinMeeting", {
       margin-top: 10px;
     }
     ${self} .back-link a {
-      color: var(--roi-theme-main-color);
+      color: var(--roi-primary);
       cursor: pointer;
     }
     ${self} .login-required {

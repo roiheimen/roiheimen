@@ -154,17 +154,17 @@ const SakSpeakerAdderInput = {
     ${self} p {
       margin: 0;
       font-size: 0.8em;
-      color: #666;
+      color: var(--roi-text-secondary);
       line-height: 1;
     }
     ${self} code {
-      background: #ccc;
-      color: #333;
+      background: var(--roi-bg-muted);
+      color: var(--roi-text-primary);
     }
     ${self} .err {
       position: absolute;
       color: white;
-      background-color: red;
+      background-color: var(--roi-error);
       pointer-events: none;
       font-size: 20px;
       margin: 0;
@@ -251,15 +251,16 @@ const SakList = {
     return `
     ${self} h3 {
       display: flex;
-      background-color: #ffa;
+      background-color: var(--roi-warning-bg);
       padding: 6px 20px;
       margin: 20px -20px 0;
-      border: 1px solid #ddd;
+      border: 1px solid var(--roi-border-light);
       border-right: none;
       border-left: none;
+      color: var(--roi-text-primary);
     }
     ${self} h3.current {
-      background-color: #cea;
+      background-color: var(--roi-success-bg);
     }
     ${self} h3 button {
       margin-left: auto;
@@ -267,28 +268,31 @@ const SakList = {
     ${self} .choice {
       font-size: 80%;
       display: inline-block;
-      background-color: #ddd;
+      background-color: var(--roi-bg-muted);
       padding: 2px 4px;
       margin: 2px;
       border-radius: 2px;
+      color: var(--roi-text-primary);
     }
     ${self} .deleted {
       text-decoration: line-through;
-      color: #ccc;
+      color: var(--roi-text-tertiary);
     }
     ${self} .speeches {
-      background-color: #eee;
+      background-color: var(--roi-bg-muted);
       padding: 0px 20px;
       margin: 0px -20px 6px;
+      color: var(--roi-text-primary);
     }
     ${self} .speech {
       font-size: 80%;
       display: inline-block;
-      background-color: white;
+      background-color: var(--roi-bg-surface);
       padding: 2px 4px;
       margin: 2px;
       border-radius: 2px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--roi-border-medium);
+      color: var(--roi-text-primary);
     }
     ${self} ol {
       margin: 0;
@@ -537,8 +541,8 @@ const MoreDialog = {
       display: inline-block;
     }
     ${self} .tabs button.active {
-      background: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2);
+      background: var(--roi-primary);
+      color: var(--roi-text-inverse);
     }
     ${self} .invitasjonar-tab {
       display: flex;

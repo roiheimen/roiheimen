@@ -47,7 +47,7 @@ define("RoiPasswordReset", {
     }
     ${self} input[type="password"]:focus {
       outline: none;
-      border-color: var(--roi-theme-main-color);
+      border-color: var(--roi-primary);
       box-shadow: 0 0 0 3px rgba(43, 44, 58, 0.08);
     }
     ${self} input::placeholder {
@@ -56,8 +56,8 @@ define("RoiPasswordReset", {
     ${self} .btn-submit {
       width: 100%;
       cursor: pointer;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       border: none;
       border-radius: 10px;
       padding: 14px 20px;
@@ -136,8 +136,8 @@ define("RoiPasswordReset", {
       display: inline-block;
       margin-top: 16px;
       padding: 12px 24px;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       text-decoration: none;
       border-radius: 10px;
       font-weight: 600;
@@ -179,8 +179,8 @@ define("RoiPasswordReset", {
       display: inline-block;
       margin-top: 16px;
       padding: 12px 24px;
-      background-color: var(--roi-theme-main-color);
-      color: var(--roi-theme-main-color2, white);
+      background-color: var(--roi-primary);
+      color: var(--roi-text-inverse);
       text-decoration: none;
       border-radius: 10px;
       font-weight: 600;
